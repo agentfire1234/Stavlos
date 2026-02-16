@@ -1,12 +1,14 @@
 import { Redis } from '@upstash/redis'
+import { supabaseAdmin } from '@/lib/supabase'
 
 const redis = new Redis({
     url: process.env.UPSTASH_REDIS_REST_URL!,
     token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 })
 
-// Hard budget limit in EUR
-const DAILY_BUDGET = parseFloat(process.env.DAILY_BUDGET_EUR || '20')
+// System config key for budget
+const BUDGET_KEY = 'system:config:daily_budget_eur'
+const DEFAULT_BUDGET = parseFloat(process.env.DAILY_BUDGET_EUR || '20')
 
 export type BudgetPhase = 'NORMAL' | 'CAUTIOUS' | 'RESTRICTED' | 'EMERGENCY'
 
@@ -19,18 +21,43 @@ export interface Permission {
 
 export class CostGovernor {
 
+    static async getDailyBudget(): Promise<number> {
+        try {
+            // 1. Try Redis Cache
+            const cached = await redis.get(BUDGET_KEY)
+            if (cached) return parseFloat(cached as string)
+
+            // 2. Try Supabase
+            const { data } = await supabaseAdmin
+                .from('system_config')
+                .select('value')
+                .eq('key', 'daily_budget_eur')
+                .single()
+
+            const budget = data ? parseFloat(data.value) : DEFAULT_BUDGET
+
+            // 3. Cache in Redis for 1 hour
+            await redis.set(BUDGET_KEY, budget.toString(), { ex: 3600 })
+
+            return budget
+        } catch (e) {
+            return DEFAULT_BUDGET
+        }
+    }
+
     static async checkBudget() {
         const today = new Date().toISOString().split('T')[0]
         const spendKey = `spend:${today}`
+        const budget = await this.getDailyBudget()
 
         // Get current spend
         const todaySpend = parseFloat(await redis.get(spendKey) as string || '0')
-        const percentUsed = todaySpend / DAILY_BUDGET
+        const percentUsed = todaySpend / budget
 
         return {
             spent: todaySpend,
-            budget: DAILY_BUDGET,
-            remaining: DAILY_BUDGET - todaySpend,
+            budget: budget,
+            remaining: budget - todaySpend,
             percentUsed: percentUsed,
             phase: this.getPhase(percentUsed)
         }
@@ -53,7 +80,7 @@ export class CostGovernor {
                 return {
                     allowed: true,
                     queue: false,
-                    model: this.getOptimalModel(taskType),
+                    model: await this.getOptimalModel(taskType),
                     message: null
                 }
 
@@ -62,7 +89,7 @@ export class CostGovernor {
                 return {
                     allowed: true,
                     queue: false,
-                    model: 'openai/gpt-4o-mini', // Force mini
+                    model: 'llama-3.1-8b-instant', // Force instant
                     message: null
                 }
 
@@ -72,14 +99,14 @@ export class CostGovernor {
                     return {
                         allowed: false,
                         queue: true,
-                        model: 'openai/gpt-4o-mini',
+                        model: 'llama-3.1-8b-instant',
                         message: "⚡ High demand! Queued for 1 hour.\n\n💡 Upgrade to Pro for instant responses"
                     }
                 }
                 return {
                     allowed: true,
                     queue: false,
-                    model: 'openai/gpt-4o-mini',
+                    model: 'llama-3.1-8b-instant',
                     message: null
                 }
 
@@ -89,50 +116,56 @@ export class CostGovernor {
                     return {
                         allowed: false,
                         queue: false,
-                        model: 'openai/gpt-4o-mini',
+                        model: 'llama-3.1-8b-instant',
                         message: "📊 Daily limit reached. Resets at midnight.\n\n⚡ Upgrade to Pro for 24/7 access"
                     }
                 }
                 return {
                     allowed: true, // Pro still allowed but maybe queued
                     queue: true,
-                    model: 'openai/gpt-4o-mini',
+                    model: 'llama-3.1-8b-instant',
                     message: "Queued for priority processing"
                 }
         }
     }
 
-    static getOptimalModel(taskType: string): string {
-        // Model routing for OpenRouter
-        const routing: Record<string, string> = {
-            'grammar_fix': 'openai/gpt-4o-mini',
-            'flashcard': 'openai/gpt-4o-mini',
-            'summary': 'openai/gpt-4o-mini',
-            'essay_outline': 'openai/gpt-4o-mini',
-            'code_debug': 'openai/gpt-4o-mini',
-            'general_chat': 'openai/gpt-4o-mini',
-            'math_solver': 'openai/gpt-4o', // Need reasoning power
-            'syllabus_qa': 'openai/gpt-4o-mini'
+    static async getOptimalModel(taskType: string): Promise<string> {
+        // 1. Try to get overrides from Redis
+        const overridesStr = await redis.get('system:config:model_overrides') as string
+        const overrides = overridesStr ? JSON.parse(overridesStr) : null
+
+        if (overrides && overrides[taskType]) {
+            return overrides[taskType]
         }
 
-        return routing[taskType] || 'openai/gpt-4o-mini'
+        // 2. Fallback to hardcoded routing
+        const routing: Record<string, string> = {
+            'grammar_fix': 'llama-3.1-8b-instant',
+            'flashcard': 'llama-3.1-8b-instant',
+            'summary': 'llama-3.1-8b-instant',
+            'essay_outline': 'llama-3.1-70b-versatile',
+            'code_debug': 'llama-3.1-70b-versatile',
+            'general_chat': 'llama-3.1-70b-versatile',
+            'math_solver': 'llama-3.1-70b-versatile',
+            'syllabus_qa': 'llama-3.1-70b-versatile'
+        }
+
+        return routing[taskType] || 'llama-3.1-70b-versatile'
     }
 
-    static async recordCost(inputTokens: number, outputTokens: number, model: string): Promise<number> {
+    static async recordCost(inputTokens: number, outputTokens: number, model: string, taskType: string = 'chat'): Promise<number> {
         const today = new Date().toISOString().split('T')[0]
         const spendKey = `spend:${today}`
 
-        // OpenRouter Pricing (Approximate)
+        // Groq Pricing (Approximate)
         const costPer1K: Record<string, number> = {
-            'openai/gpt-4o-mini': 0.00015,
-            'openai/gpt-4o': 0.005,
-            'openai/gpt-4o-large': 0.015,
-            'anthropic/claude-3.5-sonnet': 0.003,
-            'google/gemini-flash-1.5': 0.000075
+            'llama-3.1-70b-versatile': 0.0007,
+            'llama-3.1-8b-instant': 0.00005,
+            'openai/text-embedding-3-small': 0.00002 // Via OpenRouter
         }
 
-        // Fallback to mini price if unknown
-        const price = costPer1K[model] || costPer1K['openai/gpt-4o-mini']
+        // Fallback to instant price if unknown
+        const price = costPer1K[model] || costPer1K['llama-3.1-8b-instant']
 
         const totalTokens = inputTokens + outputTokens
         const cost = (totalTokens / 1000) * price
@@ -141,7 +174,17 @@ export class CostGovernor {
         await redis.incrbyfloat(spendKey, cost)
         await redis.expire(spendKey, 86400 * 2) // Keep for 48h
 
-        // Log detailed usage
+        // Log to Supabase for persistence
+        await supabaseAdmin.from('analytics_logs').insert({
+            event_type: taskType === 'chat' ? 'chat' : taskType,
+            model_used: model,
+            input_tokens: inputTokens,
+            output_tokens: outputTokens,
+            cost: cost,
+            cache_hit: false
+        })
+
+        // Log detailed usage to Redis for speed
         await this.logUsage(today, model, totalTokens, cost)
 
         return cost

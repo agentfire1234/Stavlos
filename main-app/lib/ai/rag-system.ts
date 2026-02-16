@@ -2,8 +2,11 @@ import { supabaseAdmin } from '@/lib/supabase'
 import OpenAI from 'openai'
 import pdfParse from 'pdf-parse'
 
-// We use OpenAI direct for embeddings as it's reliable and cheap
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+// We use OpenRouter for embeddings to keep keys consolidated
+const openai = new OpenAI({
+    apiKey: process.env.OPENROUTER_API_KEY,
+    baseURL: "https://openrouter.ai/api/v1"
+})
 
 export class RAGSystem {
 
@@ -31,7 +34,7 @@ export class RAGSystem {
         for (let i = 0; i < chunks.length; i += 20) {
             const batch = chunks.slice(i, i + 20)
             const response = await openai.embeddings.create({
-                model: 'text-embedding-3-small',
+                model: 'openai/text-embedding-3-small',
                 input: batch
             })
             embeddings.push(...response.data.map((d: any) => d.embedding))
@@ -81,7 +84,7 @@ export class RAGSystem {
     static async querySyllabus(question: string, userId: string) {
         // 1. Embed query
         const questionEmb = await openai.embeddings.create({
-            model: 'text-embedding-3-small',
+            model: 'openai/text-embedding-3-small',
             input: question
         })
 

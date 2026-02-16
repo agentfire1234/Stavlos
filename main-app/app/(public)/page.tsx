@@ -13,8 +13,8 @@ export default function LandingPage() {
                     <div className="flex gap-6 text-sm text-white/60">
                         <Link href="#features" className="hover:text-white transition">Features</Link>
                         <Link href="#pricing" className="hover:text-white transition">Pricing</Link>
-                        <Link href="/login" className="hover:text-white transition">Login</Link>
-                        <Link href="/login" className="px-4 py-2 bg-white text-black rounded-full hover:bg-white/90 font-medium transition">
+                        <Link href="/auth/login" className="hover:text-white transition">Login</Link>
+                        <Link href="/auth/login" className="px-4 py-2 bg-white text-black rounded-full hover:bg-white/90 font-medium transition">
                             Get Started
                         </Link>
                     </div>
@@ -40,7 +40,7 @@ export default function LandingPage() {
                         generating quizzes, essays, and notes instantly.
                     </p>
                     <div className="flex gap-4 justify-center">
-                        <Link href="/login" className="px-8 py-4 bg-blue-600 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2">
+                        <Link href="/auth/login" className="px-8 py-4 bg-blue-600 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2">
                             Start for Free <span className="text-xl">→</span>
                         </Link>
                         <Link href="#demo" className="px-8 py-4 bg-white/5 border border-white/10 rounded-lg font-semibold hover:bg-white/10 transition">
@@ -108,7 +108,7 @@ export default function LandingPage() {
                         <li className="flex gap-2">✅ Priority Support</li>
                     </ul>
 
-                    <Link href="/login" className="block w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-gray-100 transition">
+                    <Link href="/auth/login" className="block w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-gray-100 transition">
                         Get Started Now
                     </Link>
                     <p className="mt-4 text-xs text-white/30">Free tier available with daily limits.</p>

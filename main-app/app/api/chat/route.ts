@@ -1,23 +1,35 @@
 import { NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { AIOrchestrator } from '@/lib/ai/orchestrator'
-import { supabase } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(req: Request) {
     try {
-        const { message, history, taskType } = await req.json()
+        const { message, chatId, taskType } = await req.json()
 
-        // 1. Auth Check (Placeholder for Supabase Auth)
-        // In production: const { data: { user } } = await supabase.auth.getUser()
-        // For now, simulate headers or body user_id
-        const userId = req.headers.get('x-user-id')
+        // 1. Auth Check
+        const cookieStore = await cookies()
+        const supabaseServer = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    getAll() {
+                        return cookieStore.getAll()
+                    },
+                },
+            }
+        )
+        const { data: { user } } = await supabaseServer.auth.getUser()
 
-        if (!userId) {
-            // Allow anonymous for demo/testing if desired, or block
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
+        const userId = user.id
 
-        // 2. Get User Tier (Pro vs Free)
-        const { data: profile } = await supabase
+        // 2. Get User Tier
+        const { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('is_pro')
             .eq('id', userId)
@@ -25,7 +37,22 @@ export async function POST(req: Request) {
 
         const userTier = profile?.is_pro ? 'pro' : 'free'
 
-        // 3. Orchestrate
+        // 3. Persist User Message (Optimistic or Sync)
+        let currentChatId = chatId
+        if (!currentChatId) {
+            const { data: newConvo } = await supabaseAdmin
+                .from('conversations')
+                .insert({ user_id: userId, title: message.substring(0, 50), preview: message.substring(0, 100) })
+                .select()
+                .single()
+            currentChatId = newConvo?.id
+        }
+
+        await supabaseAdmin
+            .from('messages')
+            .insert({ conversation_id: currentChatId, role: 'user', content: message })
+
+        // 4. Orchestrate
         const result = await AIOrchestrator.handleQuery(
             message,
             userId,
@@ -33,12 +60,26 @@ export async function POST(req: Request) {
             taskType || 'general_chat'
         )
 
-        // 4. Return response
-        if (result.blocked) {
-            return NextResponse.json(result, { status: 429 }) // Too Many Requests
+        // 5. Persist Assistant Message
+        if (!result.blocked) {
+            await supabaseAdmin
+                .from('messages')
+                .insert({
+                    conversation_id: currentChatId,
+                    role: 'assistant',
+                    content: result.response,
+                    model_used: result.model,
+                    cache_hit: result.cacheHit
+                })
+
+            // Record activity for streak
+            await supabaseAdmin
+                .from('user_activities')
+                .upsert({ user_id: userId, activity_date: new Date().toISOString().split('T')[0] })
+                .select()
         }
 
-        return NextResponse.json(result)
+        return NextResponse.json({ ...result, chatId: currentChatId })
 
     } catch (error: any) {
         console.error('Chat error:', error)

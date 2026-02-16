@@ -129,3 +129,67 @@ CREATE TABLE user_usage (
 );
 
 CREATE INDEX idx_usage_user_date ON user_usage(user_id, usage_date);
+-- 8. CONVERSATIONS (Grouped chat history)
+CREATE TABLE conversations (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT DEFAULT 'New Conversation',
+  preview TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_conversations_user ON conversations(user_id);
+
+-- 9. MESSAGES (Individual AI/User turns)
+CREATE TABLE messages (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE,
+  role TEXT NOT NULL, -- 'user' or 'assistant'
+  content TEXT NOT NULL,
+  tokens_used INT DEFAULT 0,
+  model_used TEXT,
+  cache_hit BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_messages_convo ON messages(conversation_id);
+
+-- 10. USER ACTIVITIES (For Streaks)
+CREATE TABLE user_activities (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  activity_date DATE DEFAULT CURRENT_DATE,
+  UNIQUE(user_id, activity_date)
+);
+
+-- 11. WAITLIST & RANK (Ported from waitlist-app for parity)
+CREATE TABLE IF NOT EXISTS waitlist (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  referral_code TEXT UNIQUE NOT NULL,
+  referred_by UUID REFERENCES waitlist(id),
+  referral_count INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE OR REPLACE VIEW waitlist_with_rank AS
+SELECT 
+  *,
+  ROW_NUMBER() OVER (ORDER BY created_at ASC) as current_rank
+FROM waitlist;
+
+-- 12. INITIAL CONFIG SEEDS
+INSERT INTO system_config (key, value) VALUES ('kill_switch', 'false') ON CONFLICT (key) DO NOTHING;
+INSERT INTO system_config (key, value) VALUES ('platform_revenue_total', '0') ON CONFLICT (key) DO NOTHING;
+INSERT INTO system_config (key, value) VALUES ('referral_discount_percentage', '10') ON CONFLICT (key) DO NOTHING;
+
+-- 13. ANALYTICS TABLES
+CREATE TABLE IF NOT EXISTS daily_analytics (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  date DATE UNIQUE NOT NULL,
+  total_cost DECIMAL(10,5) DEFAULT 0,
+  total_users_active INTEGER DEFAULT 0,
+  total_messages INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);

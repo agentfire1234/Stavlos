@@ -105,6 +105,10 @@ export class CacheSystem {
         }
     }
 
+    static async getConfig(key: string): Promise<string | null> {
+        return redis.get(`system:config:${key}`)
+    }
+
     static async getHits(tier: string): Promise<number> {
         // In a real app, you'd maintain a global counter
         // efficiently, not scan keys.

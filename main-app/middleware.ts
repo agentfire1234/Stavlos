@@ -8,7 +8,6 @@ export async function middleware(request: NextRequest) {
         },
     })
 
-    // 1. Refresh Session
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -32,26 +31,29 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    // 2. Protect Routes
-    const path = request.nextUrl.pathname
-
-    // Admin Routes (Abraham Only)
-    if (path.startsWith('/admin')) {
-        if (!user || user.email !== process.env.ADMIN_EMAIL) {
-            return NextResponse.redirect(new URL('/', request.url))
+    // 1. Protected Student Routes
+    if (request.nextUrl.pathname.startsWith('/dashboard') ||
+        request.nextUrl.pathname.startsWith('/chat') ||
+        request.nextUrl.pathname.startsWith('/library') ||
+        request.nextUrl.pathname.startsWith('/tools')) {
+        if (!user) {
+            return NextResponse.redirect(new URL('/auth/login', request.url))
         }
     }
 
-    // Student Routes (Protected)
-    // Assumes we put dashboard under /dashboard or (student) group
-    if (path.startsWith('/dashboard') || path.startsWith('/chat') || path.startsWith('/syllabus')) {
-        if (!user) {
-            return NextResponse.redirect(new URL('/login', request.url))
+    // 2. Admin Route Protection
+    if (request.nextUrl.pathname.startsWith('/admin')) {
+        const isAdmin = user?.email === 'Japonendeutch@gmail.com'
+        if (!isAdmin) {
+            return NextResponse.redirect(new URL('/dashboard', request.url))
         }
+    }
+
+    // 3. Auth Redirect (If logged in, don't show login/signup)
+    if (user && request.nextUrl.pathname.startsWith('/auth')) {
+        return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
     return response
@@ -64,8 +66,8 @@ export const config = {
          * - _next/static (static files)
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
-         * - public (public folder)
+         * - public files (manifest.json, sw.js, etc)
          */
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw).*)',
     ],
 }

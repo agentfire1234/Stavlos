@@ -1,203 +1,112 @@
 import { CostGovernor } from './cost-governor'
 import { CacheSystem } from './cache-system'
 import { RAGSystem } from './rag-system'
-import OpenAI from 'openai'
+import { AIClient } from './ai-client'
 
-// OpenRouter setup (uses OpenAI SDK)
-const openai = new OpenAI({
-    apiKey: process.env.OPENROUTER_API_KEY,
-    baseURL: "https://openrouter.ai/api/v1",
-    defaultHeaders: {
-        "HTTP-Referer": process.env.NEXT_PUBLIC_URL,
-        "X-Title": "Stavlos"
-    }
-})
-
-export interface AIResult {
+export interface OrchestratorResult {
     response: string
-    source: 'cache' | 'ai' | 'rag' | 'system'
-    model?: string
+    model: string
+    cacheHit: boolean
     cost: number
-    cached: boolean
     blocked?: boolean
+    message?: string
+    steps: string[]
+    sources?: any[]
 }
 
 export class AIOrchestrator {
+    static async handleQuery(
+        query: string,
+        userId: string,
+        userTier: 'free' | 'pro' = 'free',
+        taskType: string = 'general_chat'
+    ): Promise<OrchestratorResult> {
+        const steps: string[] = []
 
-    static async handleQuery(query: string, userId: string, userTier: 'free' | 'pro', taskType: string = 'general_chat'): Promise<AIResult> {
+        // 0. Global Kill Switch Check
+        const killSwitch = await CacheSystem.getConfig('kill_switch')
+        if (killSwitch === 'true') {
+            return {
+                response: 'System is currently undergoing essential maintenance. Please try again shortly.',
+                model: 'emergency-offline',
+                cacheHit: false,
+                cost: 0,
+                blocked: true,
+                message: 'SYSTEM_OFFLINE',
+                steps: ['Checking platform status...', 'Emergency maintenance detected.']
+            }
+        }
 
-        // STEP 1: Check cache FIRST (always)
+        // 1. Check Cache
+        steps.push("Searching platform knowledge...")
         const cached = await CacheSystem.get(query, userId)
-        if (cached) {
+        if (cached && cached.response) {
+            steps.push("Found in internal knowledge cache.")
             return {
                 response: cached.response,
-                source: 'cache',
+                model: 'cache-eternal',
+                cacheHit: true,
                 cost: 0,
-                cached: true
+                steps
             }
         }
 
-        // STEP 2: Check budget (smart degradation)
-        const permission = await CostGovernor.shouldProcess(userId, userTier, taskType)
-
-        if (!permission.allowed) {
-            // Logic for queuing could go here, for now return blocked message
+        // 2. Check Budget & Model Routing
+        steps.push("Checking resource availability...")
+        const allowed = await CostGovernor.shouldProcess(userId, userTier, taskType)
+        if (!allowed.allowed) {
             return {
-                response: permission.message || "Request blocked by system policy.",
-                source: 'system',
+                response: '',
+                model: allowed.model,
+                cacheHit: false,
                 cost: 0,
-                cached: false,
-                blocked: true
+                blocked: true,
+                message: allowed.message || 'Limit reached',
+                steps
+            }
+        }
+        steps.push(`Routing to ${allowed.model.includes('70b') ? 'High-Performance Engine' : 'Instant Engine'}...`)
+
+        // 3. RAG Context (if syllabus related)
+        let context = ''
+        let sources: any[] = []
+        if (taskType === 'syllabus_qa' || query.toLowerCase().includes('syllabus')) {
+            steps.push("Consulting your course syllabuses...")
+            const ragResult = await RAGSystem.querySyllabus(query, userId)
+            if (ragResult.found) {
+                context = ragResult.context || ''
+                sources = ragResult.ids || []
+                steps.push(`Found relevant course content in ${sources.length} matching sections.`)
+            } else {
+                steps.push("No direct course context found. Using global knowledge.")
             }
         }
 
-        // STEP 3: Handle syllabus queries with RAG
-        if (taskType === 'syllabus_qa') {
-            return await this.handleSyllabusQuery(query, userId, permission.model)
-        }
+        // 4. Execute AI
+        steps.push("Synthesizing response...")
+        const completion = await AIClient.chat(query, context, allowed.model, taskType)
+        const responseText = completion.choices[0].message.content || ''
 
-        // STEP 4: Call AI with appropriate model
-        const result = await this.callAI(query, permission.model, taskType)
-
-        // STEP 5: Cache the response
-        await CacheSystem.set(query, result.response, userId)
-
-        // STEP 6: Record cost
-        await CostGovernor.recordCost(
-            result.usage.prompt_tokens,
-            result.usage.completion_tokens,
-            permission.model
+        // 5. Record Cost & Usage
+        const cost = await CostGovernor.recordCost(
+            completion.usage?.prompt_tokens || 0,
+            completion.usage?.completion_tokens || 0,
+            allowed.model,
+            taskType
         )
 
-        return {
-            response: result.response,
-            source: 'ai',
-            model: permission.model,
-            cost: result.cost,
-            cached: false
+        // 6. Cache for future (if appropriate)
+        if (responseText.length > 50) {
+            await CacheSystem.set(query, responseText, userId)
         }
-    }
-
-    // RAG handler
-    static async handleSyllabusQuery(question: string, userId: string, model: string): Promise<AIResult> {
-        const ragResult = await RAGSystem.querySyllabus(question, userId)
-
-        if (!ragResult.found) {
-            // Fallback to general chat if not found in syllabus?
-            // For now, return the RAG message
-            return {
-                response: ragResult.message || "Information not found in syllabus.",
-                source: 'rag',
-                cost: 0.00001, // Minimal cost for embedding
-                cached: false
-            }
-        }
-
-        // Generate answer with context
-        const context = ragResult.context
-        const systemPrompt = `You are a helpful study assistant. Answer the question based ONLY on the provided syllabus context. If the answer is not in the context, say so.`
-        const prompt = `Context:\n${context}\n\nQuestion: ${question}`
-
-        const completion = await openai.chat.completions.create({
-            model: model,
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: prompt }
-            ],
-            max_tokens: 300,
-            temperature: 0.5
-        })
-
-        const responseText = completion.choices[0].message.content || "No response generated."
-
-        // Cache the result
-        await CacheSystem.set(question, responseText, userId)
-
-        // Record cost (embedding + generation)
-        // Approximate embedding cost + generation cost
-        const genCost = this.calculateCost(completion.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, model)
-        const totalCost = genCost + 0.00001
-
-        await CostGovernor.recordCost(
-            (completion.usage?.prompt_tokens || 0),
-            (completion.usage?.completion_tokens || 0),
-            model
-        )
 
         return {
             response: responseText,
-            source: 'rag',
-            model: model,
-            cost: totalCost,
-            cached: false
+            model: allowed.model,
+            cacheHit: false,
+            cost: cost,
+            steps,
+            sources: sources.length > 0 ? sources : undefined
         }
-    }
-
-    // OpenRouter API call
-    static async callAI(query: string, model: string, taskType: string) {
-        const systemPrompt = this.getSystemPrompt(taskType)
-        const maxTokens = this.getMaxTokens(taskType)
-
-        const completion = await openai.chat.completions.create({
-            model: model, // OpenRouter model name
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: query }
-            ],
-            max_tokens: maxTokens,
-            temperature: 0.7
-        })
-
-        return {
-            response: completion.choices[0].message.content || "No response.",
-            usage: completion.usage || { prompt_tokens: 0, completion_tokens: 0 },
-            cost: this.calculateCost(completion.usage || { prompt_tokens: 0, completion_tokens: 0 }, model)
-        }
-    }
-
-    // System prompts (compressed for cost savings)
-    static getSystemPrompt(taskType: string): string {
-        const prompts: Record<string, string> = {
-            'grammar_fix': 'Fix grammar. Be brief.',
-            'flashcard': 'Create Q&A flashcards from the text.',
-            'summary': 'Summarize efficiently. Key points only.',
-            'essay_outline': 'Create an essay outline using PEEL method.',
-            'math_solver': 'Solve step-by-step. Explain reasoning.',
-            'code_debug': 'Find the bug and explain the fix.',
-            'general_chat': 'You are Stavlos, an AI study partner. Help students learn. Be clear and encouraging.',
-            'syllabus_qa': 'Answer based on the syllabus context.'
-        }
-
-        return prompts[taskType] || prompts['general_chat']
-    }
-
-    // Token limits (control costs)
-    static getMaxTokens(taskType: string): number {
-        const limits: Record<string, number> = {
-            'grammar_fix': 150,
-            'flashcard': 300,
-            'summary': 250,
-            'essay_outline': 400,
-            'math_solver': 500,
-            'code_debug': 400,
-            'general_chat': 300
-        }
-
-        return limits[taskType] || 200
-    }
-
-    // Cost calculation (OpenRouter pricing)
-    static calculateCost(usage: { prompt_tokens: number, completion_tokens: number }, model: string): number {
-        const costPer1K: Record<string, number> = {
-            'openai/gpt-4o-mini': 0.00015,
-            'openai/gpt-4o': 0.005, // Blended input/output approx
-            'openai/gpt-4o-large': 0.015,
-            'anthropic/claude-3.5-sonnet': 0.003,
-            'google/gemini-flash-1.5': 0.000075
-        }
-
-        const total = usage.prompt_tokens + usage.completion_tokens
-        const price = costPer1K[model] || costPer1K['openai/gpt-4o-mini']
-        return (total / 1000) * price
     }
 }
