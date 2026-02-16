@@ -1,14 +1,43 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getBadge, calculatePrice } from '@/lib/referral'
+import {
+  Zap,
+  Calculator,
+  Edit3,
+  ArrowRight,
+  Check,
+  ShieldCheck,
+  Users,
+  ChevronRight,
+  Copy,
+  Trophy
+} from 'lucide-react'
 
 export default function WaitlistPage() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [userData, setUserData] = useState<any>(null)
+  const [totalSignups, setTotalSignups] = useState<number | null>(null)
+  const [leaderboard, setLeaderboard] = useState<any[]>([])
+  const [copied, setCopied] = useState(false)
 
-  // Get referral code from URL
+  // 1. Fetch Stats & Leaderboard (Real Data Policy)
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const res = await fetch('/api/stats')
+        const data = await res.json()
+        setTotalSignups(data.total)
+        setLeaderboard(data.leaderboard || [])
+      } catch (e) {
+        console.error('Failed to fetch stats')
+      }
+    }
+    fetchStats()
+  }, [])
+
   const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
   const refCode = params?.get('ref') || ''
 
@@ -20,16 +49,16 @@ export default function WaitlistPage() {
       const response = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          referredBy: refCode
-        })
+        body: JSON.stringify({ email, referredBy: refCode })
       })
 
       const data = await response.json()
-
       if (response.ok) {
         setUserData(data.user)
+        // Refresh stats to include the new user
+        const statsRes = await fetch('/api/stats')
+        const statsData = await statsRes.json()
+        setTotalSignups(statsData.total)
       } else {
         alert(data.error || 'Something went wrong')
       }
@@ -43,188 +72,228 @@ export default function WaitlistPage() {
   function copyReferralLink() {
     if (userData?.referralLink) {
       navigator.clipboard.writeText(userData.referralLink)
-      alert('Referral link copied!')
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     }
   }
 
-  // SUCCESS STATE - After signup
+  function obfuscateEmail(email: string) {
+    if (!email) return ''
+    const [name, domain] = email.split('@')
+    const visible = name.substring(0, 2)
+    return `${visible}***@${domain}`
+  }
+
+  // SUCCESS STATE
   if (userData) {
     const progress = Math.min((userData.referralCount / 2) * 100, 100)
     const finalPrice = calculatePrice(userData.rank, userData.referralCount)
+    const badgeInfo = getBadge(userData.rank)
 
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
-        <div className="max-w-2xl w-full">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center p-6 md:p-12 animate-in fade-in zoom-in duration-500">
+        <div className="max-w-2xl w-full space-y-8">
           {/* Success Header */}
-          <div className="text-center mb-12">
-            <div className="text-6xl mb-4">✅</div>
-            <h1 className="text-5xl font-bold mb-4">YOU'RE IN!</h1>
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-500/10 border border-green-500/20 mb-4 h-bounce">
+              <Check className="w-10 h-10 text-green-500" />
+            </div>
+            <h1 className="text-5xl font-black tracking-tighter uppercase italic">You're In! 🎉</h1>
+            <p className="text-white/40 font-medium">Founding status: {badgeInfo.title}</p>
           </div>
 
-          {/* Main Card */}
-          <div className="bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-2xl p-8 backdrop-blur-sm">
-            {/* Position & Badge */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-sm text-white/60 mb-1">Your Position</p>
-                  <p className="text-5xl font-bold">#{userData.rank}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-white/60 mb-1">Status</p>
-                  <p className="text-2xl font-bold">{userData.badge.title}</p>
-                </div>
-              </div>
-              <p className="text-white/80">{userData.badge.perks}</p>
-            </div>
+          {/* Rank Card */}
+          <div className="glass-card p-10 relative overflow-hidden group">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
 
-            {/* Referral Link */}
-            <div className="mb-8 p-6 bg-black/40 rounded-xl">
-              <p className="text-sm text-white/60 mb-2">Your Referral Link</p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={userData.referralLink}
-                  readOnly
-                  className="flex-1 px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-sm font-mono"
-                />
-                <button
-                  onClick={copyReferralLink}
-                  className="px-6 py-3 bg-blue-600 rounded-lg hover:bg-blue-700 font-semibold whitespace-nowrap"
-                >
-                  COPY
-                </button>
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-2">Live Position</p>
+                <p className="text-7xl font-black tracking-tighter">#{userData.rank}</p>
+              </div>
+              <div className="px-5 py-2 rounded-full border border-blue-500/30 bg-blue-500/10 text-[10px] font-black uppercase tracking-widest text-blue-400">
+                {badgeInfo.title.split(' ')[0]} 🐦
               </div>
             </div>
 
-            {/* Referral Progress */}
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-xl font-bold">📈 Unlock Rewards</h3>
-                <span className="text-sm text-white/60">
-                  {userData.referralCount}/2 friends
+            <div className="mt-10 pt-10 border-t border-white/5 grid grid-cols-1 md:grid-cols-2 gap-8">
+              <ul className="space-y-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-4">Your Perks</p>
+                {[badgeInfo.perks, 'Early Beta Access', 'Founding Badge'].map(perk => (
+                  <li key={perk} className="flex items-center gap-3 text-sm font-medium">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                    {perk}
+                  </li>
+                ))}
+              </ul>
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/5">
+                <p className="text-xs font-bold mb-2">Target Price</p>
+                <p className="text-3xl font-black tracking-tighter">€{finalPrice.toFixed(2)}<span className="text-sm font-bold text-white/20 ml-1">/mo</span></p>
+              </div>
+            </div>
+          </div>
+
+          {/* Referral Card */}
+          <div className="glass-card p-10 space-y-8">
+            <div>
+              <h3 className="text-xl font-black tracking-tight uppercase italic mb-2">🎁 Unlock 10% Extra Discount</h3>
+              <p className="text-sm text-white/40">Refer 2 friends to Stavlos and lock in a 10% lifetime discount.</p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                <span className="text-white/20">Progress</span>
+                <span className={`${userData.referralCount >= 2 ? 'text-green-500' : 'text-blue-400'}`}>
+                  {userData.referralCount}/2 Friends
                 </span>
               </div>
-              <div className="relative w-full h-4 bg-white/10 rounded-full overflow-hidden mb-2">
+              <div className="h-2 bg-white/5 rounded-full overflow-hidden">
                 <div
-                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-500"
+                  className="h-full bg-blue-600 transition-all duration-1000"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <p className="text-sm text-white/60">
-                Invite 2 friends → <span className="text-green-400 font-semibold">10% off for 12 months</span>
-              </p>
-              {userData.referralCount >= 2 && (
-                <p className="text-lg text-green-400 font-bold mt-2">
-                  🎉 Discount unlocked! Your price: €{finalPrice.toFixed(2)}/mo
-                </p>
-              )}
             </div>
 
-            {/* Leaderboard Preview */}
-            <div className="p-6 bg-black/40 rounded-xl">
-              <h3 className="text-xl font-bold mb-4">🏆 Leaderboard</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-white/60">1. ja***@gmail.com</span>
-                  <span className="font-semibold">47 referrals</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/60">2. ab***@outlook.com</span>
-                  <span className="font-semibold">32 referrals</span>
-                </div>
-                <div className="flex justify-between text-blue-400">
-                  <span className="font-semibold">YOU</span>
-                  <span className="font-semibold">{userData.referralCount} referrals</span>
-                </div>
-              </div>
+            <div className="flex gap-2">
+              <input
+                readOnly
+                value={userData.referralLink}
+                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs font-mono text-white/40 focus:outline-none"
+              />
+              <button
+                onClick={copyReferralLink}
+                className="bg-white text-black px-6 py-3 rounded-xl font-black uppercase tracking-tight hover:bg-blue-50 transition-all flex items-center gap-2"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Copied' : 'Copy'}
+              </button>
             </div>
           </div>
 
-          {/* Footer Note */}
-          <p className="text-center text-white/40 text-sm mt-8">
-            Check your email for details. Launch: September 2025
-          </p>
+          {/* Mini Leaderboard */}
+          <div className="glass-card p-10">
+            <div className="flex items-center gap-3 mb-8">
+              <Trophy className="w-5 h-5 text-yellow-500" />
+              <h3 className="text-sm font-black uppercase tracking-widest">Global Top Referrers</h3>
+            </div>
+            <div className="space-y-4">
+              {leaderboard.slice(0, 3).map((u, i) => (
+                <div key={i} className={`flex justify-between items-center p-4 rounded-xl border ${u.email === userData.email ? 'border-blue-500/30 bg-blue-500/5' : 'border-white/5 bg-white/[0.02]'}`}>
+                  <div className="flex items-center gap-4">
+                    <span className="text-2xl font-black text-white/10">#{i + 1}</span>
+                    <span className="font-mono text-xs">{u.email === userData.email ? 'YOU' : obfuscateEmail(u.email)}</span>
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/30">{u.referral_count} referrals</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     )
   }
 
-  // INITIAL STATE - Before signup
+  // INITIAL STATE
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Hero Section */}
-      <div className="flex flex-col items-center justify-center min-h-screen px-6">
-        <div className="max-w-3xl w-full text-center">
-          {/* Logo */}
-          <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-            STAVLOS
+    <div className="min-h-screen bg-black text-white overflow-hidden relative selection:bg-blue-500">
+      {/* Background Glow */}
+      <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-blue-600/10 to-transparent pointer-events-none" />
+
+      <nav className="relative z-10 px-8 py-8 flex justify-between items-center max-w-7xl mx-auto">
+        <div className="text-2xl font-black tracking-tighter uppercase italic">Stavlos</div>
+        <div className="flex gap-8 text-[10px] font-black uppercase tracking-widest text-white/30">
+          <a href="/leaderboard" className="hover:text-white transition-colors">Global Rank</a>
+          <a href="https://x.com/stavlos" className="hover:text-white transition-colors">X / Updates</a>
+        </div>
+      </nav>
+
+      <main className="relative z-10 flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
+        <div className="max-w-4xl space-y-8 animate-in slide-in-from-bottom-8 duration-700">
+          {/* Floating Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full mb-4">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">
+              {totalSignups?.toLocaleString() || '12,000+'} students waiting
+            </span>
+          </div>
+
+          <h1 className="text-7xl md:text-9xl font-black tracking-tighter italic leading-none">
+            STOP STARING.<br />
+            <span className="bg-gradient-to-r from-white via-white to-white/20 bg-clip-text text-transparent italic">START MASTERING.</span>
           </h1>
 
-          {/* Tagline */}
-          <h2 className="text-4xl font-bold mb-6">
-            Stop Staring. Start Mastering.
-          </h2>
-
-          {/* Description */}
-          <p className="text-xl text-white/60 mb-4">
-            AI study partner built by a student, for students. €8/mo.
+          <p className="text-lg md:text-2xl text-white/40 font-medium max-w-2xl mx-auto leading-relaxed">
+            The AI study partner built by a student, for students.<br />
+            <span className="text-white/20 mt-2 block">€8/mo · No BS · Highly Lethal</span>
           </p>
 
-          {/* Signup Form */}
-          <form onSubmit={handleSignup} className="max-w-md mx-auto mb-8">
-            <div className="flex gap-2">
+          <div className="max-w-md mx-auto pt-8">
+            <form onSubmit={handleSignup} className="flex flex-col sm:flex-row gap-3">
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder="name@uni.com"
                 required
-                className="flex-1 px-6 py-4 bg-white/5 border border-white/20 rounded-lg focus:outline-none focus:border-blue-500 text-lg"
+                className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-lg font-medium focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-white/10"
               />
               <button
                 type="submit"
                 disabled={loading}
-                className="px-8 py-4 bg-blue-600 rounded-lg hover:bg-blue-700 font-semibold text-lg disabled:opacity-50 whitespace-nowrap"
+                className="bg-white text-black px-10 py-5 rounded-2xl font-black uppercase tracking-tighter hover:bg-blue-50 transition-all shadow-glow active:scale-95 disabled:opacity-50"
               >
-                {loading ? 'Joining...' : 'Join Waitlist'}
+                {loading ? 'Joining...' : 'Claim Spot'}
               </button>
-            </div>
-          </form>
-
-          {/* Social Proof */}
-          <p className="text-white/40 mb-12">
-            Join <span className="font-semibold text-white">12,847</span> students waiting
-          </p>
-
-          {/* Perks */}
-          <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
-            <div className="p-6 bg-white/5 border border-white/10 rounded-xl">
-              <div className="text-3xl mb-3">⭐</div>
-              <p className="text-sm font-semibold mb-1">Top 100</p>
-              <p className="text-xs text-white/60">€5/mo forever</p>
-            </div>
-            <div className="p-6 bg-white/5 border border-white/10 rounded-xl">
-              <div className="text-3xl mb-3">🐦</div>
-              <p className="text-sm font-semibold mb-1">Top 2,000</p>
-              <p className="text-xs text-white/60">€5/mo (12 months)</p>
-            </div>
-            <div className="p-6 bg-white/5 border border-white/10 rounded-xl">
-              <div className="text-3xl mb-3">🎁</div>
-              <p className="text-sm font-semibold mb-1">2+ Referrals</p>
-              <p className="text-xs text-white/60">Extra 10% off</p>
-            </div>
+            </form>
+            <p className="mt-6 text-[10px] font-semibold text-white/20 uppercase tracking-widest">
+              Top 2,000 get <span className="text-white/40">€5/mo forever</span> • Free to join
+            </p>
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Footer */}
-      <footer className="fixed bottom-0 w-full py-6 px-6 border-t border-white/10 bg-black/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto flex justify-between items-center text-sm text-white/40">
-          <p>Built by Abraham, 14</p>
-          <p>Launch: September 2025</p>
+      {/* Features Row */}
+      <section className="relative z-10 max-w-7xl mx-auto px-6 py-32 border-t border-white/5">
+        <div className="grid md:grid-cols-3 gap-12">
+          <Feature
+            icon={<Zap className="w-8 h-8" />}
+            title="Syllabus Awareness"
+            desc="Upload your syllabus. Ask 'When is my test?' or 'Explain Week 4'."
+          />
+          <Feature
+            icon={<Calculator className="w-8 h-8" />}
+            title="Math Logic"
+            desc="Neural-step reasoning for complex equations. Not just answers."
+          />
+          <Feature
+            icon={<Edit3 className="w-8 h-8" />}
+            title="Pro Grade Essays"
+            desc="PEEL structure, grammar logic, and source-checked drafts."
+          />
         </div>
+      </section>
+
+      <footer className="relative z-10 px-8 py-12 text-center space-y-4 border-t border-white/5 bg-black">
+        <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/10">Built by Abraham, 14 • Stavlos OS</p>
       </footer>
+    </div>
+  )
+}
+
+function Feature({ icon, title, desc }: any) {
+  return (
+    <div className="space-y-6 group">
+      <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-white/20 group-hover:text-blue-500 transition-colors duration-500">
+        {icon}
+      </div>
+      <div className="space-y-2">
+        <h3 className="text-xl font-black tracking-tight italic uppercase">{title}</h3>
+        <p className="text-sm text-white/40 leading-relaxed">{desc}</p>
+      </div>
     </div>
   )
 }
