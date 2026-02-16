@@ -9,6 +9,8 @@ interface WelcomeEmailParams {
     referralLink: string
 }
 
+const FROM_EMAIL = process.env.NEXT_PUBLIC_EMAIL_SENDER || 'Abraham at Stavlos <abraham@stavlos.com>'
+
 export async function sendWelcomeEmail({ to, rank, referralLink }: WelcomeEmailParams) {
     const badge = getBadge(rank)
 
@@ -36,7 +38,7 @@ P.S. Top 2,000 get €5/mo instead of €8/mo. You're ${rank <= 2000 ? 'IN! 🎉
 
     try {
         await resend.emails.send({
-            from: 'Abraham at Stavlos <abraham@stavlos.com>',
+            from: FROM_EMAIL,
             to,
             subject,
             text
@@ -110,7 +112,7 @@ See you at launch.
 
     try {
         await resend.emails.send({
-            from: 'Abraham at Stavlos <abraham@stavlos.com>',
+            from: FROM_EMAIL,
             to,
             subject,
             text
