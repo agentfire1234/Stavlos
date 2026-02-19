@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 
-export default function SignupPage() {
+export default function LoginPage() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
@@ -17,24 +17,21 @@ export default function SignupPage() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
 
-    async function handleSignup(e: React.FormEvent) {
+    async function handleLogin(e: React.FormEvent) {
         e.preventDefault()
         setLoading(true)
         setMessage('')
 
         try {
-            const { error } = await supabase.auth.signUp({
+            const { error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
-                options: {
-                    emailRedirectTo: `${window.location.origin}/auth/callback`,
-                },
             })
 
             if (error) throw error
 
-            // Redirect to verify page
-            router.push(`/auth/verify?email=${encodeURIComponent(email)}`)
+            // Redirect to dashboard
+            router.push('/dashboard')
         } catch (error: any) {
             setMessage(error.message)
         } finally {
@@ -49,11 +46,11 @@ export default function SignupPage() {
                     <Link href="/" className="text-3xl font-black tracking-tighter hover:opacity-80 transition">
                         STAVLOS
                     </Link>
-                    <h2 className="text-xl font-bold mt-6">Create Account</h2>
-                    <p className="text-white/40 text-sm mt-2">Join students stopping staring and starting mastering.</p>
+                    <h2 className="text-xl font-bold mt-6">Welcome Back</h2>
+                    <p className="text-white/40 text-sm mt-2">Sign in to continue your journey.</p>
                 </div>
 
-                <form onSubmit={handleSignup} className="space-y-4">
+                <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-1">
                         <label className="text-xs font-bold text-white/60 uppercase tracking-widest ml-1">Email</label>
                         <input
@@ -67,14 +64,18 @@ export default function SignupPage() {
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-bold text-white/60 uppercase tracking-widest ml-1">Password</label>
+                        <div className="flex justify-between items-center ml-1">
+                            <label className="text-xs font-bold text-white/60 uppercase tracking-widest">Password</label>
+                            <Link href="/auth/reset-password" title="Coming soon" className="text-[10px] text-blue-500 hover:underline">
+                                Forgot password?
+                            </Link>
+                        </div>
                         <input
                             type="password"
                             placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            minLength={8}
                             className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:border-blue-500 focus:outline-none transition-all placeholder:text-white/20"
                         />
                     </div>
@@ -84,7 +85,7 @@ export default function SignupPage() {
                         disabled={loading}
                         className="w-full py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold transition-all disabled:opacity-50 active:scale-[0.98] shadow-lg shadow-blue-600/20"
                     >
-                        {loading ? 'Creating...' : 'Create Account'}
+                        {loading ? 'Signing in...' : 'Sign In'}
                     </button>
 
                     {message && (
@@ -96,9 +97,9 @@ export default function SignupPage() {
 
                 <div className="mt-10 pt-6 border-t border-white/5 text-center">
                     <p className="text-white/40 text-sm">
-                        Already have an account?{' '}
-                        <Link href="/auth/login" className="text-blue-500 hover:underline font-semibold">
-                            Sign in
+                        Don't have an account?{' '}
+                        <Link href="/signup" className="text-blue-500 hover:underline font-semibold">
+                            Sign up
                         </Link>
                     </p>
                 </div>

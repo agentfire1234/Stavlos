@@ -101,8 +101,8 @@ export default function Home() {
             <p className="text-white/20 text-xs font-bold uppercase tracking-widest">Master Your Studies. Level Up Your GPA.</p>
           </div>
           <div className="flex gap-12 text-[10px] font-black uppercase tracking-widest text-white/40">
-            <Link href="/privacy" className="hover:text-blue-500 transition">Privacy</Link>
-            <Link href="/terms" className="hover:text-blue-500 transition">Terms</Link>
+            <Link href="/legal/privacy" className="hover:text-blue-500 transition">Privacy</Link>
+            <Link href="/legal/terms" className="hover:text-blue-500 transition">Terms</Link>
             <a href="mailto:Japonendeutch@gmail.com" className="hover:text-blue-500 transition">Contact</a>
           </div>
         </div>

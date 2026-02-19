@@ -16,7 +16,7 @@ export async function middleware(request: NextRequest) {
                 getAll() {
                     return request.cookies.getAll()
                 },
-                setAll(cookiesToSet) {
+                setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
                     cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
                     response = NextResponse.next({
                         request: {
@@ -39,7 +39,7 @@ export async function middleware(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/library') ||
         request.nextUrl.pathname.startsWith('/tools')) {
         if (!user) {
-            return NextResponse.redirect(new URL('/auth/login', request.url))
+            return NextResponse.redirect(new URL('/login', request.url))
         }
     }
 
@@ -52,7 +52,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // 3. Auth Redirect (If logged in, don't show login/signup)
-    if (user && request.nextUrl.pathname.startsWith('/auth')) {
+    if (user && (request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup'))) {
         return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
