@@ -1,0 +1,9 @@
+Add inline SVG logo and integrate top-left across pages
+
+Main app:
+- New reusable Logo component
+- Added to Home nav, TopNav, Sidebar, Admin header
+
+Waitlist app:
+- New Logo component
+- Added to nav
