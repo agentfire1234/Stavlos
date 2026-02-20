@@ -4,14 +4,20 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 // BUG 002 FIX: Added full OpenGraph metadata so the link preview looks great
 // when shared on X, Discord, WhatsApp, etc.
+// Helper to ensure URL has a protocol
+const getBaseUrl = () => {
+  const url = process.env.NEXT_PUBLIC_URL || 'https://waitlist.stavlos.com';
+  return url.startsWith('http') ? url : `https://${url}`;
+};
+
 export const metadata: Metadata = {
   title: "STAVLOS — AI Study Partner for Students",
   description: "Upload your syllabus. Get an AI that knows exactly what's on your exam. Built by a student, for students. €8/mo. Join 12,000+ on the waitlist.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_URL || 'https://waitlist.stavlos.com'),
+  metadataBase: new URL(getBaseUrl()),
   openGraph: {
     title: "STAVLOS — AI Study Partner for Students",
     description: "Upload your syllabus. Ask 'What's on my exam?' Get perfect answers. Join 12,000+ students on the waitlist.",
-    url: process.env.NEXT_PUBLIC_URL || 'https://waitlist.stavlos.com',
+    url: getBaseUrl(),
     siteName: "Stavlos",
     images: [
       {
