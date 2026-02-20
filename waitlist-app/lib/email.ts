@@ -24,7 +24,7 @@ Welcome to Stavlos. You're officially on the waitlist. Thanks for joining and he
 Your current rank: #${rank}
 Your status: ${badge.title}
 
-🎁 Want 10% off for 12 months?
+🎁 Want 10% off forever?
 Get 2 friends to join using your link:
 ${referralLink}
 
@@ -70,12 +70,11 @@ What this means:
 ✅ Launch credits (€20 value)
 ✅ Early feature access
 
-Plus, you're in the top 2,000 - you get Pro for €5/mo.
 
 Want 10% off too? Share your link:
 ${referralLink}
 
-Thank you for believing in me.
+Thank you for believing and supporting in me.
 — Abraham`
     } else if (rank <= 1000) {
         subject = '🐦 EARLY BIRD Status Secured'

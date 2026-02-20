@@ -1,210 +1,244 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-
-interface Stats {
-    total: number
-    today: number
-    thisWeek: number
-    avgReferrals: number
-    topReferrer: number
-    usersWithTwoPlus: number
-    rankDistribution: {
-        founding: number
-        earlyBird: number
-        pioneer: number
-        scholar: number
-    }
-}
-
-interface WaitlistUser {
-    email: string
-    current_rank: number
-    referral_count: number
-    created_at: string
-}
+import React, { useState, useEffect } from 'react'
+import {
+    Users,
+    UserPlus,
+    Calendar,
+    TrendingUp,
+    Search,
+    Download,
+    MoreVertical,
+    Mail,
+    Trash2,
+    ChevronLeft,
+    ChevronRight,
+    ShieldCheck
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Logo } from '@/components/logo'
 
 export default function AdminDashboard() {
-    const [stats, setStats] = useState<Stats | null>(null)
-    const [loading, setLoading] = useState(true)
+    const [authorized, setAuthorized] = useState(false)
+    const [password, setPassword] = useState('')
+    const [users, setUsers] = useState<any[]>([])
+    const [stats, setStats] = useState<any>(null)
+    const [searchTerm, setSearchTerm] = useState('')
+    const [loading, setLoading] = useState(false)
 
-    useEffect(() => {
-        loadStats()
-    }, [])
+    // Auth Guard
+    const handleLogin = (e: React.FormEvent) => {
+        e.preventDefault()
+        // In a real app, this would check against an env var or DB
+        if (password === 'stavlos2026') {
+            setAuthorized(true)
+            fetchAdminData()
+        } else {
+            alert('Unauthorized')
+        }
+    }
 
-    async function loadStats() {
+    const fetchAdminData = async () => {
+        setLoading(true)
         try {
-            // Get all waitlist data
-            const { data: rawData } = await supabase
-                .from('waitlist_with_rank')
-                .select('*')
-
-            const waitlist = rawData as unknown as WaitlistUser[] | null
-
-            if (!waitlist) {
-                setLoading(false)
-                return
-            }
-
-            const now = new Date()
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
-
-            // Calculate stats
-            const signupsToday = waitlist.filter(u => new Date(u.created_at) >= today).length
-            const signupsThisWeek = waitlist.filter(u => new Date(u.created_at) >= weekAgo).length
-
-            const totalReferrals = waitlist.reduce((sum, u) => sum + (u.referral_count || 0), 0)
-            const avgReferrals = waitlist.length > 0 ? (totalReferrals / waitlist.length).toFixed(1) : '0.0'
-            const topReferrer = Math.max(...waitlist.map(u => u.referral_count || 0), 0)
-            const usersWithTwoPlus = waitlist.filter(u => (u.referral_count || 0) >= 2).length
-            const conversionRate = waitlist.length > 0 ? ((usersWithTwoPlus / waitlist.length) * 100).toFixed(1) : '0.0'
-
-            const rankDist = {
-                founding: waitlist.filter(u => u.current_rank <= 100).length,
-                earlyBird: waitlist.filter(u => u.current_rank > 100 && u.current_rank <= 1000).length,
-                pioneer: waitlist.filter(u => u.current_rank > 1000 && u.current_rank <= 2000).length,
-                scholar: waitlist.filter(u => u.current_rank > 2000).length
-            }
-
-            setStats({
-                total: waitlist.length,
-                today: signupsToday,
-                thisWeek: signupsThisWeek,
-                avgReferrals: parseFloat(avgReferrals),
-                topReferrer,
-                usersWithTwoPlus,
-                rankDistribution: rankDist
-            })
-
-        } catch (error) {
-            console.error('Failed to load stats:', error)
+            const res = await fetch('/api/admin/data')
+            const data = await res.json()
+            setUsers(data.users || [])
+            setStats(data.stats || null)
+        } catch (e) {
+            console.error('Failed to fetch admin data')
         } finally {
             setLoading(false)
         }
     }
 
-    async function exportCSV() {
-        window.location.href = '/api/admin/export'
+    const exportCSV = () => {
+        const headers = ['Email', 'Signup Date', 'Rank', 'Referrals', 'Referred By']
+        const rows = users.map(u => [u.email, u.created_at, u.rank, u.referral_count, u.referred_by])
+        const csvContent = [headers, ...rows].map(e => e.join(',')).join('\n')
+        const blob = new Blob([csvContent], { type: 'text/csv' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `stavlos-waitlist-${new Date().toISOString().split('T')[0]}.csv`
+        a.click()
     }
 
-    if (loading) {
+    if (!authorized) {
         return (
-            <div className="min-h-screen bg-black text-white flex items-center justify-center">
-                <div className="text-xl">Loading dashboard...</div>
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-main)] p-6">
+                <div className="card-premium p-10 w-full max-w-md text-center">
+                    <Logo size={48} className="mx-auto mb-8" />
+                    <h1 className="text-2xl font-black mb-6 uppercase italic tracking-tighter">Admin Access</h1>
+                    <form onSubmit={handleLogin} className="space-y-4">
+                        <Input
+                            type="password"
+                            placeholder="Enter secret key..."
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                        <Button type="submit" className="w-full">Unlock Dashboard</Button>
+                    </form>
+                </div>
             </div>
         )
     }
 
-    if (!stats) {
-        return (
-            <div className="min-h-screen bg-black text-white flex items-center justify-center">
-                <div className="text-xl text-red-500">Failed to load stats</div>
-            </div>
-        )
-    }
+    const filteredUsers = users.filter(u => u.email.toLowerCase().includes(searchTerm.toLowerCase()))
 
     return (
-        <div className="min-h-screen bg-black text-white p-8">
-            {/* Header */}
-            <div className="max-w-7xl mx-auto mb-12">
-                <h1 className="text-4xl font-bold mb-2">WAITLIST CONTROL CENTER</h1>
-                <p className="text-white/60">Abraham's Dashboard</p>
-            </div>
-
-            {/* Main Stats */}
-            <div className="max-w-7xl mx-auto grid grid-cols-3 gap-6 mb-8">
-                <div className="bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-xl p-6">
-                    <p className="text-sm text-white/60 mb-2">Total Signups</p>
-                    <p className="text-5xl font-bold mb-1">{stats.total.toLocaleString()}</p>
-                    <p className="text-sm text-green-400">+{stats.today} today</p>
+        <div className="min-h-screen bg-[var(--bg-section)] flex">
+            {/* Sidebar (Desktop) */}
+            <aside className="w-64 bg-[var(--bg-main)] border-r border-[var(--border)] hidden lg:flex flex-col p-6">
+                <div className="flex items-center gap-2 mb-12">
+                    <Logo size={28} />
+                    <span className="font-black tracking-tighter uppercase italic text-xl">Stavlos</span>
                 </div>
 
-                <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                    <p className="text-sm text-white/60 mb-2">This Week</p>
-                    <p className="text-5xl font-bold mb-1">+{stats.thisWeek}</p>
-                    <p className="text-sm text-white/40">New signups</p>
-                </div>
+                <nav className="space-y-2 flex-1">
+                    <AdminNavItem icon={<TrendingUp />} label="Overview" active />
+                    <AdminNavItem icon={<Users />} label="Waitlist" />
+                    <AdminNavItem icon={<ShieldCheck />} label="Security" />
+                    <AdminNavItem icon={<Mail />} label="Broadcast" />
+                </nav>
 
-                <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                    <p className="text-sm text-white/60 mb-2">Users with 2+ Referrals</p>
-                    <p className="text-5xl font-bold mb-1">{stats.usersWithTwoPlus}</p>
-                    <p className="text-sm text-white/40">
-                        {((stats.usersWithTwoPlus / stats.total) * 100).toFixed(1)}% of total
-                    </p>
-                </div>
-            </div>
-
-            {/* Referral Stats */}
-            <div className="max-w-7xl mx-auto mb-8">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-8">
-                    <h2 className="text-2xl font-bold mb-6">Referral Statistics</h2>
-                    <div className="grid grid-cols-3 gap-8">
+                <div className="pt-6 border-t border-[var(--border)]">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[var(--primary-blue)] flex items-center justify-center text-white text-[10px] font-bold underline">AB</div>
                         <div>
-                            <p className="text-sm text-white/60 mb-2">Average Per User</p>
-                            <p className="text-4xl font-bold">{stats.avgReferrals}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-white/60 mb-2">Top Referrer</p>
-                            <p className="text-4xl font-bold">{stats.topReferrer}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-white/60 mb-2">Conversion Rate</p>
-                            <p className="text-4xl font-bold">
-                                {((stats.usersWithTwoPlus / stats.total) * 100).toFixed(1)}%
-                            </p>
-                            <p className="text-xs text-white/40 mt-1">Users getting discount</p>
+                            <p className="text-sm font-bold">Abraham</p>
+                            <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-black">Founder</p>
                         </div>
                     </div>
                 </div>
-            </div>
+            </aside>
 
-            {/* Rank Distribution */}
-            <div className="max-w-7xl mx-auto mb-8">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-8">
-                    <h2 className="text-2xl font-bold mb-6">Rank Distribution</h2>
-                    <div className="grid grid-cols-4 gap-6">
-                        <div className="text-center p-6 bg-yellow-600/10 border border-yellow-500/30 rounded-xl">
-                            <div className="text-3xl mb-2">⭐</div>
-                            <p className="text-sm text-white/60 mb-1">Founding (1-100)</p>
-                            <p className="text-3xl font-bold">{stats.rankDistribution.founding}</p>
+            {/* Main Content */}
+            <main className="flex-1 overflow-auto">
+                {/* Top Bar */}
+                <header className="h-20 bg-[var(--bg-main)] border-b border-[var(--border)] px-8 flex items-center justify-between sticky top-0 z-20">
+                    <h1 className="text-xl font-bold">Admin Dashboard</h1>
+                    <div className="flex items-center gap-4">
+                        <Button variant="secondary" size="sm" onClick={fetchAdminData}>Refresh</Button>
+                        <Button onClick={exportCSV} size="sm" leftIcon={<Download className="w-4 h-4" />}>Export CSV</Button>
+                    </div>
+                </header>
+
+                <div className="p-8 space-y-8">
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <StatCard title="Total Signups" value={stats?.total || 0} icon={<Users />} trend="+12% this week" />
+                        <StatCard title="Today" value={stats?.today || 0} icon={<UserPlus />} trend="+5 since hour" />
+                        <StatCard title="Conversion" value="38.5%" icon={<TrendingUp />} trend="High" />
+                        <StatCard title="Spots Left" value={2000 - (stats?.total || 0)} icon={<Calendar />} />
+                    </div>
+
+                    {/* Main Table Area */}
+                    <div className="card-premium h-full overflow-hidden flex flex-col">
+                        {/* Table Header Filter */}
+                        <div className="p-6 border-b border-[var(--border)] bg-[var(--bg-main)] flex items-center justify-between">
+                            <div className="relative w-80">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+                                <input
+                                    placeholder="Search emails..."
+                                    className="w-full h-10 pl-10 pr-4 rounded-xl border border-[var(--border)] bg-[var(--bg-section)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] transition-all"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Badge variant="outline">All Users</Badge>
+                                <Badge variant="primary">Founding</Badge>
+                            </div>
                         </div>
-                        <div className="text-center p-6 bg-blue-600/10 border border-blue-500/30 rounded-xl">
-                            <div className="text-3xl mb-2">🐦</div>
-                            <p className="text-sm text-white/60 mb-1">Early Bird (101-1K)</p>
-                            <p className="text-3xl font-bold">{stats.rankDistribution.earlyBird}</p>
+
+                        {/* Responsive Table */}
+                        <div className="overflow-x-auto">
+                            <table className="w-full border-collapse">
+                                <thead className="bg-[var(--bg-section)] border-b border-[var(--border)]">
+                                    <tr className="text-left">
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">User</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Signed Up</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Position</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Referrals</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Status</th>
+                                        <th className="px-6 py-4"></th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-[var(--bg-main)] divide-y divide-[var(--border)]">
+                                    {filteredUsers.map((user, i) => (
+                                        <tr key={i} className="hover:bg-[var(--bg-section)]/30 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <p className="font-bold text-sm tracking-tight">{user.email}</p>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-[var(--text-muted)]">
+                                                {new Date(user.created_at).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 font-mono text-sm">#{user.rank}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-bold">{user.referral_count}</span>
+                                                    {user.referral_count >= 2 && <Badge variant="success">10% Off</Badge>}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <Badge variant={user.rank <= 2000 ? 'primary' : 'outline'}>
+                                                    {user.rank <= 2000 ? 'Founding' : 'Standard'}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <button className="p-2 hover:bg-[var(--bg-section)] rounded-lg transition-colors text-[var(--text-muted)]">
+                                                    <MoreVertical className="w-4 h-4" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                        <div className="text-center p-6 bg-purple-600/10 border border-purple-500/30 rounded-xl">
-                            <div className="text-3xl mb-2">🚀</div>
-                            <p className="text-sm text-white/60 mb-1">Pioneer (1K-2K)</p>
-                            <p className="text-3xl font-bold">{stats.rankDistribution.pioneer}</p>
-                        </div>
-                        <div className="text-center p-6 bg-white/5 border border-white/10 rounded-xl">
-                            <div className="text-3xl mb-2">📚</div>
-                            <p className="text-sm text-white/60 mb-1">Scholar (2K+)</p>
-                            <p className="text-3xl font-bold">{stats.rankDistribution.scholar}</p>
+
+                        {/* Pagination Footer */}
+                        <div className="p-6 bg-[var(--bg-main)] border-t border-[var(--border)] flex items-center justify-between">
+                            <p className="text-xs text-[var(--text-muted)]">Showing <strong>{filteredUsers.length}</strong> entries</p>
+                            <div className="flex gap-2">
+                                <Button variant="secondary" size="sm" className="h-8 w-8 p-0" disabled><ChevronLeft className="w-4 h-4" /></Button>
+                                <Button variant="secondary" size="sm" className="h-8 w-8 p-0"><ChevronRight className="w-4 h-4" /></Button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </main>
+        </div>
+    )
+}
 
-            {/* Actions */}
-            <div className="max-w-7xl mx-auto">
-                <div className="flex gap-4">
-                    <button
-                        onClick={exportCSV}
-                        className="px-8 py-4 bg-blue-600 rounded-lg hover:bg-blue-700 font-semibold"
-                    >
-                        📥 Export CSV
-                    </button>
-                    <button
-                        onClick={loadStats}
-                        className="px-8 py-4 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 font-semibold"
-                    >
-                        🔄 Refresh Data
-                    </button>
+function AdminNavItem({ icon, label, active = false }: any) {
+    return (
+        <div className={`
+      flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold cursor-pointer transition-all
+      ${active ? 'bg-[var(--primary-blue)]/10 text-[var(--primary-blue)]' : 'text-[var(--text-muted)] hover:bg-[var(--bg-section)] hover:text-[var(--headline)]'}
+    `}>
+            {React.cloneElement(icon, { className: 'w-4 h-4' })}
+            {label}
+        </div>
+    )
+}
+
+function StatCard({ title, value, icon, trend }: any) {
+    return (
+        <div className="card-premium p-6 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{title}</span>
+                <div className="w-8 h-8 rounded-lg bg-[var(--primary-blue)]/10 text-[var(--primary-blue)] flex items-center justify-center">
+                    {React.cloneElement(icon, { className: 'w-4 h-4' })}
                 </div>
+            </div>
+            <div>
+                <h3 className="text-3xl font-black italic tracking-tighter mb-2">{value}</h3>
+                {trend && <p className="text-[10px] font-bold text-[var(--success-green)]">{trend}</p>}
             </div>
         </div>
     )

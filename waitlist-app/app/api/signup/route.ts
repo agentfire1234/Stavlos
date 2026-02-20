@@ -31,10 +31,30 @@ export async function POST(request: Request) {
             .single()
 
         if (existing) {
-            return NextResponse.json(
-                { error: 'Email already registered' },
-                { status: 409 }
-            )
+            // BUG 011: Instead of 409, fetch and return existing user for redirection
+            const { data: rankedUser } = await supabase
+                .from('waitlist_with_rank')
+                .select('*')
+                .eq('id', existing.id)
+                .single()
+
+            const rank = rankedUser?.current_rank || 0
+            const badge = getBadge(rank)
+            const referralLink = `${process.env.NEXT_PUBLIC_URL}?ref=${rankedUser?.referral_code}`
+
+            return NextResponse.json({
+                success: true,
+                isExisting: true,
+                user: {
+                    id: existing.id,
+                    email: rankedUser?.email,
+                    rank,
+                    badge,
+                    referralCode: rankedUser?.referral_code,
+                    referralLink,
+                    referralCount: rankedUser?.referral_count || 0
+                }
+            })
         }
 
         // Find referrer if referral code provided
