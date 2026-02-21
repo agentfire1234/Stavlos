@@ -23,6 +23,7 @@ import { supabase } from '@/lib/supabase'
 
 export default function AdminDashboard() {
     const [authorized, setAuthorized] = useState(false)
+    const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [users, setUsers] = useState<any[]>([])
     const [stats, setStats] = useState<any>(null)
@@ -37,7 +38,7 @@ export default function AdminDashboard() {
             const res = await fetch('/api/admin/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password })
+                body: JSON.stringify({ email, password })
             })
 
             if (res.ok) {
@@ -107,13 +108,20 @@ export default function AdminDashboard() {
                     <h1 className="text-2xl font-black mb-6 uppercase italic tracking-tighter">Admin Access</h1>
                     <form onSubmit={handleLogin} className="space-y-4">
                         <Input
+                            type="email"
+                            placeholder="Admin Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                        <Input
                             type="password"
-                            placeholder="Enter secret key..."
+                            placeholder="Secret Key"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
-                        <Button type="submit" className="w-full">Unlock Dashboard</Button>
+                        <Button type="submit" className="w-full" isLoading={loading}>Unlock Dashboard</Button>
                     </form>
                 </div>
             </div>

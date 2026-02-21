@@ -57,7 +57,7 @@ export function Hero({ spotsLeft, studentsJoined, onSignup }: HeroProps) {
                             <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
                             <input
                                 type="email"
-                                placeholder="university-email@edu.com"
+                                placeholder="name@gmail.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full h-16 pl-14 pr-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-main)] text-lg placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] transition-all"
