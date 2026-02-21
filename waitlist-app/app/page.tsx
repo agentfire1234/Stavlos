@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Hero } from '@/components/hero'
 import { ProblemSection } from '@/components/problem-section'
+import { supabase } from '@/lib/supabase'
 import { SolutionSection } from '@/components/solution-section'
 import { ComparisonSection } from '@/components/comparison-section'
 import { WhatIncludedSection } from '@/components/what-included-section'
@@ -34,6 +35,23 @@ export default function WaitlistPage() {
       }
     }
     fetchStats()
+
+    // 1b. REALTIME: Listen for new signups live
+    const channel = supabase
+      .channel('realtime_signups')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'waitlist' },
+        () => {
+          // Increment locally for instant "wow" factor
+          setTotalSignups(prev => (prev === null ? 1 : prev + 1))
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   // 2. Extract Referral Code

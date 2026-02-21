@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Logo } from '@/components/logo'
+import { supabase } from '@/lib/supabase'
 
 export default function AdminDashboard() {
     const [authorized, setAuthorized] = useState(false)
@@ -52,6 +53,25 @@ export default function AdminDashboard() {
             setLoading(false)
         }
     }
+
+    useEffect(() => {
+        if (!authorized) return
+
+        const channel = supabase
+            .channel('admin_sync')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'waitlist' },
+                () => {
+                    fetchAdminData()
+                }
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [authorized])
 
     const fetchAdminData = async () => {
         setLoading(true)
