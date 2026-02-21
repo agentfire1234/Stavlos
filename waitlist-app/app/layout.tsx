@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 // when shared on X, Discord, WhatsApp, etc.
 // Helper to ensure URL has a protocol
 const getBaseUrl = () => {
-  const url = process.env.NEXT_PUBLIC_URL || 'https://waitlist.stavlos.com';
+  const url = process.env.NEXT_PUBLIC_URL || 'https://waitlist-app-the-stavlos.vercel.app';
   return url.startsWith('http') ? url : `https://${url}`;
 };
 
