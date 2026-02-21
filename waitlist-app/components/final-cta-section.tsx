@@ -67,16 +67,7 @@ export function FinalCTASection({ studentsJoined, onSignup }: FinalCTAProps) {
                         <div className="flex items-center gap-2">✨ Early access (1 week before)</div>
                     </div>
 
-                    <div className="card-premium p-8 md:p-10 border-[var(--primary-blue)]/30 bg-[var(--primary-blue)]/[0.02]">
-                        <h3 className="text-2xl font-bold mb-4">Want a demo?</h3>
-                        <p className="text-[var(--text-muted)] mb-8 max-w-xl mx-auto">
-                            Talk to me (Abraham) directly. I&apos;ll show you how it works and even manually analyze your syllabus for free.
-                        </p>
-                        <Button variant="outline" size="lg" className="w-full md:w-auto px-12 gap-3">
-                            <PhoneCall className="w-5 h-5" />
-                            Book a 15-min Call
-                        </Button>
-                    </div>
+
                 </motion.div>
             </div>
         </section>
