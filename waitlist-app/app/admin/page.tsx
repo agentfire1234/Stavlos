@@ -112,10 +112,10 @@ export default function AdminDashboard() {
                 </div>
 
                 <nav className="space-y-2 flex-1">
-                    <AdminNavItem icon={<TrendingUp />} label="Overview" active />
-                    <AdminNavItem icon={<Users />} label="Waitlist" />
-                    <AdminNavItem icon={<ShieldCheck />} label="Security" />
-                    <AdminNavItem icon={<Mail />} label="Broadcast" />
+                    <AdminNavItem icon={<TrendingUp />} label="Overview" active onClick={() => alert('Overview active')} />
+                    <AdminNavItem icon={<Users />} label="Waitlist" onClick={() => alert('Waitlist view')} />
+                    <AdminNavItem icon={<ShieldCheck />} label="Security" onClick={() => alert('Security settings')} />
+                    <AdminNavItem icon={<Mail />} label="Broadcast" onClick={() => alert('Email broadcast')} />
                 </nav>
 
                 <div className="pt-6 border-t border-[var(--border)]">
@@ -143,9 +143,9 @@ export default function AdminDashboard() {
                 <div className="p-8 space-y-8">
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <StatCard title="Total Signups" value={stats?.total || 0} icon={<Users />} trend="+12% this week" />
-                        <StatCard title="Today" value={stats?.today || 0} icon={<UserPlus />} trend="+5 since hour" />
-                        <StatCard title="Conversion" value="38.5%" icon={<TrendingUp />} trend="High" />
+                        <StatCard title="Total Signups" value={stats?.total || 0} icon={<Users />} />
+                        <StatCard title="Today" value={stats?.today || 0} icon={<UserPlus />} />
+                        <StatCard title="Conversion" value="--" icon={<TrendingUp />} />
                         <StatCard title="Spots Left" value={2000 - (stats?.total || 0)} icon={<Calendar />} />
                     </div>
 
@@ -228,9 +228,11 @@ export default function AdminDashboard() {
     )
 }
 
-function AdminNavItem({ icon, label, active = false }: any) {
+function AdminNavItem({ icon, label, active = false, onClick }: any) {
     return (
-        <div className={`
+        <div
+            onClick={onClick}
+            className={`
       flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold cursor-pointer transition-all
       ${active ? 'bg-[var(--primary-blue)]/10 text-[var(--primary-blue)]' : 'text-[var(--text-muted)] hover:bg-[var(--bg-section)] hover:text-[var(--headline)]'}
     `}>

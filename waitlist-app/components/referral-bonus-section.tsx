@@ -67,7 +67,11 @@ export function ReferralBonusSection() {
                             Join the waitlist to get your unique referral link.
                             The discount is permanent — as long as you&apos;re a customer, it never expires.
                         </p>
-                        <Button variant="secondary" className="w-full bg-white text-[var(--primary-blue)] hover:bg-white/90">
+                        <Button
+                            variant="secondary"
+                            className="w-full bg-white text-[var(--primary-blue)] hover:bg-white/90"
+                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        >
                             Join & Get Your Referral Link
                         </Button>
                     </motion.div>
