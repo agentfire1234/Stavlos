@@ -7,7 +7,7 @@ import { Button } from './ui/button'
 
 const steps = [
     { icon: <Users className="w-5 h-5" />, text: "Refer 2 friends who join the waitlist" },
-    { icon: <Heart className="w-5 h-5" />, text: "When they convert to paid, you get 10% off" },
+    { icon: <Heart className="w-5 h-5" />, text: "When they join the waitlist, you get 10% off forever!" },
     { icon: <Gift className="w-5 h-5" />, text: "Founding: €5/mo → €4.50/mo FOREVER" },
     { icon: <Sparkles className="w-5 h-5" />, text: "Standard: €8/mo → €7.20/mo if you join later" }
 ]
