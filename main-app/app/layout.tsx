@@ -5,9 +5,16 @@ import "./globals.css";
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' })
 
+// Helper to ensure URL has a protocol
+const getBaseUrl = () => {
+  const url = process.env.NEXT_PUBLIC_URL || 'https://stavlos.com';
+  return url.startsWith('http') ? url : `https://${url}`;
+};
+
 export const metadata: Metadata = {
   title: "STAVLOS - Master Your Studies with AI",
   description: "The AI study partner that knows your syllabus. Stop staring, start mastering.",
+  metadataBase: new URL(getBaseUrl()),
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
