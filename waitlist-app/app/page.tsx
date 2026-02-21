@@ -103,12 +103,13 @@ export default function WaitlistPage() {
 
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="text-[10px] font-black uppercase tracking-widest px-4 py-2 bg-[var(--primary-blue)] text-white rounded-xl hover:scale-105 transition-all shadow-lg shadow-[var(--primary-blue)]/20"
-          >
-            Check Rank
-          </button>
+          <Link href="/leaderboard">
+            <button
+              className="text-[10px] font-black uppercase tracking-widest px-4 py-2 bg-[var(--primary-blue)] text-white rounded-xl hover:scale-105 transition-all shadow-lg shadow-[var(--primary-blue)]/20"
+            >
+              Check Rank
+            </button>
+          </Link>
           <Link href="/admin">
             <button className="text-[10px] opacity-10 hover:opacity-100 font-black uppercase tracking-widest transition-opacity px-3 py-1 border border-border rounded-md">
               Admin
