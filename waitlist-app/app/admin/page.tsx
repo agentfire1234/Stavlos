@@ -29,14 +29,27 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(false)
 
     // Auth Guard
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
-        // In a real app, this would check against an env var or DB
-        if (password === 'stavlos2026') {
-            setAuthorized(true)
-            fetchAdminData()
-        } else {
-            alert('Unauthorized')
+        setLoading(true)
+        try {
+            const res = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            })
+
+            if (res.ok) {
+                setAuthorized(true)
+                fetchAdminData()
+            } else {
+                const data = await res.json()
+                alert(data.error || 'Unauthorized')
+            }
+        } catch (err) {
+            alert('Login failed')
+        } finally {
+            setLoading(false)
         }
     }
 

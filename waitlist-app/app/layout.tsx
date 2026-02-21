@@ -12,11 +12,11 @@ const getBaseUrl = () => {
 
 export const metadata: Metadata = {
   title: "STAVLOS — AI Study Partner for Students",
-  description: "Upload your syllabus. Get an AI that knows exactly what's on your exam. Built by a student, for students. €8/mo. Join 12,000+ on the waitlist.",
+  description: "Upload your syllabus. Get an AI that knows exactly what's on your exam. Built by a student, for students. €8/mo. Join the waitlist.",
   metadataBase: new URL(getBaseUrl()),
   openGraph: {
     title: "STAVLOS — AI Study Partner for Students",
-    description: "Upload your syllabus. Ask 'What's on my exam?' Get perfect answers. Join 12,000+ students on the waitlist.",
+    description: "Upload your syllabus. Ask 'What's on my exam?' Get perfect answers. Join the waitlist.",
     url: getBaseUrl(),
     siteName: "Stavlos",
     images: [
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "STAVLOS — AI Study Partner for Students",
-    description: "Built by a student, for students. €8/mo. Join 12,000+ on the waitlist.",
+    description: "Built by a student, for students. €8/mo. Join the waitlist.",
     images: ["/og-image.png"],
     creator: "@stavlos",
   },

@@ -63,8 +63,8 @@ export default function WaitlistPage() {
     }
   }
 
-  const spotsLeft = Math.max(0, 2000 - (totalSignups || 1247))
-  const studentsJoined = totalSignups || 1247
+  const spotsLeft = totalSignups === null ? 2000 : Math.max(0, 2000 - totalSignups)
+  const studentsJoined = totalSignups || 0
 
   return (
     <div className="min-h-screen">
@@ -173,7 +173,7 @@ export default function WaitlistPage() {
               © 2026 Stavlos. Built with ❤️ by a 14-year-old student.
             </p>
             <div className="flex gap-6 uppercase text-[10px] font-black tracking-[0.2em] text-[var(--text-muted)]">
-              <span>London</span>
+              <span>Amersfoort</span>
               <span>Built in Public</span>
               <span>v1.2.0</span>
             </div>

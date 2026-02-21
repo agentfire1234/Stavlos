@@ -5,7 +5,8 @@ import type { NextRequest } from 'next/server'
 // The admin dash requires a secret token in the URL: /admin?token=YOUR_SECRET
 // Set ADMIN_SECRET in your .env.local
 export function middleware(request: NextRequest) {
-    if (request.nextUrl.pathname.startsWith('/admin')) {
+    // Protect /admin routes (except the login page itself and static assets)
+    if (request.nextUrl.pathname.startsWith('/admin') && request.nextUrl.pathname !== '/admin') {
         const token = request.nextUrl.searchParams.get('token')
         const adminSecret = process.env.ADMIN_SECRET
 
