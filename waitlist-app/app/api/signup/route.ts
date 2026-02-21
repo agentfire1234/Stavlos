@@ -104,7 +104,11 @@ export async function POST(request: Request) {
         if (error) {
             console.error('Supabase error:', error)
             return NextResponse.json(
-                { error: 'Failed to join waitlist' },
+                {
+                    error: 'Failed to join waitlist',
+                    details: error.message,
+                    code: error.code
+                },
                 { status: 500 }
             )
         }
