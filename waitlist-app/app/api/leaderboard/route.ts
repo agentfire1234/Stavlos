@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+function maskEmail(email: string) {
+    if (!email || !email.includes('@')) return email
+    const [username, domain] = email.split('@')
+    if (username.length <= 1) return `*@${domain}`
+    return `${username.substring(0, Math.min(3, username.length))}***@${domain}`
+}
+
 export async function GET() {
     try {
         // Fetch top 10 for leaderboard
@@ -16,9 +23,14 @@ export async function GET() {
             return NextResponse.json({ error: 'Failed to fetch leaderboard' }, { status: 500 })
         }
 
+        const maskedLeaderboard = (leaderboard || []).map((entry: any) => ({
+            ...entry,
+            email: maskEmail(entry.email)
+        }))
+
         return NextResponse.json({
             success: true,
-            leaderboard: leaderboard || []
+            leaderboard: maskedLeaderboard
         })
 
     } catch (error) {

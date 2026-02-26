@@ -22,7 +22,7 @@ export function FoundingStatusSection({ currentSpots, totalSpots }: FoundingStat
     const percentage = Math.round((currentSpots / totalSpots) * 100)
 
     return (
-        <section className="py-24 px-6 section-alt border-t border-[var(--border)]">
+        <section className="py-16 md:py-32 px-6 section-alt border-t border-[var(--border)]">
             <div className="max-w-6xl mx-auto">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                     {/* Left: Text Content */}
@@ -64,35 +64,37 @@ export function FoundingStatusSection({ currentSpots, totalSpots }: FoundingStat
                             Founding Tier Progress
                         </Badge>
 
-                        <div className="relative w-48 h-48 mb-6">
-                            <svg className="w-full h-full transform -rotate-90">
-                                <circle
-                                    cx="96"
-                                    cy="96"
-                                    r="88"
-                                    fill="transparent"
-                                    stroke="var(--border)"
-                                    strokeWidth="12"
-                                />
-                                <motion.circle
-                                    cx="96"
-                                    cy="96"
-                                    r="88"
-                                    fill="transparent"
-                                    stroke="var(--primary-blue)"
-                                    strokeWidth="12"
-                                    strokeDasharray={2 * Math.PI * 88}
-                                    initial={{ strokeDashoffset: 2 * Math.PI * 88 }}
-                                    whileInView={{ strokeDashoffset: 2 * Math.PI * 88 * (1 - currentSpots / totalSpots) }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
-                                />
-                            </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-4xl font-black">{percentage}%</span>
-                                <span className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest">Filled</span>
+                        {currentSpots >= 1000 && (
+                            <div className="relative w-48 h-48 mb-6">
+                                <svg className="w-full h-full transform -rotate-90">
+                                    <circle
+                                        cx="96"
+                                        cy="96"
+                                        r="88"
+                                        fill="transparent"
+                                        stroke="var(--border)"
+                                        strokeWidth="12"
+                                    />
+                                    <motion.circle
+                                        cx="96"
+                                        cy="96"
+                                        r="88"
+                                        fill="transparent"
+                                        stroke="var(--primary-blue)"
+                                        strokeWidth="12"
+                                        strokeDasharray={2 * Math.PI * 88}
+                                        initial={{ strokeDashoffset: 2 * Math.PI * 88 }}
+                                        whileInView={{ strokeDashoffset: 2 * Math.PI * 88 * (1 - currentSpots / totalSpots) }}
+                                        viewport={{ once: true }}
+                                        transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                                    />
+                                </svg>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span className="text-4xl font-black">{percentage}%</span>
+                                    <span className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest">Filled</span>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         <div className="w-full space-y-4">
                             <div className="flex justify-between text-sm font-black uppercase tracking-widest">

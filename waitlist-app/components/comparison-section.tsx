@@ -35,7 +35,7 @@ const features = [
 
 export function ComparisonSection() {
     return (
-        <section className="py-24 px-6 section-alt border-y border-[var(--border)]">
+        <section className="py-16 md:py-32 px-6 section-alt border-y border-[var(--border)]">
             <div className="max-w-4xl mx-auto">
                 <motion.div
                     className="text-center mb-16"
@@ -54,23 +54,26 @@ export function ComparisonSection() {
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
                 >
-                    <div className="grid grid-cols-3 bg-[var(--bg-main)] border-b border-[var(--border)] p-6 md:p-8">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Comparison</div>
-                        <div className="text-center font-bold text-red-500/80">Without Stavlos</div>
-                        <div className="text-center font-bold text-[var(--primary-blue)]">With Stavlos</div>
+                    {/* Table Header */}
+                    <div className="grid grid-cols-3 bg-[var(--bg-main)] border-b border-[var(--border)] p-4 md:p-8">
+                        <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Comparison</div>
+                        <div className="text-center text-xs sm:text-sm font-bold text-red-500/80">Without Stavlos</div>
+                        <div className="text-center text-xs sm:text-sm font-bold text-[var(--primary-blue)]">With Stavlos</div>
                     </div>
 
                     <div className="divide-y divide-[var(--border)]">
                         {features.map((feature, index) => (
-                            <div key={index} className="grid grid-cols-3 p-6 md:p-8 hover:bg-[var(--bg-section)]/50 transition-colors">
-                                <div className="text-sm font-semibold">{feature.label}</div>
-                                <div className="text-center text-sm text-[var(--text-muted)] flex items-center justify-center gap-2">
-                                    <X className="w-4 h-4 text-red-500/30" />
-                                    {feature.without}
+                            <div key={index} className="grid grid-cols-3 p-4 md:p-8 hover:bg-[var(--bg-section)]/50 transition-colors">
+                                <div className="text-xs sm:text-sm font-semibold">{feature.label}</div>
+                                <div className="text-center text-xs sm:text-sm text-[var(--text-muted)] flex items-center justify-center gap-1 sm:gap-2">
+                                    <X className="w-3 h-3 sm:w-4 sm:h-4 text-red-500/30 shrink-0" />
+                                    <span className="hidden sm:inline">{feature.without}</span>
+                                    <span className="sm:hidden text-[10px] leading-tight">{feature.without}</span>
                                 </div>
-                                <div className="text-center text-sm font-bold flex items-center justify-center gap-2">
-                                    <Check className="w-4 h-4 text-[var(--success-green)]" />
-                                    {feature.with}
+                                <div className="text-center text-xs sm:text-sm font-bold flex items-center justify-center gap-1 sm:gap-2">
+                                    <Check className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--success-green)] shrink-0" />
+                                    <span className="hidden sm:inline">{feature.with}</span>
+                                    <span className="sm:hidden text-[10px] leading-tight">{feature.with}</span>
                                 </div>
                             </div>
                         ))}

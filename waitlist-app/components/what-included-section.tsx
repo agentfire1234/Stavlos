@@ -16,7 +16,7 @@ const features = [
 
 export function WhatIncludedSection() {
     return (
-        <section className="py-24 px-6 bg-[var(--bg-main)]">
+        <section className="py-16 md:py-32 px-6 bg-[var(--bg-main)]">
             <div className="max-w-4xl mx-auto">
                 <motion.div
                     className="text-center mb-16"
@@ -58,7 +58,7 @@ export function WhatIncludedSection() {
                 >
                     <p className="text-[var(--text-muted)] text-sm leading-relaxed max-w-2xl mx-auto">
                         Average student uses ~180 questions/month. Heavy users during finals: ~450 questions/month.
-                        Our cost: ~€0.02/month. Your price: €5/month. <br />
+                        Our cost: ~€0.15/month. Your price: €5/month. <br />
                         <strong className="text-[var(--headline)]">So yes, truly unlimited.</strong>
                     </p>
                 </motion.div>

@@ -15,7 +15,7 @@ const steps = [
         number: "02",
         icon: <MessageSquare className="w-6 h-6" />,
         title: "Ask Anything",
-        desc: "Ask questions like &apos;When is my biology exam?&apos; or &apos;What are the key topics for Week 4?&apos;"
+        desc: "Ask questions like 'When is my biology exam?' or 'What are the key topics for Week 4?'"
     },
     {
         number: "03",
@@ -27,7 +27,7 @@ const steps = [
 
 export function SolutionSection() {
     return (
-        <section className="py-24 px-6 bg-[var(--bg-main)]">
+        <section className="py-16 md:py-32 px-6 bg-[var(--bg-main)]">
             <div className="max-w-6xl mx-auto">
                 <motion.div
                     className="text-center mb-20"

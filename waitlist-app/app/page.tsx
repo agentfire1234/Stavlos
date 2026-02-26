@@ -13,9 +13,9 @@ import { ReferralBonusSection } from '@/components/referral-bonus-section'
 import { FounderStorySection } from '@/components/founder-story-section'
 import { FAQSection } from '@/components/faq-section'
 import { FinalCTASection } from '@/components/final-cta-section'
-import { Logo } from '@/components/logo'
-import { ThemeToggle } from '@/components/theme-toggle'
 import { StickyCTA } from '@/components/sticky-cta'
+import { Navbar } from '@/components/navbar'
+import { Logo } from '@/components/logo'
 import Link from 'next/link'
 
 export default function WaitlistPage() {
@@ -87,38 +87,10 @@ export default function WaitlistPage() {
   return (
     <div className="min-h-screen">
       <StickyCTA />
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center max-w-7xl mx-auto backdrop-blur-md bg-[var(--bg-main)]/80 border-b border-[var(--border)]">
-        <div className="flex items-center gap-2">
-          <Logo size={32} />
-          <span className="text-2xl font-black tracking-tighter uppercase italic">Stavlos</span>
-        </div>
+      <Navbar />
 
-        <div className="hidden md:flex items-center gap-8 text-[11px] font-black uppercase tracking-widest text-[var(--text-muted)]">
-          <a href="#how" className="hover:text-[var(--primary-blue)] transition-colors">How it works</a>
-          <a href="#pricing" className="hover:text-[var(--primary-blue)] transition-colors">Pricing</a>
-          <a href="#faq" className="hover:text-[var(--primary-blue)] transition-colors">FAQ</a>
-          <a href="mailto:hello@stavlos.com" className="hover:text-[var(--primary-blue)] transition-colors">Contact</a>
-        </div>
+      <main className="px-4 sm:px-6 lg:px-0 space-y-0">
 
-        <div className="flex items-center gap-4">
-          <ThemeToggle />
-          <Link href="/leaderboard">
-            <button
-              className="text-[10px] font-black uppercase tracking-widest px-4 py-2 bg-[var(--primary-blue)] text-white rounded-xl hover:scale-105 transition-all shadow-lg shadow-[var(--primary-blue)]/20"
-            >
-              Check Rank
-            </button>
-          </Link>
-          <Link href="/admin">
-            <button className="text-[10px] opacity-10 hover:opacity-100 font-black uppercase tracking-widest transition-opacity px-3 py-1 border border-border rounded-md">
-              Admin
-            </button>
-          </Link>
-        </div>
-      </nav>
-
-      <main>
         <Hero
           spotsLeft={spotsLeft}
           studentsJoined={studentsJoined}

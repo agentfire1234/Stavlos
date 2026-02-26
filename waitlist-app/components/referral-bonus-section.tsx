@@ -6,15 +6,14 @@ import { Gift, Users, Heart, Sparkles } from 'lucide-react'
 import { Button } from './ui/button'
 
 const steps = [
-    { icon: <Users className="w-5 h-5" />, text: "Refer 2 friends who join the waitlist" },
-    { icon: <Heart className="w-5 h-5" />, text: "When they join the waitlist, you get 10% off forever!" },
-    { icon: <Gift className="w-5 h-5" />, text: "Founding: €5/mo → €4.50/mo FOREVER" },
-    { icon: <Sparkles className="w-5 h-5" />, text: "Standard: €8/mo → €7.20/mo if you join later" }
+    { icon: <Users className="w-5 h-5" />, text: "Refer 1 friend → Your €5 price is locked forever" },
+    { icon: <Gift className="w-5 h-5" />, text: "Refer 2 friends → First month completely free" },
+    { icon: <Heart className="w-5 h-5" />, text: "You help us grow, we reward you directly." }
 ]
 
 export function ReferralBonusSection() {
     return (
-        <section className="py-24 px-6 bg-[var(--bg-main)]">
+        <section className="py-16 md:py-32 px-6 bg-[var(--bg-main)]">
             <div className="max-w-4xl mx-auto">
                 <motion.div
                     className="text-center mb-16"
@@ -23,9 +22,9 @@ export function ReferralBonusSection() {
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
                 >
-                    <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight">Get 10% Off Forever</h2>
+                    <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight">Lock in Your Price</h2>
                     <p className="text-[var(--text-muted)] text-lg max-w-xl mx-auto italic">
-                        Refer 2 friends, unlock permanent discount.
+                        Refer 1 friend to lock in €5/mo. Refer 2 for a free month.
                     </p>
                 </motion.div>
 
@@ -65,7 +64,7 @@ export function ReferralBonusSection() {
                         <h4 className="text-2xl font-black mb-4 uppercase italic tracking-tighter">Permanent Reward</h4>
                         <p className="opacity-90 text-sm mb-8 leading-relaxed">
                             Join the waitlist to get your unique referral link.
-                            The discount is permanent — as long as you&apos;re a customer, it never expires.
+                            The rewards are automatically applied to your account at launch.
                         </p>
                         <Button
                             variant="secondary"

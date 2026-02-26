@@ -1,12 +1,14 @@
-import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { NextResponse, NextRequest } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabase'
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
     try {
-        // TODO: Add admin authentication check
-        // For now, this will be protected by middleware
+        const token = request.cookies.get('admin_token')?.value
+        if (!token || token !== process.env.ADMIN_SECRET) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin!
             .from('waitlist_with_rank')
             .select('email, current_rank, referral_count, created_at')
             .order('current_rank', { ascending: true })

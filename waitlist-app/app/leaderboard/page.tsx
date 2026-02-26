@@ -45,10 +45,10 @@ export default function LeaderboardPage() {
             {/* Header / Nav */}
             <nav className="p-6 border-b border-[var(--border)] backdrop-blur-md bg-[var(--bg-main)]/80 sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <div className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                         <Logo size={32} />
                         <span className="text-2xl font-black tracking-tighter uppercase italic">Stavlos</span>
-                    </Link>
+                    </div>
                     <Link href="/">
                         <Button variant="outline" size="sm" className="hidden md:flex gap-2">
                             Back to Home <ArrowRight className="w-4 h-4" />

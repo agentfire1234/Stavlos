@@ -7,24 +7,24 @@ export function ProblemSection() {
     const problems = [
         {
             title: "The midnight scramble",
-            desc: "It&apos;s 11:30 PM. You know there&apos;s a reading due tomorrow, but you can&apos;t find the link in the 40-page syllabus."
+            desc: "It's 11:30 PM. You know there's a reading due tomorrow, but you can't find the link in the 40-page syllabus."
         },
         {
-            title: "The &apos;Ctrl+F&apos; nightmare",
-            desc: "Searching for &apos;midterm&apos; gives 42 results. None of them are the actual date. You just want to know when to study."
+            title: "The 'Ctrl+F' nightmare",
+            desc: "Searching for 'midterm' gives 42 results. None of them are the actual date. You just want to know when to study."
         },
         {
             title: "Deadlines that bite",
-            desc: "Missing a 10% assignment because it was hidden in a table on page 14. We&apos;ve all been there."
+            desc: "Missing a 10% assignment because it was hidden in a table on page 14. We've all been there."
         },
         {
             title: "Zero organization",
-            desc: "Four courses, four different syllabus styles, zero consistency. It&apos;s a full-time job just to stay organized."
+            desc: "Four courses, four different syllabus styles, zero consistency. It's a full-time job just to stay organized."
         }
     ]
 
     return (
-        <section className="py-24 px-6 section-alt">
+        <section className="py-16 md:py-32 px-6 section-alt">
             <div className="max-w-6xl mx-auto">
                 <motion.div
                     className="text-center mb-20"

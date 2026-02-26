@@ -6,7 +6,7 @@ import { Gamepad2 } from 'lucide-react'
 
 export function FounderStorySection() {
     return (
-        <section className="py-24 px-6 section-alt">
+        <section className="py-16 md:py-32 px-6 section-alt">
             <div className="max-w-4xl mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
                     {/* Left: Text Content */}
@@ -17,7 +17,7 @@ export function FounderStorySection() {
                         transition={{ duration: 0.5 }}
                     >
                         <h2 className="text-3xl md:text-5xl font-bold mb-8 tracking-tight italic">Built by a Student, For Students</h2>
-                        <div className="space-y-6 text-lg text-[var(--text-muted)] leading-relaxed">
+                        <div className="space-y-6 text-base sm:text-lg text-[var(--text-muted)] leading-relaxed">
                             <p>Hi, I&apos;m Abraham. I&apos;m 14.</p>
                             <p>
                                 I built Stavlos because I was tired of searching through syllabi at midnight, missing deadlines,

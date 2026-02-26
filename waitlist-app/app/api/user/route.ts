@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getBadge } from '@/lib/referral'
 
+function maskEmail(email: string) {
+    if (!email || !email.includes('@')) return email
+    const [username, domain] = email.split('@')
+    if (username.length <= 1) return `*@${domain}`
+    return `${username.substring(0, Math.min(3, username.length))}***@${domain}`
+}
+
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const email = searchParams.get('email')
@@ -32,6 +39,11 @@ export async function GET(request: Request) {
 
         const referralLink = `${process.env.NEXT_PUBLIC_URL}?ref=${user.referral_code}`
 
+        const maskedLeaderboard = (leaderboard || []).map((entry: any) => ({
+            ...entry,
+            email: maskEmail(entry.email)
+        }))
+
         return NextResponse.json({
             success: true,
             user: {
@@ -41,7 +53,7 @@ export async function GET(request: Request) {
                 referralCount: user.referral_count,
                 referralLink,
             },
-            leaderboard: leaderboard || []
+            leaderboard: maskedLeaderboard
         })
 
     } catch (error) {

@@ -120,7 +120,7 @@ function WelcomeContent() {
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-sm font-black uppercase tracking-widest italic">Referral Progress</h3>
                             <span className="text-xs font-bold px-3 py-1 bg-[var(--success-green)]/10 text-[var(--success-green)] rounded-full">
-                                {userData.referralCount} / 2 Joined
+                                {userData.referralCount} Joined
                             </span>
                         </div>
                         <div className="h-4 bg-[var(--bg-section)] rounded-full border border-[var(--border)] overflow-hidden mb-6">
@@ -131,8 +131,10 @@ function WelcomeContent() {
                         </div>
                         <p className="text-xs text-[var(--text-muted)] font-medium leading-relaxed">
                             {userData.referralCount >= 2
-                                ? "✅ 10% Permanent Discount Activated!"
-                                : "Refer 2 more friends to unlock a permanent 10% discount on your subscription."}
+                                ? "✅ 1st Month Free & €5 Price Locked!"
+                                : userData.referralCount === 1
+                                    ? "✅ €5 Price Locked! Refer 1 more friend to get your first month free."
+                                    : "Refer 1 friend to lock in your €5/mo price forever."}
                         </p>
                     </div>
                 </div>
@@ -194,7 +196,7 @@ function WelcomeContent() {
                                         </span>
                                         <div>
                                             <p className="font-bold text-lg">{user.email.split('@')[0].substring(0, 3)}***</p>
-                                            <p className="text-[10px] font-black uppercase opacity-40">Position: #{user.rank}</p>
+                                            <p className="text-[10px] font-black uppercase opacity-40">Position: #{index + 1}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
@@ -215,9 +217,9 @@ function WelcomeContent() {
                     <h3 className="text-xl font-bold mb-8 italic uppercase tracking-tight">Your Path to Launch</h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
                         <TimelineStep icon={<Clock />} date="NOW" label="You're on the list" active />
-                        <TimelineStep icon={<ArrowRight />} date="FEB" label="Early Beta Access" />
-                        <TimelineStep icon={<Clock />} date="MAR" label="Launch Day 🚀" />
-                        <TimelineStep icon={<Check />} date="MAR+" label="Price Locked" />
+                        <TimelineStep icon={<ArrowRight />} date="MAY" label="Early Beta Access" />
+                        <TimelineStep icon={<Clock />} date="JUN" label="Launch Day 🚀" />
+                        <TimelineStep icon={<Check />} date="JUN+" label="Price Locked" />
                     </div>
                 </section>
             </main>

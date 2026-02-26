@@ -1,10 +1,14 @@
-import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { NextResponse, NextRequest } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabase'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
+        const token = request.cookies.get('admin_token')?.value
+        if (!token || token !== process.env.ADMIN_SECRET) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
         // 1. Fetch all users with ranks
-        const { data: users, error: usersError } = await supabase
+        const { data: users, error: usersError } = await supabaseAdmin!
             .from('waitlist_with_rank')
             .select('*')
             .order('current_rank', { ascending: true })
@@ -12,14 +16,14 @@ export async function GET() {
         if (usersError) throw usersError
 
         // 2. Aggregate stats
-        const { count: totalSignups } = await supabase
+        const { count: totalSignups } = await supabaseAdmin!
             .from('waitlist')
             .select('*', { count: 'exact', head: true })
 
         const today = new Date()
         today.setHours(0, 0, 0, 0)
 
-        const { count: signupsToday } = await supabase
+        const { count: signupsToday } = await supabaseAdmin!
             .from('waitlist')
             .select('*', { count: 'exact', head: true })
             .gte('created_at', today.toISOString())

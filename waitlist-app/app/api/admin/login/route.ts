@@ -10,7 +10,14 @@ export async function POST(request: Request) {
         }
 
         if (password === adminSecret) {
-            return NextResponse.json({ success: true })
+            const response = NextResponse.json({ success: true })
+            response.cookies.set('admin_token', password, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                path: '/'
+            })
+            return response
         } else {
             return NextResponse.json({ error: 'Invalid secret key' }, { status: 401 })
         }

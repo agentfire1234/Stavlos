@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase'
 import { generateReferralCode, getBadge } from '@/lib/referral'
 import { sendWelcomeEmail, sendStatusUnlockEmail } from '@/lib/email'
 
@@ -23,20 +23,15 @@ export async function POST(request: Request) {
             )
         }
 
-        // Check for duplicate (now case-insensitive because email is already lowercased)
-        const { data: existing } = await supabase
-            .from('waitlist')
-            .select('id')
+        // Check for duplicate
+        const { data: rankedUser } = await supabase
+            .from('waitlist_with_rank')
+            .select('*')
             .eq('email', email)
             .single()
 
-        if (existing) {
+        if (rankedUser) {
             // BUG 011: Instead of 409, fetch and return existing user for redirection
-            const { data: rankedUser } = await supabase
-                .from('waitlist_with_rank')
-                .select('*')
-                .eq('id', existing.id)
-                .single()
 
             const rank = rankedUser?.current_rank || 0
             const badge = getBadge(rank)
@@ -46,7 +41,7 @@ export async function POST(request: Request) {
                 success: true,
                 isExisting: true,
                 user: {
-                    id: existing.id,
+                    id: rankedUser.id,
                     email: rankedUser?.email,
                     rank,
                     badge,
@@ -69,29 +64,15 @@ export async function POST(request: Request) {
             referrerId = referrer?.id || null
         }
 
-        // Generate unique referral code
-        let referralCode = generateReferralCode()
-        let codeExists = true
-
-        while (codeExists) {
-            const { data } = await supabase
-                .from('waitlist')
-                .select('id')
-                .eq('referral_code', referralCode)
-                .single()
-
-            if (!data) {
-                codeExists = false
-            } else {
-                referralCode = generateReferralCode()
-            }
-        }
+        // Generate unique referral code (Rely on Database Constraints)
+        const referralCode = generateReferralCode()
 
         // Insert into waitlist
         // BUG 001 NOTE: Referral count increment should be handled by a
         // Supabase SQL trigger (see schema.sql / Supabase SQL editor) to
         // prevent race conditions. The JS code does NOT manually increment.
-        const { data: newUser, error } = await supabase
+        const db = supabaseAdmin || supabase
+        const { data: newUser, error } = await db
             .from('waitlist')
             .insert({
                 email,   // already normalized
@@ -114,22 +95,22 @@ export async function POST(request: Request) {
         }
 
         // Get rank using view
-        const { data: rankedUser } = await supabase
+        const { data: newRankedUser } = await supabase
             .from('waitlist_with_rank')
             .select('*')
             .eq('id', newUser.id)
             .single()
 
-        const rank = rankedUser?.current_rank || 0
+        const rank = newRankedUser?.current_rank || 0
         const badge = getBadge(rank)
         const referralLink = `${process.env.NEXT_PUBLIC_URL}?ref=${referralCode}`
 
-        // Send welcome email
-        await sendWelcomeEmail({ to: email, rank, referralLink })
+        // Send welcome email (Fire and forget!)
+        sendWelcomeEmail({ to: email, rank, referralLink }).catch(console.error)
 
-        // Send status unlock email if applicable
+        // Send status unlock email if applicable (Fire and forget!)
         if (rank <= 2000) {
-            await sendStatusUnlockEmail({ to: email, rank, referralLink })
+            sendStatusUnlockEmail({ to: email, rank, referralLink }).catch(console.error)
         }
 
         return NextResponse.json({
