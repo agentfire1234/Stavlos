@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Analytics } from "@vercel/analytics/next";
 
 // BUG 002 FIX: Added full OpenGraph metadata so the link preview looks great
 // when shared on X, Discord, WhatsApp, etc.
@@ -63,6 +64,7 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
