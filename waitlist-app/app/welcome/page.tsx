@@ -133,9 +133,9 @@ function WelcomeContent() {
                         </div>
                         <p className="text-xs text-[var(--text-muted)] font-medium leading-relaxed">
                             {userData.referralCount >= 2
-                                ? "✅ 1st Month Free & €5 Price Locked!"
+                                ? "1st Month Free & €5 Price Locked!"
                                 : userData.referralCount === 1
-                                    ? "✅ €5 Price Locked! Refer 1 more friend to get your first month free."
+                                    ? "€5 Price Locked! Refer 1 more friend to get your first month free."
                                     : "Refer 1 friend to lock in your €5/mo price forever."}
                         </p>
                     </div>

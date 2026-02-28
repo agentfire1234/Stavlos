@@ -6,7 +6,7 @@ import type { NextRequest } from 'next/server'
 // Also switched to cookie-based auth consistently.
 
 export function isProtectedRoute(pathname: string): boolean {
-    return pathname === '/admin' || pathname.startsWith('/api/admin')
+    return pathname.startsWith('/api/admin')
 }
 
 export function validateAdminToken(token: string | undefined): boolean {

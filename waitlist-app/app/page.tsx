@@ -103,10 +103,6 @@ export default function WaitlistPage() {
         <div id="pricing">
           <ComparisonSection />
           <WhatIncludedSection />
-          <FoundingStatusSection
-            currentSpots={studentsJoined}
-            totalSpots={2000}
-          />
         </div>
         <ReferralBonusSection />
         <FounderStorySection />
@@ -162,7 +158,7 @@ export default function WaitlistPage() {
 
           <div className="pt-8 border-t border-[var(--border)] flex flex-col md:flex-row justify-between items-center gap-6">
             <p className="text-xs text-[var(--text-muted)] font-medium">
-              © 2026 Stavlos. Built with ❤️ by a 14-year-old student.
+              © 2026 Stavlos. Built by a 14-year-old student.
             </p>
             <div className="flex gap-6 uppercase text-[10px] font-black tracking-[0.2em] text-[var(--text-muted)]">
               <span>Amersfoort</span>

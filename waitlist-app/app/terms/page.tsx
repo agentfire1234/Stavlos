@@ -55,7 +55,7 @@ export default function TermsOfService() {
 
                     <section>
                         <h2 className="text-2xl font-bold text-white mb-4">4. What You Can and Can't Do</h2>
-                        <h3 className="text-lg font-semibold text-white mb-3">✅ You CAN:</h3>
+                        <h3 className="text-lg font-semibold text-white mb-3">You CAN:</h3>
                         <ul className="list-disc list-inside space-y-2 ml-4">
                             <li>Use Stavlos for your own personal studying</li>
                             <li>Upload your own syllabuses and course materials</li>
@@ -64,7 +64,7 @@ export default function TermsOfService() {
                             <li>Cancel your subscription whenever you want</li>
                             <li>Export your data at any time</li>
                         </ul>
-                        <h3 className="text-lg font-semibold text-white mb-3 mt-6">❌ You CANNOT:</h3>
+                        <h3 className="text-lg font-semibold text-white mb-3 mt-6">You CANNOT:</h3>
                         <ul className="list-disc list-inside space-y-2 ml-4">
                             <li>Use Stavlos to cheat on exams in ways prohibited by your institution</li>
                             <li>Share your account with others</li>
