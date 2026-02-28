@@ -23,6 +23,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS on_waitlist_signup ON waitlist;
 CREATE TRIGGER on_waitlist_signup
   AFTER INSERT ON waitlist
   FOR EACH ROW
@@ -41,6 +42,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS on_waitlist_delete ON waitlist;
 CREATE TRIGGER on_waitlist_delete
   AFTER DELETE ON waitlist
   FOR EACH ROW
@@ -54,6 +56,6 @@ SELECT
 FROM waitlist;
 
 -- 4. INDEXES FOR PERFORMANCE
-CREATE INDEX idx_waitlist_created ON waitlist(created_at);
-CREATE INDEX idx_waitlist_referral_code ON waitlist(referral_code);
-CREATE INDEX idx_waitlist_referred_by ON waitlist(referred_by);
+CREATE INDEX IF NOT EXISTS idx_waitlist_created ON waitlist(created_at);
+CREATE INDEX IF NOT EXISTS idx_waitlist_referral_code ON waitlist(referral_code);
+CREATE INDEX IF NOT EXISTS idx_waitlist_referred_by ON waitlist(referred_by);
