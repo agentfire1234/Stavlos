@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase, supabaseAdmin } from '@/lib/supabase'
 import { generateReferralCode, getBadge } from '@/lib/referral'
-import { sendWelcomeEmail, sendStatusUnlockEmail } from '@/lib/email'
+import { sendWelcomeEmail } from '@/lib/email'
 
 export async function POST(request: Request) {
     try {
@@ -87,16 +87,9 @@ export async function POST(request: Request) {
         const activeReferralCode = userRecord.referral_code
         const referralLink = `https://waitlist.stavlos.com?ref=${activeReferralCode}`
 
-        // 4. Send emails ONLY for new users
+        // 4. Send email ONLY for new users (Unified Dynamic Template)
         if (isNewUser && rankedUser) {
-            // If they are in the top 2,000, they get the specialized Status Unlock email.
-            // Otherwise, they get the generic Welcome email. 
-            // This prevents the "double email" bug.
-            if (rank <= 2000) {
-                sendStatusUnlockEmail({ to: email, rank, referralLink }).catch(console.error)
-            } else {
-                sendWelcomeEmail({ to: email, rank, referralLink }).catch(console.error)
-            }
+            sendWelcomeEmail({ to: email, rank, referralLink }).catch(console.error)
         }
 
         return NextResponse.json({
