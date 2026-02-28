@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase'
 import { getBadge } from '@/lib/referral'
 
 function maskEmail(email: string) {
@@ -19,7 +19,8 @@ export async function GET(request: Request) {
     }
 
     try {
-        let query = supabase.from('waitlist_with_rank').select('*')
+        const db = supabaseAdmin || supabase
+        let query = db.from('waitlist_with_rank').select('*')
 
         if (code) {
             query = query.eq('referral_code', code)
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
         }
 
         // Fetch top 10 for leaderboard
-        const { data: leaderboard } = await supabase
+        const { data: leaderboard } = await db
             .from('waitlist')
             .select('email, referral_count')
             .order('referral_count', { ascending: false })

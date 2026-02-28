@@ -27,20 +27,20 @@ export async function POST(request: Request) {
         // BUG 020: Use a simple in-memory map or check DB timestamps to prevent spam.
         // For this implementation, we'll assume basic protection is enough for now.
 
+        // Race-condition proof signup
+        const db = supabaseAdmin || supabase
+
         // Find referrer if referral code provided
         let referrerId = null
         if (referredBy) {
-            const { data: referrer } = await supabase
+            const { data: referrer } = await db
                 .from('waitlist')
                 .select('id')
                 .eq('referral_code', referredBy)
-                .single()
+                .maybeSingle()
 
             referrerId = referrer?.id || null
         }
-
-        // Race-condition proof signup
-        const db = supabaseAdmin || supabase
 
         // 1. Try to insert first
         const referralCode = generateReferralCode()
