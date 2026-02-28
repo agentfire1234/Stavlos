@@ -39,44 +39,43 @@ export async function POST(request: Request) {
             referrerId = referrer?.id || null
         }
 
-        // Check if user already exists
+        // Race-condition proof signup
         const db = supabaseAdmin || supabase
-        const { data: existingUser, error: checkError } = await db
+
+        // 1. Try to insert first
+        const referralCode = generateReferralCode()
+        const { data: newUser, error: insertError } = await db
             .from('waitlist')
-            .select('*')
-            .eq('email', email)
+            .insert({
+                email,
+                referral_code: referralCode,
+                referred_by: referrerId
+            })
+            .select()
             .maybeSingle()
 
-        let userRecord = existingUser
-        let isNewUser = false
+        let userRecord = newUser
+        let isNewUser = !!newUser
 
-        if (!existingUser) {
-            // Generate unique referral code
-            const referralCode = generateReferralCode()
-
-            // Insert into waitlist
-            const { data: newUser, error: insertError } = await db
+        // 2. If insert fails due to duplicate email, fetch existing user instead
+        if (insertError || !newUser) {
+            const { data: existingUser } = await db
                 .from('waitlist')
-                .insert({
-                    email,
-                    referral_code: referralCode,
-                    referred_by: referrerId
-                })
-                .select()
-                .single()
+                .select('*')
+                .eq('email', email)
+                .maybeSingle()
 
-            if (insertError) {
-                console.error('Supabase error:', insertError)
-                return NextResponse.json(
-                    { error: 'Failed to join waitlist' },
-                    { status: 500 }
-                )
+            if (existingUser) {
+                userRecord = existingUser
+                isNewUser = false
+            } else {
+                // Real error occurred
+                console.error('Signup error:', insertError)
+                return NextResponse.json({ error: 'Failed to join waitlist' }, { status: 500 })
             }
-            userRecord = newUser
-            isNewUser = true
         }
 
-        // Get rank using view
+        // 3. Get rank using view
         const { data: rankedUser } = await supabase
             .from('waitlist_with_rank')
             .select('*')
@@ -89,7 +88,7 @@ export async function POST(request: Request) {
         const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://waitlist.stavlos.com'
         const referralLink = `${baseUrl}?ref=${activeReferralCode}`
 
-        // Send emails asynchronously (Fire and forget) - ONLY for NEW users
+        // 4. Send emails ONLY for new users
         if (isNewUser && rankedUser) {
             sendWelcomeEmail({ to: email, rank, referralLink }).catch(console.error)
 
