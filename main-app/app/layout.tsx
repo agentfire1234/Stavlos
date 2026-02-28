@@ -25,6 +25,8 @@ export const metadata: Metadata = {
 
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { CommandBar } from '@/components/layout/command-bar'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 export default function RootLayout({
   children,
@@ -47,6 +49,8 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         {children}
+        <Analytics />
+        <SpeedInsights />
         <CommandBar />
         <MobileNav />
 
