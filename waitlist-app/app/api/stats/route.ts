@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase'
 
 export async function GET() {
     try {
+        const db = supabaseAdmin || supabase
         // 1. Get Total Count (Real Data)
-        const { count: totalSignups } = await supabase
+        const { count: totalSignups } = await db
             .from('waitlist')
             .select('*', { count: 'exact', head: true })
 
         // 2. Get Top 50 Leaderboard (Full emails fetched server-side only)
-        const { data: rawLeaderboard } = await supabase
+        const { data: rawLeaderboard } = await db
             .from('waitlist')
             .select('email, referral_count')
             .order('referral_count', { ascending: false })

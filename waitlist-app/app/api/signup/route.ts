@@ -76,7 +76,7 @@ export async function POST(request: Request) {
         }
 
         // 3. Get rank using view
-        const { data: rankedUser } = await supabase
+        const { data: rankedUser } = await db
             .from('waitlist_with_rank')
             .select('*')
             .eq('id', userRecord.id)
