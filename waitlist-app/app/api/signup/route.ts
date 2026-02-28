@@ -89,10 +89,13 @@ export async function POST(request: Request) {
 
         // 4. Send emails ONLY for new users
         if (isNewUser && rankedUser) {
-            sendWelcomeEmail({ to: email, rank, referralLink }).catch(console.error)
-
+            // If they are in the top 2,000, they get the specialized Status Unlock email.
+            // Otherwise, they get the generic Welcome email. 
+            // This prevents the "double email" bug.
             if (rank <= 2000) {
                 sendStatusUnlockEmail({ to: email, rank, referralLink }).catch(console.error)
+            } else {
+                sendWelcomeEmail({ to: email, rank, referralLink }).catch(console.error)
             }
         }
 
