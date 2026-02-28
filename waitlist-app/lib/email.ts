@@ -10,7 +10,7 @@ interface WelcomeEmailParams {
     referralLink: string
 }
 
-const FROM_EMAIL = process.env.NEXT_PUBLIC_EMAIL_SENDER || 'Abraham at Stavlos <abraham@stavlos.com>'
+const FROM_EMAIL = process.env.NEXT_PUBLIC_EMAIL_SENDER || 'Stavlos <hello@send.stavlos.com>'
 
 export async function sendWelcomeEmail({ to, rank, referralLink }: WelcomeEmailParams) {
     const badge = getBadge(rank)
