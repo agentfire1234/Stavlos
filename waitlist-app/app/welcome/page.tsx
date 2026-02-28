@@ -21,7 +21,7 @@ function WelcomeContent() {
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        if (!email) {
+        if (!email && !code) {
             setIsLoading(false)
             return
         }
@@ -50,7 +50,7 @@ function WelcomeContent() {
             }
         }
         fetchData()
-    }, [email])
+    }, [email, code])
 
     const copyLink = () => {
         if (userData?.referralLink) {
