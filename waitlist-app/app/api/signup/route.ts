@@ -41,11 +41,11 @@ export async function POST(request: Request) {
 
         // Check if user already exists
         const db = supabaseAdmin || supabase
-        const { data: existingUser } = await db
+        const { data: existingUser, error: checkError } = await db
             .from('waitlist')
             .select('*')
             .eq('email', email)
-            .single()
+            .maybeSingle()
 
         let userRecord = existingUser
         let isNewUser = false
