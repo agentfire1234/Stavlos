@@ -147,6 +147,7 @@ export default function WaitlistPage() {
               <ul className="space-y-3 text-sm text-[var(--text-muted)]">
                 <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
                 <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+                <li><Link href="/admin" className="hover:text-white transition-colors opacity-20 hover:opacity-100">Admin</Link></li>
               </ul>
             </div>
 

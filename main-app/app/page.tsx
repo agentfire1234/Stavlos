@@ -104,6 +104,7 @@ export default function Home() {
           <div className="flex gap-12 text-[10px] font-black uppercase tracking-widest text-white/40">
             <Link href="/legal/privacy" className="hover:text-blue-500 transition">Privacy</Link>
             <Link href="/legal/terms" className="hover:text-blue-500 transition">Terms</Link>
+            <Link href="/admin" className="hover:text-blue-500 transition opacity-20 hover:opacity-100 italic">Admin Access</Link>
             <a href="mailto:Japonendeutch@gmail.com" className="hover:text-blue-500 transition">Contact</a>
           </div>
         </div>

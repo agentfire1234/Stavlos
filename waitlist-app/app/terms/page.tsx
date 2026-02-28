@@ -182,7 +182,8 @@ export default function TermsOfService() {
                     <p className="text-gray-500 text-sm">© 2026 Stavlos. All rights reserved.</p>
                     <div className="flex gap-6 text-sm">
                         <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</Link>
-                        <Link href="/" className="text-gray-400 hover:text-white transition-colors">Back to Stavlos</Link>
+                        <Link href="/admin" className="text-gray-400 hover:text-white transition-colors opacity-20">Admin</Link>
+                        <Link href="/" className="text-gray-400 hover:text-white transition-colors font-bold">Back to Stavlos</Link>
                     </div>
                 </div>
             </div>
