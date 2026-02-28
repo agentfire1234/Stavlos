@@ -18,16 +18,16 @@ export function FounderStorySection() {
                     >
                         <h2 className="text-3xl md:text-5xl font-bold mb-8 tracking-tight italic">Built by a Student, For Students</h2>
                         <div className="space-y-6 text-base sm:text-lg text-[var(--text-muted)] leading-relaxed">
-                            <p>Hi, I&apos;m Abraham. I&apos;m 14.</p>
+                            <p>Hi, I'm Abraham. I'm 14.</p>
                             <p>
                                 I built Stavlos because I was tired of searching through syllabi at midnight, missing deadlines,
                                 and feeling disorganized.
                             </p>
                             <p className="font-semibold text-[var(--headline)]">
-                                Most &apos;student tools&apos; are built by people who haven&apos;t been in a classroom in 20 years. They don&apos;t get it.
+                                Most 'student tools' are built by people who haven't been in a classroom in 20 years. They don't get it.
                             </p>
                             <p>
-                                Stavlos is different because I&apos;m actually a student, I use it for my own courses, and I understand the pain.
+                                Stavlos is different because I'm actually a student, I use it for my own courses, and I understand the pain.
                             </p>
                         </div>
                     </motion.div>
@@ -51,7 +51,7 @@ export function FounderStorySection() {
                                 <p className="mt-1 text-[var(--text-muted)]">Less than 2 coffees, or the stress of missing one deadline.</p>
                             </div>
                             <div className="p-4 rounded-xl bg-[var(--primary-blue)] text-white">
-                                <p><strong>The PC Goal 🎮</strong></p>
+                                <p><strong>The PC Goal</strong></p>
                                 <p className="mt-1 opacity-90">If 500 students join, I get my gaming PC. If 5,000 join, I&apos;ve built a real business.</p>
                             </div>
                         </div>

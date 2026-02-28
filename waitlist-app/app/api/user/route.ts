@@ -5,25 +5,29 @@ import { getBadge } from '@/lib/referral'
 function maskEmail(email: string) {
     if (!email || !email.includes('@')) return email
     const [username, domain] = email.split('@')
-    if (username.length <= 1) return `*@${domain}`
-    return `${username.substring(0, Math.min(3, username.length))}***@${domain}`
+    if (username.length <= 3) return `${username[0]}***@${domain}`
+    return `${username.substring(0, 3)}***@${domain}`
 }
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const email = searchParams.get('email')
+    const code = searchParams.get('code')
 
-    if (!email) {
-        return NextResponse.json({ error: 'Email required' }, { status: 400 })
+    if (!email && !code) {
+        return NextResponse.json({ error: 'Email or code required' }, { status: 400 })
     }
 
     try {
-        // Fetch user with rank
-        const { data: user, error } = await supabase
-            .from('waitlist_with_rank')
-            .select('*')
-            .eq('email', email.trim().toLowerCase())
-            .single()
+        let query = supabase.from('waitlist_with_rank').select('*')
+
+        if (code) {
+            query = query.eq('referral_code', code)
+        } else {
+            query = query.eq('email', email!.trim().toLowerCase())
+        }
+
+        const { data: user, error } = await query.single()
 
         if (error || !user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -48,7 +52,7 @@ export async function GET(request: Request) {
             success: true,
             user: {
                 id: user.id,
-                email: user.email,
+                email: maskEmail(user.email),
                 rank: user.current_rank,
                 referralCount: user.referral_count,
                 referralLink,

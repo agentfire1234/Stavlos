@@ -21,7 +21,13 @@ export function FinalCTASection({ studentsJoined, onSignup }: FinalCTAProps) {
         setIsLoading(true)
         try {
             await onSignup(email)
+        } catch (e) {
+            console.error(e)
+            setIsLoading(false)
         } finally {
+            // Only set to false if we didn't catch, or just always set it here
+            // The task asks to reset it on error.
+            // If onSignup succeeds, it might redirect, so setting to false is usually safe.
             setIsLoading(false)
         }
     }
@@ -67,9 +73,9 @@ export function FinalCTASection({ studentsJoined, onSignup }: FinalCTAProps) {
                     </form>
 
                     <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-16 text-[10px] sm:text-sm font-bold text-[var(--text-muted)] uppercase tracking-widest">
-                        <div className="flex items-center gap-2">✨ No credit card required</div>
-                        <div className="flex items-center gap-2">🚀 Launch: June 2026</div>
-                        <div className="flex items-center gap-2">✨ Early access (1 week before)</div>
+                        <div className="flex items-center gap-2">No credit card required</div>
+                        <div className="flex items-center gap-2">Launch: June 2026</div>
+                        <div className="flex items-center gap-2">Early access (1 week before)</div>
                     </div>
 
 

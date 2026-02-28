@@ -1,5 +1,3 @@
-// BUG 016 FIX: Removed backtick markdown syntax from JSX return statement.
-// BUG 018 FIX: Replaced <a> tags for internal links with Next.js <Link> component.
 import Link from 'next/link'
 
 export default function PrivacyPolicy() {
@@ -15,10 +13,10 @@ export default function PrivacyPolicy() {
                 {/* Header */}
                 <div className="mb-12">
                     <h1 className="text-4xl font-bold mb-4">Privacy Policy</h1>
-                    <p className="text-gray-400 text-sm">Last updated: February 2026 · Effective: February 2026</p>
+                    <p className="text-gray-400 text-sm">Last updated: June 2026 · Effective: June 2026</p>
                     <div className="mt-6 p-4 border border-white/10 rounded-xl bg-white/5">
                         <p className="text-gray-300 text-sm leading-relaxed">
-                            <strong className="text-white">Plain English first:</strong> We collect your email to keep you updated about Stavlos. We collect basic usage data to make the product better. We don&apos;t sell your data. Ever.
+                            <strong className="text-white">Plain English first:</strong> We collect your email to keep you updated about Stavlos. We collect basic usage data to make the product better. We don't sell your data. Ever.
                         </p>
                     </div>
                 </div>
@@ -61,7 +59,7 @@ export default function PrivacyPolicy() {
                             <li>Referral source (how you found us)</li>
                         </ul>
 
-                        <h3 className="text-lg font-semibold text-white mb-2 mt-6">2.4 What We Don&apos;t Collect</h3>
+                        <h3 className="text-lg font-semibold text-white mb-2 mt-6">2.4 What We Don't Collect</h3>
                         <ul className="list-disc list-inside mt-3 space-y-2 ml-4">
                             <li>Your real name (unless you give it to us)</li>
                             <li>Your phone number</li>
@@ -77,7 +75,7 @@ export default function PrivacyPolicy() {
                                 { title: "Messages & uploaded files", desc: "To provide the AI study service. Your messages are sent to our AI provider (Groq/OpenRouter) to generate responses. They are not used to train AI models." },
                                 { title: "Usage data", desc: "To understand how people use Stavlos and make it better. We look at patterns, not individual users." },
                                 { title: "Payment data", desc: "To process your subscription. Handled entirely by Stripe. We only see that you paid and when." },
-                                { title: "Referral data", desc: "To track referrals and give you the discount you earned. That's it." },
+                                { title: "Referral data", desc: "To track referrals and apply your €5 price lock or free month bonus reward. That's it." },
                             ].map((item) => (
                                 <div key={item.title} className="p-4 border border-white/10 rounded-xl">
                                     <p className="font-semibold text-white">{item.title}</p>
@@ -89,7 +87,7 @@ export default function PrivacyPolicy() {
 
                     <section>
                         <h2 className="text-2xl font-bold text-white mb-4">4. Who We Share Data With</h2>
-                        <p className="mb-4">We don&apos;t sell your data. We only share with services that help us run Stavlos:</p>
+                        <p className="mb-4">We don't sell your data. We only share with services that help us run Stavlos:</p>
                         <div className="space-y-3">
                             {[
                                 { name: "Supabase", use: "Database hosting", location: "EU" },
@@ -196,13 +194,13 @@ export default function PrivacyPolicy() {
 
                     <section>
                         <h2 className="text-2xl font-bold text-white mb-4">9. Age Requirements</h2>
-                        <p>Stavlos is designed for students aged 13 and older. If you are under 16, you may need parental consent depending on your country&apos;s laws.</p>
+                        <p>Stavlos is designed for students aged 13 and older. If you are under 16, you may need parental consent depending on your country's laws.</p>
                         <p className="mt-3">We do not knowingly collect data from children under 13. Contact us at <a href="mailto:privacy@stavlos.com" className="text-blue-400 hover:underline">privacy@stavlos.com</a> if you believe this has happened.</p>
                     </section>
 
                     <section>
                         <h2 className="text-2xl font-bold text-white mb-4">10. Changes to This Policy</h2>
-                        <p>For significant changes, we&apos;ll email you at least 14 days in advance. The date at the top of this page always shows when it was last updated.</p>
+                        <p>For significant changes, we'll email you at least 14 days in advance. The date at the top of this page always shows when it was last updated.</p>
                     </section>
 
                     <section>

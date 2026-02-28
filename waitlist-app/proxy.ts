@@ -1,22 +1,30 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// BUG 005 FIX: Modified Proxy to use exact pathname matching.
+// Previously, /admin-something would be incorrectly blocked.
+// Also switched to cookie-based auth consistently.
+
+export function isProtectedRoute(pathname: string): boolean {
+    return pathname === '/admin' || pathname.startsWith('/api/admin')
+}
+
+export function validateAdminToken(token: string | undefined): boolean {
+    if (!token) return false
+    return token === process.env.ADMIN_SECRET
+}
+
 export function proxy(request: NextRequest) {
     const path = request.nextUrl.pathname;
 
-    // Protect /api/admin routes globally
-    if (path.startsWith('/api/admin') && path !== '/api/admin/login') {
+    // Protect /admin and /api/admin routes
+    if (isProtectedRoute(path) && path !== '/api/admin/login') {
         const token = request.cookies.get('admin_token')?.value
-        const adminSecret = process.env.ADMIN_SECRET
 
-        if (!adminSecret || token !== adminSecret) {
+        if (!validateAdminToken(token)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
     }
 
-    return NextResponse.next()
-}
-
-export const config = {
-    matcher: ['/api/admin/:path*']
+    return null
 }

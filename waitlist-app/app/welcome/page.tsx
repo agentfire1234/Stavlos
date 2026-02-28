@@ -13,6 +13,7 @@ import Link from 'next/link'
 function WelcomeContent() {
     const searchParams = useSearchParams()
     const email = searchParams?.get('email')
+    const code = searchParams?.get('code') || searchParams?.get('ref')
 
     const [userData, setUserData] = useState<any>(null)
     const [leaderboard, setLeaderboard] = useState<any[]>([])
@@ -27,7 +28,8 @@ function WelcomeContent() {
 
         async function fetchData() {
             try {
-                const res = await fetch(`/api/user?email=${encodeURIComponent(email || '')}`)
+                const queryParam = code ? `code=${encodeURIComponent(code)}` : `email=${encodeURIComponent(email || '')}`
+                const res = await fetch(`/api/user?${queryParam}`)
                 const data = await res.json()
                 if (res.ok) {
                     setUserData(data.user)
@@ -68,7 +70,7 @@ function WelcomeContent() {
         <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg-main)] p-6 text-center">
             <Logo size={48} className="mb-8" />
             <h1 className="text-3xl font-bold mb-4 tracking-tight uppercase italic">Waitlist Entry Not Found</h1>
-            <p className="text-[var(--text-muted)] mb-8">It seems we couldn&apos;t find your entry. Did you join through the main page?</p>
+            <p className="text-[var(--text-muted)] mb-8">It seems we couldn't find your entry. Did you join through the main page?</p>
             <Link href="/" passHref legacyBehavior>
                 <Button>Back to Home</Button>
             </Link>
@@ -76,10 +78,10 @@ function WelcomeContent() {
     )
 
     const progress = Math.min((userData.referralCount / 2) * 100, 100)
-    const finalPrice = calculatePrice(userData.rank, userData.referralCount)
+    const priceData = calculatePrice(userData.rank, userData.referralCount)
     const badgeInfo = getBadge(userData.rank)
 
-    const shareText = `I just joined Stavlos - an AI that reads your syllabus so you never have to search PDFs at 2am again 😅\n\nFirst 2,000 get it for €5/month forever. I'm #${userData.rank} in line.\n\nJoin with my link and we both get 10% off:\n${userData.referralLink}`
+    const shareText = `I just joined Stavlos - an AI that reads your syllabus so you never have to search PDFs at 2am again.\n\nFirst 2,000 get it for €5/month forever. I'm #${userData.rank} in line.\n\nJoin with my link to lock in the €5 price or get a free month:\n${userData.referralLink}`
 
     return (
         <div className="min-h-screen bg-[var(--bg-main)] text-[var(--headline)]">
@@ -98,7 +100,7 @@ function WelcomeContent() {
                     <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-[var(--success-green)]/10 border border-[var(--success-green)]/20 mb-4 animate-bounce">
                         <Check className="w-12 h-12 text-[var(--success-green)]" />
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-black tracking-tighter uppercase italic">You&apos;re In! 🎉</h1>
+                    <h1 className="text-5xl md:text-6xl font-black tracking-tighter uppercase italic">You&apos;re In!</h1>
                     <p className="text-xl text-[var(--text-muted)] font-medium">Welcome to the Stavlos founding members</p>
                 </section>
 
@@ -111,7 +113,7 @@ function WelcomeContent() {
                         <h2 className="text-3xl font-black italic mb-6 uppercase tracking-tighter">{badgeInfo.title}</h2>
                         <div className="p-4 rounded-xl bg-[var(--bg-section)] border border-[var(--border)]">
                             <p className="text-xs font-bold mb-1 opacity-60">Locked Price</p>
-                            <p className="text-4xl font-black tracking-tighter">€{finalPrice.toFixed(2)}<span className="text-sm font-bold opacity-30 ml-1">/mo</span></p>
+                            <p className="text-4xl font-black tracking-tighter">€{priceData.finalPrice.toFixed(2)}<span className="text-sm font-bold opacity-30 ml-1">/mo</span></p>
                         </div>
                     </div>
 
@@ -196,12 +198,12 @@ function WelcomeContent() {
                                         </span>
                                         <div>
                                             <p className="font-bold text-lg">{user.email.split('@')[0].substring(0, 3)}***</p>
-                                            <p className="text-[10px] font-black uppercase opacity-40">Position: #{index + 1}</p>
+                                            <p className="text-[10px] font-black uppercase opacity-40">Position: #{user.rank || (index + 1)}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-sm font-black text-[var(--primary-blue)]">{user.referral_count} referrals</p>
-                                        {index === 0 && <Badge variant="primary" className="mt-1">Rank #1 🔥</Badge>}
+                                        {index === 0 && <Badge variant="primary" className="mt-1">Rank #1</Badge>}
                                     </div>
                                 </div>
                             )
@@ -218,21 +220,21 @@ function WelcomeContent() {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
                         <TimelineStep icon={<Clock />} date="NOW" label="You're on the list" active />
                         <TimelineStep icon={<ArrowRight />} date="MAY" label="Early Beta Access" />
-                        <TimelineStep icon={<Clock />} date="JUN" label="Launch Day 🚀" />
+                        <TimelineStep icon={<Clock />} date="JUN" label="Launch Day" />
                         <TimelineStep icon={<Check />} date="JUN+" label="Price Locked" />
                     </div>
                 </section>
             </main>
 
             <footer className="p-12 text-center text-xs text-[var(--text-muted)] font-medium opacity-60">
-                <p className="mb-4">Check your email for confirmation. We&apos;ll keep you updated on our progress.</p>
+                <p className="mb-4">Check your email for confirmation. We'll keep you updated on our progress.</p>
                 <Logo size={20} className="mx-auto grayscale" />
             </footer>
         </div>
     )
 }
 
-function TimelineStep({ icon, date, label, active = false }: any) {
+function TimelineStep({ icon, date, label, active = false }: { icon: React.ReactNode, date: string, label: string, active?: boolean }) {
     return (
         <div className={`flex flex-col items-center gap-3 ${active ? 'opacity-100' : 'opacity-40'}`}>
             <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${active ? 'border-[var(--primary-blue)] bg-[var(--primary-blue)]/10 text-[var(--primary-blue)]' : 'border-[var(--border)]'}`}>

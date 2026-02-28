@@ -24,7 +24,7 @@ export function ReferralBonusSection() {
                 >
                     <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight">Lock in Your Price</h2>
                     <p className="text-[var(--text-muted)] text-lg max-w-xl mx-auto italic">
-                        Refer 1 friend to lock in €5/mo. Refer 2 for a free month.
+                        Refer 1 friend to lock in €5/mo. Refer 2 for your first month free.
                     </p>
                 </motion.div>
 

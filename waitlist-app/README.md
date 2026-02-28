@@ -19,7 +19,7 @@ Edit `.env.local` with your credentials:
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 RESEND_API_KEY=your_resend_api_key
-ADMIN_EMAIL=Japonendeutch@gmail.com
+ADMIN_EMAIL=your_admin_email@gmail.com
 NEXT_PUBLIC_URL=http://localhost:3000
 ```
 
@@ -58,7 +58,7 @@ Open [http://localhost:3000](http://localhost:3000)
 - Success state with:
   - User's rank and badge
   - Referral link
-  - Progress bar (2+ referrals = 10% off)
+  - Progress bar (1 Referral = €5 Lock, 2 Referrals = 1st Month Free)
   - Leaderboard preview
 
 ### Admin Dashboard (`/admin`)
@@ -72,16 +72,17 @@ Open [http://localhost:3000](http://localhost:3000)
 ## Gamification System
 
 ### Badges (Based on Rank)
-- **1-100**: FOUNDING MEMBER ⭐ (€5/mo forever)
-- **101-1,000**: EARLY BIRD 🐦 (€5/mo for 12 months)
-- **1,001-2,000**: PIONEER 🚀 (€5/mo for 12 months)
-- **2,001+**: STAVLOS SCHOLAR 📚 (€8/mo)
+- **1-100**: FOUNDING MEMBER (€5/mo forever + credits)
+- **101-1,000**: EARLY BIRD (€5/mo)
+- **1,001-2,000**: PIONEER (€5/mo)
+- **2,001+**: STAVLOS SCHOLAR (€8/mo)
 
 ### Referral Rewards
-- **2+ referrals** = Additional 10% off for 12 months
-- Stacks with rank-based pricing
+- **1 referral** = Lock in €5/month founding price forever (for those > #2000)
+- **2 referrals** = First month completely free
+- Top 10 referrers get **lifetime free access**
 
-**Example:** Rank #500 + 2 referrals = €4.50/mo (€5 × 0.9)
+**Example:** Rank #5000 + 1 referral = €5/mo locked!
 
 ## Email Automation
 
@@ -166,4 +167,4 @@ waitlist-app/
 
 ---
 
-Built by Abraham, 14 🚀
+Built by Abraham, 14

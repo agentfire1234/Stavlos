@@ -4,8 +4,8 @@ import { supabase } from '@/lib/supabase'
 function maskEmail(email: string) {
     if (!email || !email.includes('@')) return email
     const [username, domain] = email.split('@')
-    if (username.length <= 1) return `*@${domain}`
-    return `${username.substring(0, Math.min(3, username.length))}***@${domain}`
+    if (username.length <= 3) return `${username[0]}***@${domain}`
+    return `${username.substring(0, 3)}***@${domain}`
 }
 
 export async function GET() {

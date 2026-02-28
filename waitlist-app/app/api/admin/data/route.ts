@@ -1,10 +1,11 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { validateAdminToken } from '@/proxy'
 
 export async function GET(request: NextRequest) {
     try {
         const token = request.cookies.get('admin_token')?.value
-        if (!token || token !== process.env.ADMIN_SECRET) {
+        if (!validateAdminToken(token)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
         // 1. Fetch all users with ranks
@@ -12,6 +13,7 @@ export async function GET(request: NextRequest) {
             .from('waitlist_with_rank')
             .select('*')
             .order('current_rank', { ascending: true })
+            .limit(100)
 
         if (usersError) throw usersError
 

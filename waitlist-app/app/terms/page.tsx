@@ -1,5 +1,3 @@
-// BUG 016 FIX: Removed backtick markdown syntax from JSX return statement.
-// BUG 018 FIX: Replaced <a> tags for internal links with Next.js <Link> component.
 import Link from 'next/link'
 
 export default function TermsOfService() {
@@ -18,7 +16,7 @@ export default function TermsOfService() {
                     <p className="text-gray-400 text-sm">Last updated: February 2026 · Effective: February 2026</p>
                     <div className="mt-6 p-4 border border-white/10 rounded-xl bg-white/5">
                         <p className="text-gray-300 text-sm leading-relaxed">
-                            <strong className="text-white">Plain English first:</strong> Use Stavlos for studying. Don&apos;t abuse it. Pay your subscription. If something breaks we&apos;ll fix it. That&apos;s basically it.
+                            <strong className="text-white">Plain English first:</strong> Use Stavlos for studying. Don't abuse it. Pay your subscription. If something breaks we'll fix it. That's basically it.
                         </p>
                     </div>
                 </div>
@@ -27,7 +25,7 @@ export default function TermsOfService() {
                     <section>
                         <h2 className="text-2xl font-bold text-white mb-4">1. Who We Are &amp; Who This Is For</h2>
                         <p>Stavlos is an AI-powered study tool operated as a sole proprietorship registered in the Netherlands. These Terms govern your use of the Stavlos website, waitlist, and application.</p>
-                        <p className="mt-3">By signing up for the waitlist or creating an account, you agree to these Terms. If you don&apos;t agree, don&apos;t use Stavlos.</p>
+                        <p className="mt-3">By signing up for the waitlist or creating an account, you agree to these Terms. If you don't agree, don't use Stavlos.</p>
                         <div className="mt-4 p-4 border border-white/10 rounded-xl bg-white/5 text-sm">
                             <p><strong className="text-white">Operator:</strong> Stavlos (sole proprietorship, Netherlands)</p>
                             <p className="mt-1"><strong className="text-white">Contact:</strong> hello@stavlos.com</p>
@@ -37,7 +35,7 @@ export default function TermsOfService() {
 
                     <section>
                         <h2 className="text-2xl font-bold text-white mb-4">2. Age Requirements</h2>
-                        <p>You must be at least 13 to use Stavlos. If you&apos;re between 13–16, your parent or guardian must consent. If you&apos;re under 13, you may not use Stavlos.</p>
+                        <p>You must be at least 13 to use Stavlos. If you're between 13–16, your parent or guardian must consent. If you're under 13, you may not use Stavlos.</p>
                     </section>
 
                     <section>
@@ -52,11 +50,11 @@ export default function TermsOfService() {
                         <h3 className="text-lg font-semibold text-white mb-2 mt-6">3.2 One Account Per Person</h3>
                         <p>Creating multiple accounts to abuse free tier limits or referral rewards is not allowed and will result in all accounts being banned.</p>
                         <h3 className="text-lg font-semibold text-white mb-2 mt-6">3.3 Account Deletion</h3>
-                        <p>You can delete your account from Settings anytime. We&apos;ll delete your data within 30 days, except where legally required.</p>
+                        <p>You can delete your account from Settings anytime. We'll delete your data within 30 days, except where legally required.</p>
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold text-white mb-4">4. What You Can and Can&apos;t Do</h2>
+                        <h2 className="text-2xl font-bold text-white mb-4">4. What You Can and Can't Do</h2>
                         <h3 className="text-lg font-semibold text-white mb-3">✅ You CAN:</h3>
                         <ul className="list-disc list-inside space-y-2 ml-4">
                             <li>Use Stavlos for your own personal studying</li>
@@ -73,14 +71,14 @@ export default function TermsOfService() {
                             <li>Use Stavlos to generate harmful, illegal, or offensive content</li>
                             <li>Attempt to reverse-engineer, scrape, or copy Stavlos</li>
                             <li>Use bots to spam the service</li>
-                            <li>Upload copyrighted materials you don&apos;t have rights to</li>
+                            <li>Upload copyrighted materials you don't have rights to</li>
                             <li>Abuse the free tier or referral system</li>
                             <li>Resell or sublicense access to Stavlos</li>
-                            <li>Attempt to access other users&apos; accounts or data</li>
+                            <li>Attempt to access other users' accounts or data</li>
                         </ul>
                         <div className="mt-6 p-4 border border-yellow-500/30 rounded-xl bg-yellow-500/5">
                             <p className="text-yellow-400 text-sm font-semibold">Note on Academic Integrity</p>
-                            <p className="text-sm mt-2">Stavlos is a study tool, not a cheating tool. Using AI to learn and understand concepts is fine. Submitting AI-generated work as your own without disclosure may violate your institution&apos;s academic integrity policy — that&apos;s your responsibility, not ours.</p>
+                            <p className="text-sm mt-2">Stavlos is a study tool, not a cheating tool. Using AI to learn and understand concepts is fine. Submitting AI-generated work as your own without disclosure may violate your institution's academic integrity policy — that's your responsibility, not ours.</p>
                         </div>
                     </section>
 
@@ -90,9 +88,9 @@ export default function TermsOfService() {
                             {[
                                 { title: "Free Plan", desc: "Available to all users with limited features. Free plan limits may change with reasonable notice." },
                                 { title: "Pro Plan", desc: "A monthly subscription. Your card is charged monthly on the same date you signed up. Payments processed by Stripe." },
-                                { title: "Early Bird Pricing (BUG 012)", desc: "The first 2,000 users on the waitlist get €5/month forever (standard: €8/month). This price is locked in as long as your subscription remains active. If you cancel and resubscribe, standard pricing applies." },
-                                { title: "Referral Discount", desc: "Referring 2 friends earns you an additional 10% lifetime discount stacked on top of your base price. Example: €5 founding price × 0.9 = €4.50/month." },
-                                { title: "Price Changes", desc: "We may change prices with at least 30 days notice. Early bird pricing is excluded from increases as long as your subscription stays active." },
+                                { title: "Early Bird Pricing", desc: "The first 2,000 users on the waitlist get €5/month forever (standard: €8/month). This price is locked in by default for these users." },
+                                { title: "Referral Rewards", desc: "Referring 1 friend locks in your €5/month founding price regardless of your waitlist position. Referring 2 friends earns you your first month completely free." },
+                                { title: "Price Changes", desc: "We may change prices with at least 30 days notice. Early bird and referral-locked pricing is excluded from standard increases as long as your subscription stays active." },
                                 { title: "Failed Payments", desc: "If your payment fails, we'll retry up to 3 times in 7 days. After that, your account is downgraded to free until you update your payment method." },
                             ].map((item) => (
                                 <div key={item.title} className="p-4 border border-white/10 rounded-xl">
@@ -122,14 +120,14 @@ export default function TermsOfService() {
 
                     <section>
                         <h2 className="text-2xl font-bold text-white mb-4">7. Cancellation</h2>
-                        <p>Cancel your subscription anytime from Settings → Billing. Cancellation takes effect at the end of your current billing period. You won&apos;t be charged again after cancelling.</p>
+                        <p>Cancel your subscription anytime from Settings → Billing. Cancellation takes effect at the end of your current billing period. You won't be charged again after cancelling.</p>
                         <p className="mt-3">We may terminate accounts that violate these Terms. Serious violations may result in immediate termination without notice.</p>
                     </section>
 
                     <section>
                         <h2 className="text-2xl font-bold text-white mb-4">8. AI &amp; Content</h2>
                         <h3 className="text-lg font-semibold text-white mb-2">8.1 AI Accuracy</h3>
-                        <p>Stavlos uses AI to generate responses. AI can make mistakes. Always verify important information from official sources. Don&apos;t rely on Stavlos for medical, legal, or financial decisions.</p>
+                        <p>Stavlos uses AI to generate responses. AI can make mistakes. Always verify important information from official sources. Don't rely on Stavlos for medical, legal, or financial decisions.</p>
                         <h3 className="text-lg font-semibold text-white mb-2 mt-4">8.2 Your Content</h3>
                         <p>You own everything you upload. By uploading, you give us permission to process it to provide the service. We don&apos;t claim ownership of your content.</p>
                         <h3 className="text-lg font-semibold text-white mb-2 mt-4">8.3 AI Output</h3>
@@ -138,7 +136,7 @@ export default function TermsOfService() {
 
                     <section>
                         <h2 className="text-2xl font-bold text-white mb-4">9. Availability &amp; Uptime</h2>
-                        <p>We aim to keep Stavlos available 24/7 but can&apos;t guarantee it. We may take the service down for maintenance and will try to give advance notice when possible.</p>
+                        <p>We aim to keep Stavlos available 24/7 but can't guarantee it. We may take the service down for maintenance and will try to give advance notice when possible.</p>
                     </section>
 
                     <section>
@@ -159,7 +157,7 @@ export default function TermsOfService() {
 
                     <section>
                         <h2 className="text-2xl font-bold text-white mb-4">12. Changes to These Terms</h2>
-                        <p>For significant changes, we&apos;ll email you at least 14 days in advance. Continuing to use Stavlos after changes take effect means you accept the new Terms.</p>
+                        <p>For significant changes, we'll email you at least 14 days in advance. Continuing to use Stavlos after changes take effect means you accept the new Terms.</p>
                     </section>
 
                     <section>

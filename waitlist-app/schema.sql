@@ -28,6 +28,24 @@ CREATE TRIGGER on_waitlist_signup
   FOR EACH ROW
   EXECUTE FUNCTION increment_referral_count();
 
+-- 2b. DECREMENT REFERRAL COUNT TRIGGER (on delete)
+CREATE OR REPLACE FUNCTION decrement_referral_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF OLD.referred_by IS NOT NULL THEN
+    UPDATE waitlist 
+    SET referral_count = GREATEST(0, referral_count - 1)
+    WHERE id = OLD.referred_by;
+  END IF;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER on_waitlist_delete
+  AFTER DELETE ON waitlist
+  FOR EACH ROW
+  EXECUTE FUNCTION decrement_referral_count();
+
 -- 3. RANK VIEW (for leaderboard and badge assignment)
 CREATE OR REPLACE VIEW waitlist_with_rank AS
 SELECT 

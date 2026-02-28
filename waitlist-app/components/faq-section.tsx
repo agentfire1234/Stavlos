@@ -19,7 +19,7 @@ const faqs = [
     },
     {
         question: "Is my data private?",
-        answer: "Yes. Your syllabi are processed securely and used only to power your assistant. We don&apos;t sell your data to publishers or university boards. Your study habits are your business."
+        answer: "Yes. Your syllabi are processed securely and used only to power your assistant. We don't sell your data to publishers or university boards. Your study habits are your business."
     },
     {
         question: "When does it launch?",
@@ -56,7 +56,7 @@ export function FAQSection() {
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
                 >
-                    <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight">Questions? We&apos;ve Got Answers.</h2>
+                    <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight">Questions? We've Got Answers.</h2>
                 </motion.div>
 
                 <div className="space-y-4">

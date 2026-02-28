@@ -32,7 +32,10 @@ export function Hero({ spotsLeft, studentsJoined, onSignup }: HeroProps) {
             {/* Background Decorative Elements */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 w-72 md:w-96 h-72 md:h-96 bg-[var(--primary-blue)]/10 rounded-full blur-[120px] animate-pulse" />
-                <div className="absolute bottom-1/4 right-1/4 w-72 md:w-96 h-72 md:h-96 bg-[var(--success-green)]/5 rounded-full blur-[120px] animate-pulse delay-700" />
+                <div
+                    className="absolute bottom-1/4 right-1/4 w-72 md:w-96 h-72 md:h-96 bg-[var(--success-green)]/5 rounded-full blur-[120px] animate-pulse"
+                    style={{ animationDelay: '700ms' }}
+                />
             </div>
 
             <div className="max-w-7xl mx-auto w-full">
@@ -61,7 +64,7 @@ export function Hero({ spotsLeft, studentsJoined, onSignup }: HeroProps) {
                         </h1>
 
                         <p className="text-[var(--text-muted)] text-lg sm:text-xl md:text-2xl mb-8 sm:mb-12 max-w-2xl mx-auto lg:mx-0 font-medium">
-                            Stop searching. Start knowing. Stavlos reads your syllabus so you don&apos;t have to.{' '}
+                            Stop searching. Start knowing. Stavlos reads your syllabus so you don't have to.{' '}
                             Be one of the first founding members locking in €5/month forever.
                         </p>
 
@@ -91,9 +94,9 @@ export function Hero({ spotsLeft, studentsJoined, onSignup }: HeroProps) {
 
                         {/* Trust badges */}
                         <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-8 text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)]">
-                            <div className="flex items-center gap-2">✨ LOCK IN €5/MO FOREVER</div>
-                            <div className="flex items-center gap-2">🚀 JUNE 2026 LAUNCH</div>
-                            <div className="flex items-center gap-2">🛡️ NO CREDIT CARD NEEDED</div>
+                            <div className="flex items-center gap-2">LOCK IN €5/MO FOREVER</div>
+                            <div className="flex items-center gap-2">JUNE 2026 LAUNCH</div>
+                            <div className="flex items-center gap-2">NO CREDIT CARD NEEDED</div>
                         </div>
                     </motion.div>
 

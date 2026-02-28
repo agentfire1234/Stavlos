@@ -72,7 +72,7 @@ export default function WaitlistPage() {
       const data = await response.json()
       if (response.ok) {
         // Redirect to specialized /welcome hub
-        router.push(`/welcome?email=${encodeURIComponent(data.user.email)}`)
+        router.push(`/welcome?code=${encodeURIComponent(data.user.referralCode)}`)
       } else {
         alert(data.error || 'Something went wrong')
       }

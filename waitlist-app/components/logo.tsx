@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useId } from 'react'
 import Link from 'next/link'
 
 type Props = {
@@ -8,6 +8,8 @@ type Props = {
 }
 
 export function Logo({ size = 28, className, href = '/' }: Props) {
+  const id1 = useId()
+  const id2 = useId()
   const strokeWidth = Math.max(2, Math.round(size / 14))
   const stripeGap = Math.max(4, Math.round(size / 7))
 
@@ -21,16 +23,16 @@ export function Logo({ size = 28, className, href = '/' }: Props) {
     >
       <circle cx="24" cy="32" r="20" fill="none" stroke="currentColor" strokeWidth={strokeWidth} />
       <circle cx="40" cy="32" r="20" fill="none" stroke="currentColor" strokeWidth={strokeWidth} />
-      <mask id="m1">
+      <mask id={id1}>
         <rect x="0" y="0" width="64" height="64" fill="black" />
         <circle cx="24" cy="32" r="20" fill="white" />
       </mask>
-      <mask id="m2">
+      <mask id={id2}>
         <rect x="0" y="0" width="64" height="64" fill="black" />
         <circle cx="40" cy="32" r="20" fill="white" />
       </mask>
-      <g mask="url(#m1)">
-        <g mask="url(#m2)">
+      <g mask={`url(#${id1})`}>
+        <g mask={`url(#${id2})`}>
           {Array.from({ length: 16 }).map((_, i) => {
             const x = i * stripeGap
             return (

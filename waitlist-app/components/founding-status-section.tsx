@@ -64,7 +64,7 @@ export function FoundingStatusSection({ currentSpots, totalSpots }: FoundingStat
                             Founding Tier Progress
                         </Badge>
 
-                        {currentSpots >= 1000 && (
+                        {currentSpots >= 50 && (
                             <div className="relative w-48 h-48 mb-6">
                                 <svg className="w-full h-full transform -rotate-90">
                                     <circle

@@ -57,20 +57,11 @@ export default function AdminDashboard() {
     useEffect(() => {
         if (!authorized) return
 
-        const channel = supabase
-            .channel('admin_sync')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'waitlist' },
-                () => {
-                    fetchAdminData()
-                }
-            )
-            .subscribe()
+        const interval = setInterval(() => {
+            fetchAdminData()
+        }, 30000) // Poll every 30 seconds
 
-        return () => {
-            supabase.removeChannel(channel)
-        }
+        return () => clearInterval(interval)
     }, [authorized])
 
     const fetchAdminData = async () => {
@@ -132,15 +123,15 @@ export default function AdminDashboard() {
                 </div>
 
                 <nav className="space-y-2 flex-1">
-                    <AdminNavItem icon={<TrendingUp />} label="Overview" active onClick={() => alert('Overview active')} />
-                    <AdminNavItem icon={<Users />} label="Waitlist" onClick={() => alert('Waitlist view')} />
-                    <AdminNavItem icon={<ShieldCheck />} label="Security" onClick={() => alert('Security settings')} />
-                    <AdminNavItem icon={<Mail />} label="Broadcast" onClick={() => alert('Email broadcast')} />
+                    <AdminNavItem icon={<TrendingUp />} label="Overview" active />
+                    <AdminNavItem icon={<Users />} label="Waitlist" />
+                    <AdminNavItem icon={<ShieldCheck />} label="Security" />
+                    <AdminNavItem icon={<Mail />} label="Broadcast" />
                 </nav>
 
                 <div className="pt-6 border-t border-[var(--border)]">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[var(--primary-blue)] flex items-center justify-center text-white text-[10px] font-bold underline">AB</div>
+                        <div className="w-8 h-8 rounded-full bg-[var(--primary-blue)] flex items-center justify-center text-white text-[10px] font-bold">AB</div>
                         <div>
                             <p className="text-sm font-bold">Abraham</p>
                             <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-black">Founder</p>
@@ -212,9 +203,12 @@ export default function AdminDashboard() {
                                             </td>
                                             <td className="px-6 py-4 font-mono text-sm">#{user.rank}</td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-bold">{user.referral_count}</span>
-                                                    {user.referral_count >= 2 && <Badge variant="success">10% Off</Badge>}
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-bold">{user.referral_count} referrals</span>
+                                                        {user.referral_count >= 1 && <Badge variant="success">Price Locked</Badge>}
+                                                    </div>
+                                                    {user.referral_count >= 2 && <span className="text-[9px] font-black uppercase text-[var(--success-green)]">1st mo Free</span>}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
@@ -248,7 +242,7 @@ export default function AdminDashboard() {
     )
 }
 
-function AdminNavItem({ icon, label, active = false, onClick }: any) {
+function AdminNavItem({ icon, label, active = false, onClick }: { icon: React.ReactElement<{ className?: string }>, label: string, active?: boolean, onClick?: () => void }) {
     return (
         <div
             onClick={onClick}
@@ -262,7 +256,7 @@ function AdminNavItem({ icon, label, active = false, onClick }: any) {
     )
 }
 
-function StatCard({ title, value, icon, trend }: any) {
+function StatCard({ title, value, icon, trend }: { title: string, value: string | number, icon: React.ReactElement<{ className?: string }>, trend?: string }) {
     return (
         <div className="card-premium p-6 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-4">

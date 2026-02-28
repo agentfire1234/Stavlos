@@ -35,7 +35,7 @@ export function ProblemSection() {
                 >
                     <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight italic uppercase">College is hard.</h2>
                     <p className="text-[var(--text-muted)] text-lg max-w-2xl mx-auto font-medium">
-                        Studying is hard enough. Finding out &apos;how&apos; to study shouldn&apos;t be.
+                        Studying is hard enough. Finding out 'how' to study shouldn't be.
                     </p>
                 </motion.div>
 
