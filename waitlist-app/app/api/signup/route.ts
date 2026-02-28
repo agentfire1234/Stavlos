@@ -39,32 +39,41 @@ export async function POST(request: Request) {
             referrerId = referrer?.id || null
         }
 
-        // Generate unique referral code
-        const referralCode = generateReferralCode()
-
-        // Insert/Upsert into waitlist
-        // BUG 011 FIX: Remove duplicate pre-check and use upsert with onConflict.
-        // This makes the signup flow faster and more robust.
+        // Check if user already exists
         const db = supabaseAdmin || supabase
-        const { data: userRecord, error: insertError } = await db
+        const { data: existingUser } = await db
             .from('waitlist')
-            .upsert(
-                {
+            .select('*')
+            .eq('email', email)
+            .single()
+
+        let userRecord = existingUser
+        let isNewUser = false
+
+        if (!existingUser) {
+            // Generate unique referral code
+            const referralCode = generateReferralCode()
+
+            // Insert into waitlist
+            const { data: newUser, error: insertError } = await db
+                .from('waitlist')
+                .insert({
                     email,
                     referral_code: referralCode,
                     referred_by: referrerId
-                },
-                { onConflict: 'email', ignoreDuplicates: false }
-            )
-            .select()
-            .single()
+                })
+                .select()
+                .single()
 
-        if (insertError) {
-            console.error('Supabase error:', insertError)
-            return NextResponse.json(
-                { error: 'Failed to join waitlist' },
-                { status: 500 }
-            )
+            if (insertError) {
+                console.error('Supabase error:', insertError)
+                return NextResponse.json(
+                    { error: 'Failed to join waitlist' },
+                    { status: 500 }
+                )
+            }
+            userRecord = newUser
+            isNewUser = true
         }
 
         // Get rank using view
@@ -80,11 +89,8 @@ export async function POST(request: Request) {
         const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://waitlist.stavlos.com'
         const referralLink = `${baseUrl}?ref=${activeReferralCode}`
 
-        // Send emails asynchronously (Fire and forget)
-        // BUG 015 FIX: Ensure emails are truly asynchronous.
-        if (rankedUser && !insertError) {
-            // Only send welcome email for NEW users (simplistic check based on created_at vs updated_at if needed)
-            // For now, let's just send it.
+        // Send emails asynchronously (Fire and forget) - ONLY for NEW users
+        if (isNewUser && rankedUser) {
             sendWelcomeEmail({ to: email, rank, referralLink }).catch(console.error)
 
             if (rank <= 2000) {
