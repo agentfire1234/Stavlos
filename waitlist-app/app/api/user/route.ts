@@ -41,8 +41,7 @@ export async function GET(request: Request) {
             .order('created_at', { ascending: true })
             .limit(10)
 
-        const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://waitlist.stavlos.com'
-        const referralLink = `${baseUrl}?ref=${user.referral_code}`
+        const referralLink = `https://waitlist.stavlos.com?ref=${user.referral_code}`
 
         const maskedLeaderboard = (leaderboard || []).map((entry: any) => ({
             ...entry,

@@ -85,8 +85,7 @@ export async function POST(request: Request) {
         const rank = rankedUser?.current_rank || 0
         const badge = getBadge(rank)
         const activeReferralCode = userRecord.referral_code
-        const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://waitlist.stavlos.com'
-        const referralLink = `${baseUrl}?ref=${activeReferralCode}`
+        const referralLink = `https://waitlist.stavlos.com?ref=${activeReferralCode}`
 
         // 4. Send emails ONLY for new users
         if (isNewUser && rankedUser) {
