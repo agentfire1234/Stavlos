@@ -29,10 +29,12 @@ export default async function PricingPage() {
     const rank = waitlist?.current_rank || 10000
     const refs = waitlist?.referral_count || 0
 
-    // Pricing Logic
-    const basePrice = rank <= 2000 ? 5 : 8
-    const discount = refs >= 2 ? 0.10 : 0
-    const finalPrice = basePrice * (1 - discount)
+    // Pricing Logic (Waitlist Promises)
+    const isPriceLocked = rank <= 2000 || refs >= 1
+    const hasFreeTrial = refs >= 2
+
+    const basePrice = 8
+    const finalPrice = isPriceLocked ? 5 : 8
 
     return (
         <div className="min-h-screen bg-black text-white p-6 md:p-12 pb-32">
@@ -60,22 +62,31 @@ export default async function PricingPage() {
 
                         <div className="relative z-10 space-y-8 text-center">
                             <div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 mb-2">Your Early Bird Claim</p>
+                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 mb-2">
+                                    {isPriceLocked ? 'Founding Member Price Locked' : 'Early Bird Claim'}
+                                </p>
                                 <div className="flex items-center justify-center gap-1">
                                     <span className="text-3xl font-black text-white/30 mt-4">€</span>
-                                    <span className="text-8xl font-black tracking-tighter">{finalPrice.toFixed(2)}</span>
+                                    <span className="text-8xl font-black tracking-tighter">{finalPrice}</span>
                                     <span className="text-lg font-bold text-white/20 ml-2">/mo</span>
                                 </div>
+                                {hasFreeTrial && (
+                                    <p className="text-blue-400 text-[10px] font-black uppercase mt-2">
+                                        + 1st Month Free Unlocked
+                                    </p>
+                                )}
                             </div>
 
                             <div className="space-y-3 pt-6 border-t border-white/5">
                                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
                                     <span>Waitlist Rank #{rank}</span>
-                                    <span>€{basePrice} Base</span>
+                                    <span>{isPriceLocked ? '€5 Locked' : '€8 Standard'}</span>
                                 </div>
                                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-blue-400">
-                                    <span>2-Friend Quest</span>
-                                    <span>{discount > 0 ? '-10% applied' : 'Not unlocked'}</span>
+                                    <span>Referral Quest</span>
+                                    <span>
+                                        {refs === 0 ? '0 refs' : refs === 1 ? '1 ref: Price Locked' : `${refs} refs: Free Month`}
+                                    </span>
                                 </div>
                             </div>
 

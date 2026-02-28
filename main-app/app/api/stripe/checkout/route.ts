@@ -38,29 +38,25 @@ export async function POST(req: Request) {
             .eq('email', user.email)
             .single()
 
-        // 2. Determine Price Tier (Minimal Luxury Logic)
-        // Base Price: €5 if Top 2000, else €8
+        // 2. Determine Price Tier & Rewards (Waitlist Promises)
+        const { data: waitlistData } = await supabaseAdmin
+            .from('waitlist')
+            .select('referral_count')
+            .eq('email', user.email)
+            .single()
+
+        const referrals = waitlistData?.referral_count || profile?.referral_count || 0
         const isTop2000 = (waitlist?.current_rank || 99999) <= 2000
 
-        // Referral: 10% off if 2+ friends
-        const hasReferralDiscount = (profile?.referral_count || 0) >= 2
+        // Promises:
+        // 1. Rank <= 2000 OR 1+ Referral = €5/mo Lock
+        // 2. 2+ Referrals = 1st Month Free (30-day trial)
+        const isPriceLocked = isTop2000 || referrals >= 1
+        const hasFreeTrial = referrals >= 2
 
-        // Select the correct price ID based on ranking
-        // In environmental variables, we should have:
-        // STRIPE_PRICE_TOP_2000_DISCOUNTED (Stacking rank + referrals)
-        // STRIPE_PRICE_TOP_2000_BASE (Just rank)
-        // STRIPE_PRICE_STANDARD_DISCOUNTED (Just referrals)
-        // STRIPE_PRICE_STANDARD_BASE (Neither)
-
-        let priceId = process.env.STRIPE_PRICE_PRO_STANDARD
-
-        if (isTop2000) {
-            priceId = hasReferralDiscount
-                ? process.env.STRIPE_PRICE_TOP_2000_REFERRAL // €4.50 (stacked)
-                : process.env.STRIPE_PRICE_TOP_2000_BASE     // €5.00
-        } else if (hasReferralDiscount) {
-            priceId = process.env.STRIPE_PRICE_PRO_DISCOUNTED // €7.20 (10% off €8)
-        }
+        const priceId = isPriceLocked
+            ? process.env.STRIPE_PRICE_PRO_FOUNDER
+            : process.env.STRIPE_PRICE_PRO_STANDARD
 
         if (!priceId) {
             console.error('Missing Stripe Price IDs in ENV')
@@ -77,11 +73,15 @@ export async function POST(req: Request) {
                 },
             ],
             mode: 'subscription',
+            // Apply 30-day trial if 2+ referrals
+            subscription_data: hasFreeTrial ? { trial_period_days: 30 } : undefined,
             success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?billing=success`,
             cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?billing=cancelled`,
             metadata: {
                 userId: user.id,
-                hasReferralDiscount: hasReferralDiscount.toString()
+                referralCount: referrals.toString(),
+                isPriceLocked: isPriceLocked.toString(),
+                hasFreeTrial: hasFreeTrial.toString()
             }
         })
 

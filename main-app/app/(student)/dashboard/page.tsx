@@ -15,6 +15,7 @@ import {
     Flame,
     ArrowUpRight
 } from 'lucide-react'
+import { getBadge } from '@/lib/referral'
 
 export default async function DashboardPage() {
     const cookieStore = await cookies()
@@ -36,6 +37,7 @@ export default async function DashboardPage() {
     // REAL DATA FETCHING
     const data = await getDashboardData(user.id, user.email!)
     const userFirstName = user.email?.split('@')[0] || 'Student'
+    const badge = getBadge(data.waitlist?.current_rank || 10000)
 
     return (
         <div className="max-w-7xl mx-auto px-6 py-12 space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -45,13 +47,15 @@ export default async function DashboardPage() {
                     <h1 className="text-6xl font-black tracking-tight italic mb-2 uppercase">
                         STAY ELITE, <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent capitalize">{userFirstName}</span>.
                     </h1>
-                    <p className="text-white/40 font-medium tracking-wide">Ready to dominate your courses today?</p>
+                    <p className="text-white/40 font-medium tracking-wide flex items-center gap-2">
+                        {badge.title} <span className="w-1 h-1 rounded-full bg-white/20" /> Ready to dominate your courses today?
+                    </p>
                 </div>
 
                 {/* Viral Stats (Zero Fake Data) */}
                 <div className="glass-card px-8 py-6 flex items-center gap-6">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-1">Global Rank</p>
+                        <p className={`text-[10px] font-black uppercase tracking-[0.3em] mb-1 ${badge.color}`}>{badge.title}</p>
                         <p className="text-2xl font-black italic">#{data.waitlist?.current_rank || '...'}</p>
                     </div>
                     <div className="w-px h-10 bg-white/10" />
