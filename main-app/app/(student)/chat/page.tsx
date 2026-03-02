@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createBrowserClient } from '@supabase/ssr'
 import {
@@ -57,7 +57,7 @@ function timeAgo(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString()
 }
 
-export default function ChatPage() {
+function ChatClient() {
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [input, setInput] = useState('')
     const [activeMode, setActiveMode] = useState('general')
@@ -411,6 +411,18 @@ export default function ChatPage() {
                 </div>
             </main>
         </div>
+    )
+}
+
+export default function ChatPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-[calc(100vh-3rem)]">
+                <div className="w-8 h-8 rounded-full border-2 border-blue-500/20 animate-spin border-t-blue-500" />
+            </div>
+        }>
+            <ChatClient />
+        </Suspense>
     )
 }
 
