@@ -1,141 +1,115 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft, Send, Sparkles, Brain, Calculator } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+    Calculator,
+    ArrowLeft,
+    Send,
+    Copy,
+    Check,
+    RotateCcw,
+    Loader2
+} from 'lucide-react'
 import Link from 'next/link'
+import ReactMarkdown from 'react-markdown'
+import toast from 'react-hot-toast'
 
 export default function MathSolverPage() {
-    const [problem, setProblem] = useState('')
+    const [input, setInput] = useState('')
+    const [solution, setSolution] = useState('')
     const [loading, setLoading] = useState(false)
-    const [result, setResult] = useState<{
-        solution: string;
-        steps: string[];
-        concept: string;
-    } | null>(null)
+    const [copied, setCopied] = useState(false)
 
-    const solveProblem = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!problem.trim()) return
-
+    async function handleSolve() {
+        if (!input.trim()) return
         setLoading(true)
         try {
-            const res = await fetch('/api/chat', {
+            const res = await fetch('/api/tools/math-solver', {
                 method: 'POST',
-                body: JSON.stringify({
-                    message: `Please solve this math problem step-by-step and explain the core concept: ${problem}`,
-                    taskType: 'math_solver'
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ input })
             })
+            if (!res.ok) throw new Error('Request failed')
             const data = await res.json()
-
-            // Artificial parsing for demonstration - in production, AI returns JSON via taskType
-            // For now, using result.response as the solution
-            setResult({
-                solution: data.response,
-                steps: data.steps || ["Analyzing core equation...", "Applying algebraic transformations...", "Calculating final result."],
-                concept: "Mathematical Logic & Application"
-            })
+            setSolution(data.result)
         } catch (error) {
-            console.error(error)
+            toast.error("Math engine failed. Try again.")
         } finally {
             setLoading(false)
         }
     }
 
+    const copy = () => {
+        navigator.clipboard.writeText(solution)
+        setCopied(true)
+        toast.success("Solution copied.")
+        setTimeout(() => setCopied(false), 2000)
+    }
+
     return (
-        <div className="max-w-4xl mx-auto px-6 py-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <Link href="/dashboard" className="flex items-center gap-2 text-white/40 hover:text-white transition-colors group">
-                    <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                    <span className="text-sm font-bold uppercase tracking-widest">Back to Dashboard</span>
-                </Link>
-                <div className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-widest text-blue-400">
-                    Pro Tool: High Precision
+        <div className="max-w-3xl mx-auto px-6 py-12 space-y-12">
+            <Link href="/tools" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-amber-500 transition-colors font-syne italic">
+                <ArrowLeft className="w-3 h-3" /> Back to Toolbox
+            </Link>
+
+            <header className="space-y-2">
+                <div className="w-12 h-12 rounded-2xl glass-card border-amber-500/20 flex items-center justify-center mb-6">
+                    <Calculator className="w-6 h-6 text-amber-500" />
                 </div>
-            </div>
+                <h1 className="text-4xl font-black font-syne uppercase italic tracking-tight">Math <span className="text-amber-500">Solver</span></h1>
+                <p className="text-xs font-bold font-dm-sans text-white/30 italic">Paste any equation or word problem. Get every step explained.</p>
+            </header>
 
-            <div>
-                <h1 className="text-5xl font-black tracking-tighter mb-4 flex items-center gap-4">
-                    <Calculator className="w-10 h-10 text-blue-500" />
-                    Math Solver
-                </h1>
-                <p className="text-white/40 font-medium text-lg max-w-2xl">
-                    Stuck on a calculation? Paste your problem below. We don't just give the answer—we explain the "why" behind every step.
-                </p>
-            </div>
-
-            {/* Input Area */}
-            <form onSubmit={solveProblem} className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-[2rem] blur opacity-10 group-focus-within:opacity-25 transition duration-500" />
-                <div className="relative glass-card p-2 rounded-[2rem] flex flex-col md:flex-row gap-2">
+            <div className="space-y-6">
+                <div className="glass-card p-2 border-white/10 focus-within:border-amber-500/50 transition-all">
                     <textarea
-                        value={problem}
-                        onChange={(e) => setProblem(e.target.value)}
-                        placeholder="Paste your math problem here (e.g. Solve for x: 3x^2 + 6x = 0)..."
-                        className="flex-1 bg-transparent border-none focus:ring-0 p-6 text-lg placeholder:text-white/20 resize-none min-h-[120px]"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Paste your math problem here..."
+                        className="w-full bg-transparent border-none outline-none resize-none p-4 text-sm font-dm-sans italic min-h-[160px] placeholder:text-white/10"
                     />
-                    <button
-                        type="submit"
-                        disabled={loading || !problem.trim()}
-                        className="bg-white text-black px-8 py-4 rounded-[1.5rem] font-black flex items-center justify-center gap-2 hover:bg-blue-50 transition-all active:scale-95 disabled:opacity-50"
+                </div>
+
+                <button
+                    onClick={handleSolve}
+                    disabled={loading || !input.trim()}
+                    className="btn-primary w-full py-4 bg-amber-600 hover:bg-amber-500 border-none shadow-amber-500/20 text-sm font-black uppercase tracking-[0.3em] font-syne italic"
+                >
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Solve Step by Step <Send className="w-4 h-4 ml-2" /></>}
+                </button>
+            </div>
+
+            <AnimatePresence>
+                {solution && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-6"
                     >
-                        {loading ? (
-                            <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                        ) : (
-                            <>
-                                Solve Step-by-Step
-                                <Send className="w-4 h-4" />
-                            </>
-                        )}
-                    </button>
-                </div>
-            </form>
-
-            {/* Results Area */}
-            {result && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                    <div className="grid md:grid-cols-3 gap-6">
-                        {/* Concept Card */}
-                        <div className="md:col-span-1 glass-card p-6 bg-blue-600/5 border-blue-500/20">
-                            <div className="flex items-center gap-2 mb-4 text-blue-400">
-                                <Brain className="w-4 h-4" />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Core Concept</span>
-                            </div>
-                            <h3 className="text-xl font-bold mb-2">{result.concept}</h3>
-                            <p className="text-sm text-white/40 leading-relaxed">
-                                Understanding this principle helps you solve similar problems in future exams.
-                            </p>
+                        <div className="flex items-center justify-between px-2">
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 font-syne italic">Neural Solution</h2>
+                            <button onClick={copy} className="text-[10px] font-bold text-amber-500 hover:underline uppercase tracking-widest font-dm-sans flex items-center gap-2">
+                                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {copied ? 'Copied' : 'Copy Full Workings'}
+                            </button>
                         </div>
-
-                        {/* Steps Card */}
-                        <div className="md:col-span-2 glass-card p-8">
-                            <div className="flex items-center gap-2 mb-6 text-white/40">
-                                <Sparkles className="w-4 h-4" />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Step-by-Step Logic</span>
+                        <div className="glass-card p-10 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-8 opacity-5">
+                                <Calculator className="w-32 h-32 text-amber-500" />
                             </div>
-
-                            <div className="space-y-6">
-                                {result.steps.map((step, idx) => (
-                                    <div key={idx} className="flex gap-4">
-                                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-black text-white/40">
-                                            {idx + 1}
-                                        </div>
-                                        <p className="text-white/80 text-sm leading-relaxed">{step}</p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="mt-10 pt-8 border-t border-white/5">
-                                <div className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">Final Answer</div>
-                                <div className="text-2xl font-bold text-white selection:bg-blue-500/30">
-                                    {result.solution}
-                                </div>
+                            <div className="prose prose-invert prose-sm max-w-none font-dm-sans leading-loose relative z-10">
+                                <ReactMarkdown>{solution}</ReactMarkdown>
                             </div>
                         </div>
-                    </div>
-                </div>
-            )}
+                        <button
+                            onClick={() => { setSolution(''); setInput(''); }}
+                            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-white mx-auto font-syne italic"
+                        >
+                            <RotateCcw className="w-3 h-3" /> Clear Module
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }

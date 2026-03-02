@@ -2,27 +2,25 @@ import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { AIOrchestrator } from '@/lib/ai/orchestrator'
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
+import { RAGSystem } from '@/lib/ai/rag-system'
 
 export async function POST(req: Request) {
     try {
-        const { message, chatId, taskType } = await req.json()
+        const { message, chatId, mode = 'general', syllabusId } = await req.json()
+
+        if (!message?.trim()) {
+            return NextResponse.json({ error: 'Message is required' }, { status: 400 })
+        }
 
         // 1. Auth Check
         const cookieStore = await cookies()
         const supabaseServer = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() {
-                        return cookieStore.getAll()
-                    },
-                },
-            }
+            { cookies: { getAll() { return cookieStore.getAll() } } }
         )
         const { data: { user } } = await supabaseServer.auth.getUser()
-
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
@@ -31,55 +29,89 @@ export async function POST(req: Request) {
         // 2. Get User Tier
         const { data: profile } = await supabaseAdmin
             .from('profiles')
-            .select('is_pro')
+            .select('is_pro, daily_usage')
             .eq('id', userId)
             .single()
 
         const userTier = profile?.is_pro ? 'pro' : 'free'
 
-        // 3. Persist User Message (Optimistic or Sync)
+        // 3. Create or reuse chat
         let currentChatId = chatId
         if (!currentChatId) {
-            const { data: newConvo } = await supabaseAdmin
-                .from('conversations')
-                .insert({ user_id: userId, title: message.substring(0, 50), preview: message.substring(0, 100) })
+            const { data: newChat } = await supabaseAdmin
+                .from('chats')
+                .insert({
+                    user_id: userId,
+                    title: message.substring(0, 50),
+                    mode: mode,
+                    syllabus_id: syllabusId || null,
+                })
                 .select()
                 .single()
-            currentChatId = newConvo?.id
+            currentChatId = newChat?.id
         }
 
+        // 4. Persist user message
         await supabaseAdmin
             .from('messages')
-            .insert({ conversation_id: currentChatId, role: 'user', content: message })
+            .insert({ chat_id: currentChatId, role: 'user', content: message })
 
-        // 4. Orchestrate
+        // 5. RAG context for syllabus mode
+        let context = ''
+        if (mode === 'syllabus' && syllabusId) {
+            try {
+                const rag = await RAGSystem.querySyllabus(message, userId)
+                if (rag.found) context = rag.context
+            } catch {
+                // RAG failure is non-fatal, continue without context
+            }
+        }
+
+        // 6. Map mode to task type
+        const taskTypeMap: Record<string, string> = {
+            general: 'general_chat',
+            syllabus: 'syllabus_qa',
+            math: 'math_solver',
+            grammar: 'grammar_fix',
+            summary: 'summary',
+            essay: 'essay_outline',
+            flashcards: 'flashcard',
+        }
+        const taskType = taskTypeMap[mode] || 'general_chat'
+
+        // 7. Orchestrate
         const result = await AIOrchestrator.handleQuery(
-            message,
+            context ? `Context:\n${context}\n\nQuestion: ${message}` : message,
             userId,
             userTier,
-            taskType || 'general_chat'
+            taskType
         )
 
-        // 5. Persist Assistant Message
+        // 8. Persist assistant response
         if (!result.blocked) {
             await supabaseAdmin
                 .from('messages')
                 .insert({
-                    conversation_id: currentChatId,
+                    chat_id: currentChatId,
                     role: 'assistant',
                     content: result.response,
                     model_used: result.model,
-                    cache_hit: result.cacheHit
                 })
 
-            // Record activity for streak
+            // Update daily usage
             await supabaseAdmin
-                .from('user_activities')
-                .upsert({ user_id: userId, activity_date: new Date().toISOString().split('T')[0] })
-                .select()
+                .from('profiles')
+                .update({ daily_usage: (profile?.daily_usage || 0) + 1 })
+                .eq('id', userId)
         }
 
-        return NextResponse.json({ ...result, chatId: currentChatId })
+        return NextResponse.json({
+            response: result.response,
+            chatId: currentChatId,
+            model: result.model,
+            blocked: result.blocked || false,
+            message: result.message || null,
+        })
 
     } catch (error: any) {
         console.error('Chat error:', error)

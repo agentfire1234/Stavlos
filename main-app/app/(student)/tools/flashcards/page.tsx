@@ -1,178 +1,163 @@
 'use client'
 
 import { useState } from 'react'
-import { Brain, ArrowLeft, RefreshCw, Plus, Trash2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+    Layers,
+    ArrowLeft,
+    Send,
+    RotateCcw,
+    Loader2,
+    BookOpen,
+    ChevronLeft,
+    ChevronRight,
+    Rotate3d,
+    Sparkles
+} from 'lucide-react'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
-interface Flashcard {
-    id: string
-    front: string
-    back: string
-}
-
-export default function FlashcardsPage() {
+export default function FlashcardPage() {
     const [input, setInput] = useState('')
-    const [cards, setCards] = useState<Flashcard[]>([])
-    const [generating, setGenerating] = useState(false)
-    const [viewMode, setViewMode] = useState<'edit' | 'study'>('edit')
-    const [currentIndex, setCurrentIndex] = useState(0)
-    const [flipped, setFlipped] = useState(false)
+    const [cards, setCards] = useState<any[]>([])
+    const [loading, setLoading] = useState(false)
+    const [index, setIndex] = useState(0)
+    const [isFlipped, setIsFlipped] = useState(false)
 
-    async function generateCards() {
+    async function handleGenerate() {
         if (!input.trim()) return
-        setGenerating(true)
+        setLoading(true)
         try {
-            const response = await fetch('/api/chat', {
+            const res = await fetch('/api/tools/flashcards', {
                 method: 'POST',
-                body: JSON.stringify({
-                    message: `Generate 5 study flashcards (Front/Back) based on this text:\n\n${input}`,
-                    taskType: 'flashcard'
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ input })
             })
-            const data = await response.json()
+            if (!res.ok) throw new Error('Request failed')
+            const data = await res.json()
 
-            // Basic parsing of AI response (expecting Front: / Back: format)
-            const lines = data.response.split('\n').filter((l: string) => l.includes(':'))
-            const newCards: Flashcard[] = []
-
-            for (let i = 0; i < lines.length; i += 2) {
-                if (lines[i] && lines[i + 1]) {
-                    newCards.push({
-                        id: Math.random().toString(36).substr(2, 9),
-                        front: lines[i].split(':')[1].trim(),
-                        back: lines[i + 1].split(':')[1].trim()
-                    })
-                }
+            // Extract JSON from response
+            const match = data.result.match(/\[.*\]/s)
+            if (match) {
+                setCards(JSON.parse(match[0]))
+                setIndex(0)
+                setIsFlipped(false)
+            } else {
+                toast.error("Stavlos failed to parse card array. Try simpler notes.")
             }
-            setCards([...cards, ...newCards])
-            setInput('')
-        } catch (e) {
-            console.error(e)
+        } catch (error) {
+            toast.error("Flashcard engine failed.")
         } finally {
-            setGenerating(false)
+            setLoading(false)
         }
     }
 
     return (
-        <div className="min-h-screen bg-black text-white p-6 md:p-12 pb-32">
-            <div className="max-w-4xl mx-auto space-y-12">
-                <header className="flex flex-col gap-4">
-                    <Link href="/dashboard" className="flex items-center gap-2 text-white/30 hover:text-white transition-colors text-xs font-black uppercase tracking-widest group">
-                        <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
-                        Toolbox
-                    </Link>
-                    <div className="flex justify-between items-end">
-                        <div>
-                            <h1 className="text-5xl font-black tracking-tight mb-2 italic">Flashcard Generator</h1>
-                            <p className="text-white/40 font-medium">Turn notes into active recall sets in seconds.</p>
-                        </div>
-                        <Brain className="w-12 h-12 text-purple-500/20" />
-                    </div>
-                </header>
+        <div className="max-w-4xl mx-auto px-6 py-12 space-y-12">
+            <Link href="/tools" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-orange-500 transition-colors font-syne italic">
+                <ArrowLeft className="w-3 h-3" /> Back to Toolbox
+            </Link>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                    {/* Input Side */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <div className="glass-card p-6 space-y-4">
-                            <h2 className="text-[10px] font-black uppercase tracking-widest text-white/30">Paste Notes</h2>
-                            <textarea
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                placeholder="Paste a paragraph or key concepts..."
-                                className="w-full h-48 bg-black/40 border border-white/5 rounded-2xl p-4 text-sm font-medium focus:outline-none focus:border-purple-500/50 transition-all resize-none"
-                            />
-                            <button
-                                onClick={generateCards}
-                                disabled={generating || !input.trim()}
-                                className="w-full bg-white text-black py-4 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-purple-50 transition-all disabled:opacity-50"
-                            >
-                                {generating ? 'Thinking...' : 'Generate Set'}
-                            </button>
-                        </div>
-
-                        {cards.length > 0 && (
-                            <button
-                                onClick={() => setViewMode(viewMode === 'edit' ? 'study' : 'edit')}
-                                className="w-full border border-white/5 bg-white/[0.02] py-4 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-white/[0.05] transition-all"
-                            >
-                                {viewMode === 'edit' ? 'Start Studying' : 'Back to Edit'}
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Display Side */}
-                    <div className="lg:col-span-2">
-                        {viewMode === 'edit' ? (
-                            <div className="space-y-4">
-                                {cards.length === 0 ? (
-                                    <div className="h-64 border border-dashed border-white/10 rounded-3xl flex items-center justify-center">
-                                        <p className="text-white/20 text-xs font-black uppercase tracking-widest">No cards generated yet</p>
-                                    </div>
-                                ) : (
-                                    cards.map(card => (
-                                        <div key={card.id} className="glass-card p-6 flex justify-between gap-6 group">
-                                            <div className="space-y-2 flex-1">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-purple-400">Question</p>
-                                                <p className="text-sm font-bold">{card.front}</p>
-                                                <div className="h-px bg-white/5 w-full" />
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Answer</p>
-                                                <p className="text-sm text-white/50">{card.back}</p>
-                                            </div>
-                                            <button
-                                                onClick={() => setCards(cards.filter(c => c.id !== card.id))}
-                                                className="opacity-0 group-hover:opacity-100 p-2 text-white/20 hover:text-red-400 transition-all"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        ) : (
-                            <div className="space-y-12">
-                                <div
-                                    onClick={() => setFlipped(!flipped)}
-                                    className="perspective-1000 cursor-pointer h-72"
-                                >
-                                    <div className={`relative w-full h-full transition-all duration-500 preserve-3d ${flipped ? 'rotate-y-180' : ''}`}>
-                                        {/* Front */}
-                                        <div className="absolute inset-0 backface-hidden glass-card p-12 flex flex-col items-center justify-center text-center">
-                                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-500 mb-6">Question</p>
-                                            <h2 className="text-2xl font-black">{cards[currentIndex]?.front}</h2>
-                                            <p className="mt-12 text-[10px] font-black uppercase text-white/20">Tap to Reveal</p>
-                                        </div>
-                                        {/* Back */}
-                                        <div className="absolute inset-0 backface-hidden rotate-y-180 glass-card p-12 flex flex-col items-center justify-center text-center border-purple-500/20 bg-purple-500/[0.02]">
-                                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 mb-6">Answer</p>
-                                            <h2 className="text-xl font-bold leading-relaxed">{cards[currentIndex]?.back}</h2>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-between items-center px-12">
-                                    <button
-                                        disabled={currentIndex === 0}
-                                        onClick={() => { setCurrentIndex(currentIndex - 1); setFlipped(false) }}
-                                        className="text-xs font-black uppercase tracking-widest text-white/30 hover:text-white disabled:opacity-20 transition-all"
-                                    >
-                                        Previous
-                                    </button>
-                                    <p className="text-[10px] font-black font-mono text-white/20">
-                                        {currentIndex + 1} OF {cards.length}
-                                    </p>
-                                    <button
-                                        disabled={currentIndex === cards.length - 1}
-                                        onClick={() => { setCurrentIndex(currentIndex + 1); setFlipped(false) }}
-                                        className="text-xs font-black uppercase tracking-widest text-purple-400 hover:text-purple-300 disabled:opacity-20 transition-all"
-                                    >
-                                        Next Card
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+            <header className="space-y-2">
+                <div className="w-12 h-12 rounded-2xl glass-card border-orange-500/20 flex items-center justify-center mb-6">
+                    <Layers className="w-6 h-6 text-orange-500" />
                 </div>
-            </div>
+                <h1 className="text-4xl font-black font-syne uppercase italic tracking-tight">Active <span className="text-orange-500">Recall</span></h1>
+                <p className="text-xs font-bold font-dm-sans text-white/30 italic">Turn your lecture notes into high-impact study cards instantly.</p>
+            </header>
+
+            {!cards.length ? (
+                <div className="space-y-6">
+                    <div className="glass-card p-2 border-white/10 focus-within:border-orange-500/50 transition-all">
+                        <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Paste your notes here to generate a deck..."
+                            className="w-full bg-transparent border-none outline-none resize-none p-6 text-sm font-dm-sans italic min-h-[300px] placeholder:text-white/10"
+                        />
+                    </div>
+                    <button
+                        onClick={handleGenerate}
+                        disabled={loading || !input.trim()}
+                        className="btn-primary w-full py-4 bg-orange-600 hover:bg-orange-500 border-none shadow-orange-500/20 text-sm font-black uppercase tracking-[0.3em] font-syne italic"
+                    >
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Distill Knowledge Deck <Sparkles className="w-4 h-4 ml-2" /></>}
+                    </button>
+                </div>
+            ) : (
+                <div className="space-y-12 flex flex-col items-center">
+                    {/* Card Container */}
+                    <div
+                        className="relative w-full max-w-lg h-[320px] cursor-pointer perspective-1000"
+                        onClick={() => setIsFlipped(!isFlipped)}
+                    >
+                        <motion.div
+                            className="w-full h-full relative transition-all duration-700 preserve-3d"
+                            animate={{ rotateY: isFlipped ? 180 : 0 }}
+                        >
+                            {/* Front */}
+                            <div className="absolute inset-0 backface-hidden glass-card p-12 flex flex-col items-center justify-center text-center border-orange-500/20 bg-orange-500/[0.02]">
+                                <span className="absolute top-6 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-widest text-white/20 font-syne italic">Neural Inquiry</span>
+                                <p className="text-xl font-bold font-dm-sans italic text-white/80 leading-relaxed">
+                                    {cards[index].question}
+                                </p>
+                                <div className="absolute bottom-6 flex items-center gap-2 text-[9px] font-black uppercase text-orange-500 opacity-40 font-syne italic">
+                                    <Rotate3d className="w-3 h-3" /> Tap to Flip
+                                </div>
+                            </div>
+
+                            {/* Back */}
+                            <div className="absolute inset-0 backface-hidden glass-card p-12 flex flex-col items-center justify-center text-center border-emerald-500/20 bg-emerald-500/[0.02] rotate-y-180">
+                                <span className="absolute top-6 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-widest text-emerald-500/40 font-syne italic">Verified Context</span>
+                                <p className="text-lg font-bold font-dm-sans italic text-white/60 leading-relaxed">
+                                    {cards[index].answer}
+                                </p>
+                                <div className="absolute bottom-6 flex items-center gap-2 text-[9px] font-black uppercase text-emerald-500/40 font-syne italic">
+                                    <Rotate3d className="w-3 h-3" /> Tap to Flip
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="flex items-center gap-8">
+                        <button
+                            onClick={() => { setIndex(i => Math.max(0, i - 1)); setIsFlipped(false); }}
+                            disabled={index === 0}
+                            className="p-4 glass-card border-white/5 disabled:opacity-5 text-white/40 hover:text-white"
+                        >
+                            <ChevronLeft className="w-6 h-6" />
+                        </button>
+
+                        <div className="flex flex-col items-center">
+                            <p className="text-2xl font-black font-syne italic tracking-widest text-white">{index + 1}<span className="text-white/20"> / {cards.length}</span></p>
+                            <p className="text-[10px] font-black uppercase text-white/20 mt-1 tracking-widest">Active Deck</p>
+                        </div>
+
+                        <button
+                            onClick={() => { setIndex(i => Math.min(cards.length - 1, i + 1)); setIsFlipped(false); }}
+                            disabled={index === cards.length - 1}
+                            className="p-4 glass-card border-white/5 disabled:opacity-5 text-white/40 hover:text-white"
+                        >
+                            <ChevronRight className="w-6 h-6" />
+                        </button>
+                    </div>
+
+                    <button
+                        onClick={() => setCards([])}
+                        className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-white font-syne italic"
+                    >
+                        <RotateCcw className="w-3 h-3" /> Purge Deck
+                    </button>
+                </div>
+            )}
+
+            <style jsx global>{`
+                .perspective-1000 { perspective: 1000px; }
+                .preserve-3d { transform-style: preserve-3d; }
+                .backface-hidden { backface-visibility: hidden; }
+                .rotate-y-180 { transform: rotateY(180deg); }
+            `}</style>
         </div>
     )
 }

@@ -28,11 +28,19 @@ export async function GET(req: Request) {
             await supabaseAdmin.from('daily_analytics').insert({
                 date: dateStr,
                 total_cost: totalSpent,
-                // Add more aggregated metrics here if needed
             })
         }
 
-        // 4. Reset AI Consumption Keys
+        // 4. Reset all user daily usage counters
+        await supabaseAdmin
+            .from('profiles')
+            .update({
+                daily_usage: 0,
+                usage_reset_at: new Date().toISOString()
+            })
+            .gte('daily_usage', 0)
+
+        // 5. Reset AI Consumption Keys
         // We don't actually delete them, we let them expire via Redis TTL (set to 48h in recordCost)
         // But we ensure the "Current Phase" in Admin UI resets naturally by shifting to the new day's key.
 

@@ -1,216 +1,330 @@
-import { UsageStats } from '@/components/dashboard/usage-stats'
-import { CourseGrid } from '@/components/dashboard/course-grid'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { getDashboardData } from '@/lib/db/dashboard'
-import Link from 'next/link'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { motion, Variants } from 'framer-motion'
 import {
     Zap,
-    Brain,
-    Type,
-    Quote,
-    Plus,
-    History,
-    Crown,
     Flame,
-    ArrowUpRight
+    MessageSquare,
+    Upload,
+    Calculator,
+    CheckSquare,
+    ChevronRight,
+    ArrowUpRight,
+    BookOpen,
+    Wrench,
+    GraduationCap
 } from 'lucide-react'
-import { getBadge } from '@/lib/referral'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
-export default async function DashboardPage() {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return cookieStore.getAll()
-                },
-            },
+const container: Variants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.08 } }
+}
+
+const item: Variants = {
+    hidden: { opacity: 0, y: 16 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.23, 1, 0.32, 1] } }
+}
+
+export default function DashboardPage() {
+    const [data, setData] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(false)
+    const router = useRouter()
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const res = await fetch('/api/dashboard')
+                if (!res.ok) throw new Error('Failed to load')
+                const dashboardData = await res.json()
+                setData(dashboardData)
+            } catch (err) {
+                setError(true)
+            } finally {
+                setLoading(false)
+            }
         }
-    )
+        load()
+    }, [])
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return null
+    if (loading) return <DashboardSkeleton />
+    if (error || !data) return <DashboardError onRetry={() => window.location.reload()} />
 
-    // REAL DATA FETCHING
-    const data = await getDashboardData(user.id, user.email!)
-    const userFirstName = user.email?.split('@')[0] || 'Student'
-    const badge = getBadge(data.waitlist?.current_rank || 10000)
+    const profile = data.profile
+    const firstName = profile?.display_name?.split(' ')[0] || 'Student'
+    const today = new Date()
+    const hour = today.getHours()
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
 
     return (
-        <div className="max-w-7xl mx-auto px-6 py-12 space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header Area */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
-                <div>
-                    <h1 className="text-6xl font-black tracking-tight italic mb-2 uppercase">
-                        STAY ELITE, <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent capitalize">{userFirstName}</span>.
-                    </h1>
-                    <p className="text-white/40 font-medium tracking-wide flex items-center gap-2">
-                        {badge.title} <span className="w-1 h-1 rounded-full bg-white/20" /> Ready to dominate your courses today?
+        <motion.div
+            variants={container}
+            initial="hidden"
+            animate="show"
+            className="max-w-6xl mx-auto px-6 py-12 space-y-12 pb-24 md:pb-12"
+        >
+            {/* Header */}
+            <motion.header variants={item} className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-400 font-body">
+                        {greeting}, {firstName}
                     </p>
+                    <h1 className="text-4xl md:text-5xl font-black font-syne tracking-tight text-white uppercase italic">
+                        {new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).format(today)}
+                    </h1>
                 </div>
 
-                {/* Viral Stats (Zero Fake Data) */}
-                <div className="glass-card px-8 py-6 flex items-center gap-6">
-                    <div>
-                        <p className={`text-[10px] font-black uppercase tracking-[0.3em] mb-1 ${badge.color}`}>{badge.title}</p>
-                        <p className="text-2xl font-black italic">#{data.waitlist?.current_rank || '...'}</p>
-                    </div>
-                    <div className="w-px h-10 bg-white/10" />
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-1">Impact</p>
-                        <p className="text-2xl font-black text-blue-400 italic">{data.waitlist?.referral_count || 0} REFS</p>
-                    </div>
+                <div className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border transition-all ${profile?.is_pro
+                    ? 'bg-blue-600/10 border-blue-500/30 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]'
+                    : 'bg-white/5 border-white/10 text-slate-400'
+                    }`}>
+                    {profile?.is_pro ? 'Pro Plan' : 'Free Plan'}
                 </div>
-            </div>
+            </motion.header>
 
-            {/* Performance Stats */}
+            {/* Stats Row */}
             <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatCard
-                    label="Daily AI Burn"
-                    value={`${data.usage.used}/${data.usage.limit}`}
-                    sub={`${data.usage.limit - data.usage.used} messages left`}
-                    progress={(data.usage.used / data.usage.limit) * 100}
-                    icon={<Zap className="w-4 h-4 text-yellow-500" />}
+                {/* Usage Card */}
+                <StatsCard
+                    title="Today's Usage"
+                    value={data.usage.used}
+                    limit={data.usage.limit}
+                    subtext={data.usage.used >= data.usage.limit ? "Limit reached" : `Resets in ${getResetTime(data.usage.reset_at)}`}
+                    type="usage"
                 />
-                <StatCard
-                    label="Study Streak"
-                    value={`${data.streak} Days`}
-                    sub="Keep the fire alive"
-                    icon={<Flame className="w-4 h-4 text-orange-500" />}
+
+                {/* Streak Card */}
+                <StatsCard
+                    title="Study Streak"
+                    value={data.streak}
+                    subtext={data.streak > 2 ? "🔥 You're on fire!" : "Start your streak today"}
+                    type="streak"
+                    weeklyActivity={data.weeklyActivity}
                 />
-                <StatCard
-                    label="Member Plan"
-                    value={data.profile?.is_pro ? 'STAVLOS PRO' : 'FREE TIER'}
-                    sub={data.profile?.is_pro ? 'Elite Access Active' : 'Upgrade to dominate'}
-                    icon={<Crown className="w-4 h-4 text-purple-500" />}
-                    link={!data.profile?.is_pro ? { label: "UPGRADE", href: "/pricing" } : undefined}
+
+                {/* Total Questions Card */}
+                <StatsCard
+                    title="Total Questions"
+                    value={data.totalQuestions}
+                    subtext={`${data.usage.used} questions today`}
+                    type="total"
                 />
             </section>
 
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
+            {/* Quick Actions */}
+            <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <QuickAction icon={MessageSquare} label="New Chat" href="/chat" color="blue" />
+                <QuickAction icon={Upload} label="Upload Syllabus" href="/syllabus" color="purple" />
+                <QuickAction icon={Calculator} label="Math Solver" href="/tools/math-solver" color="amber" />
+                <QuickAction icon={CheckSquare} label="Grammar Fix" href="/tools/grammar" color="emerald" />
+            </section>
 
-                {/* Left Side: Syllabus Control */}
-                <div className="lg:col-span-2 space-y-12">
-                    <section>
-                        <div className="flex items-center justify-between mb-8 ml-1">
-                            <div className="flex items-center gap-3">
-                                <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                                <h2 className="text-xs font-black uppercase tracking-[0.3em] text-white/40 italic">Course Index</h2>
-                            </div>
-                            <Link href="/syllabus" className="glass-card px-4 py-2 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-white/10">
-                                <Plus className="w-3 h-3" /> New Syllabus
-                            </Link>
-                        </div>
-                        <CourseGrid syllabuses={data.syllabuses} />
-                    </section>
+            {/* Recent & Courses Split */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                {/* Recent Conversations */}
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                        <h3 className="text-lg font-bold font-syne uppercase italic text-white flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4 text-blue-500" />
+                            Recent Conversations
+                        </h3>
+                        <Link href="/chat" className="text-xs font-bold text-blue-500 hover:text-blue-400 font-body">View all →</Link>
+                    </div>
 
-                    {/* Quick Tools Grid - SPEC ALIGNED */}
-                    <section>
-                        <div className="flex items-center justify-between mb-8 ml-1">
-                            <div className="flex items-center gap-3">
-                                <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
-                                <h2 className="text-xs font-black uppercase tracking-[0.3em] text-white/40 italic">Quick Utility</h2>
-                            </div>
-                            <Link href="/tools" className="text-[10px] font-black text-white/20 hover:text-white transition-colors uppercase tracking-[0.3em]">
-                                All Tools →
-                            </Link>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {[
-                                { icon: <Brain />, title: 'Flashcards', href: '/tools/flashcards' },
-                                { icon: <Quote />, title: 'Citations', href: '/tools/citations' },
-                                { icon: <Type />, title: 'Grammar', href: '/tools/grammar' },
-                                { icon: <Plus />, title: 'Summarize', href: '/tools/summarizer' }
-                            ].map(tool => (
+                    <div className="space-y-3">
+                        {data.chats.length > 0 ? (
+                            data.chats.map((chat: any) => (
                                 <Link
-                                    key={tool.title}
-                                    href={tool.href}
-                                    className="p-8 glass-card flex flex-col items-center text-center space-y-4 group"
+                                    key={chat.id}
+                                    href={`/chat/${chat.id}`}
+                                    className="glass-card p-4 flex items-center justify-between group"
                                 >
-                                    <div className="text-white/20 group-hover:text-blue-500 transition-colors duration-500">
-                                        {tool.icon}
-                                    </div>
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest">{tool.title}</h4>
-                                </Link>
-                            ))}
-                        </div>
-                    </section>
-                </div>
-
-                {/* Right Side: Activity & History */}
-                <div className="space-y-12">
-                    <section>
-                        <div className="flex items-center justify-between mb-8 ml-1">
-                            <div className="flex items-center gap-3">
-                                <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
-                                <h2 className="text-xs font-black uppercase tracking-[0.3em] text-white/40 italic">Activity Feed</h2>
-                            </div>
-                            <Link href="/chat" className="text-[10px] font-black text-white/20 hover:text-white transition-colors uppercase tracking-[0.3em]">
-                                History
-                            </Link>
-                        </div>
-
-                        <div className="space-y-3">
-                            {data.conversations.length > 0 ? (
-                                data.conversations.map(convo => (
-                                    <Link key={convo.id} href={`/chat?id=${convo.id}`} className="block glass-card p-6 group">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <h4 className="font-black text-xs uppercase tracking-tight group-hover:text-blue-400 transition-colors italic line-clamp-1">{convo.title}</h4>
-                                            <History className="w-3 h-3 text-white/10" />
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className={`p-2 rounded-lg bg-white/5 border border-white/8 group-hover:border-blue-500/50 transition-colors`}>
+                                            <MessageSquare className="w-4 h-4 text-blue-400" />
                                         </div>
-                                        <p className="text-white/20 text-[10px] font-medium line-clamp-1">{convo.preview || 'No preview available'}</p>
-                                    </Link>
-                                ))
-                            ) : (
-                                <div className="glass-card p-12 text-center border-dashed">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-white/10 italic">Zero Activity Found</p>
-                                </div>
-                            )}
-                        </div>
-                    </section>
-
-                    {/* Pro CTA */}
-                    {!data.profile?.is_pro && (
-                        <div className="glass-card p-10 bg-gradient-to-br from-blue-600/10 to-purple-600/10 border-blue-500/20 space-y-6">
-                            <Crown className="w-8 h-8 text-yellow-500 mb-2" />
-                            <h3 className="text-xl font-black italic uppercase tracking-tighter">Founding Upgrade</h3>
-                            <p className="text-xs text-white/40 leading-relaxed font-medium">Unlock unlimited syllabus indexing and high-frequency AI models.</p>
-                            <Link href="/pricing" className="w-full bg-white text-black py-4 rounded-xl text-center text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-50 transition-all flex items-center justify-center gap-2">
-                                Claim Spot <ArrowUpRight className="w-3 h-3" />
-                            </Link>
-                        </div>
-                    )}
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-semibold text-white truncate font-body">
+                                                {chat.title || 'Untitled Chat'}
+                                            </p>
+                                            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                                                {chat.mode} • {formatDistanceToNow(new Date(chat.updated_at))} ago
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-blue-500 -translate-x-2 group-hover:translate-x-0 transition-all opacity-0 group-hover:opacity-100" />
+                                </Link>
+                            ))
+                        ) : (
+                            <div className="glass-card p-8 text-center border-dashed border-white/10">
+                                <p className="text-sm text-slate-500 font-body mb-4">No conversations yet.</p>
+                                <Link href="/chat" className="btn-ghost py-2 px-4 text-xs inline-block">Start your first chat →</Link>
+                            </div>
+                        )}
+                    </div>
                 </div>
+
+                {/* My Courses */}
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                        <h3 className="text-lg font-bold font-syne uppercase italic text-white flex items-center gap-2">
+                            <BookOpen className="w-4 h-4 text-purple-500" />
+                            My Courses
+                        </h3>
+                        <Link href="/syllabus" className="text-xs font-bold text-purple-500 hover:text-purple-400 font-body">Manage syllabi →</Link>
+                    </div>
+
+                    <div className="space-y-3">
+                        {data.syllabuses.length > 0 ? (
+                            data.syllabuses.slice(0, 3).map((s: any) => (
+                                <div key={s.id} className="glass-card p-4 flex items-center justify-between gap-4">
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-semibold text-white truncate font-body">{s.course_name}</p>
+                                        <p className="text-[10px] text-slate-500 truncate font-body uppercase tracking-wider">{s.file_name} • {s.total_chunks} chunks</p>
+                                    </div>
+                                    <Link
+                                        href={`/chat?syllabus=${s.id}`}
+                                        className="btn-primary py-2 px-4 text-xs whitespace-nowrap"
+                                    >
+                                        Ask AI
+                                    </Link>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="glass-card p-8 text-center border-dashed border-white/10">
+                                <p className="text-sm text-slate-500 font-body mb-4">No syllabi uploaded.</p>
+                                <Link href="/syllabus" className="btn-ghost py-2 px-4 text-xs inline-block">Upload a PDF →</Link>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    )
+}
+
+function StatsCard({ title, value, limit, subtext, type, weeklyActivity }: any) {
+    return (
+        <div className="glass-card p-6 relative overflow-hidden group">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#475569] mb-4 font-body">{title}</h4>
+
+            {type === 'usage' && (
+                <div className="space-y-3">
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-black font-syne italic">{value}</span>
+                        <span className="text-sm font-bold text-slate-600">/ {limit}</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                        <div
+                            className={`h-full transition-all duration-1000 ${(value / limit) > 0.8 ? 'bg-red-500' : (value / limit) > 0.5 ? 'bg-amber-500' : 'bg-emerald-500'
+                                }`}
+                            style={{ width: `${Math.min((value / limit) * 100, 100)}%` }}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {type === 'streak' && (
+                <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                        <span className="text-4xl font-black font-syne italic">{value}</span>
+                        {value > 2 && <Flame className="w-6 h-6 text-amber-500 fill-amber-500" />}
+                    </div>
+                    <div className="flex gap-1">
+                        {[0, 1, 2, 3, 4, 5, 6].map(i => {
+                            const date = new Date()
+                            date.setDate(date.getDate() - (6 - i))
+                            const dateStr = date.toISOString().split('T')[0]
+                            const active = weeklyActivity?.includes(dateStr)
+                            return (
+                                <div
+                                    key={i}
+                                    className={`h-2.5 flex-1 rounded-full ${active ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-white/5'}`}
+                                    title={new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date)}
+                                />
+                            )
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {type === 'total' && (
+                <div className="flex items-baseline gap-3">
+                    <span className="text-4xl font-black font-syne italic">{value}</span>
+                </div>
+            )}
+
+            <p className="text-[11px] font-semibold text-slate-500 font-body mt-4">{subtext}</p>
+        </div>
+    )
+}
+
+function QuickAction({ icon: Icon, label, href, color }: any) {
+    const accentColors: any = {
+        blue: 'text-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.1)]',
+        purple: 'text-purple-500 shadow-[0_0_20px_rgba(139,92,246,0.1)]',
+        amber: 'text-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]',
+        emerald: 'text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.1)]',
+    }
+
+    return (
+        <Link href={href} className="flex-1">
+            <div className="glass-card p-6 flex flex-col items-center gap-4 transition-all hover:-translate-y-1 group cursor-pointer text-center h-full">
+                <div className={`p-3 rounded-xl bg-white/5 border border-white/8 group-hover:border-white/20 transition-all ${accentColors[color]}`}>
+                    <Icon className="w-8 h-8" />
+                </div>
+                <span className="text-[11px] font-black uppercase tracking-[0.1em] font-syne italic text-slate-400 group-hover:text-white transition-colors">{label}</span>
+            </div>
+        </Link>
+    )
+}
+
+function DashboardSkeleton() {
+    return (
+        <div className="max-w-6xl mx-auto px-6 py-12 space-y-12 animate-pulse">
+            <div className="flex justify-between items-end">
+                <div className="space-y-3">
+                    <div className="h-4 w-32 bg-white/5 rounded" />
+                    <div className="h-10 w-64 bg-white/5 rounded" />
+                </div>
+                <div className="h-6 w-24 bg-white/5 rounded-full" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[1, 2, 3].map(i => (
+                    <div key={i} className="h-40 glass-card" />
+                ))}
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="h-32 glass-card" />
+                ))}
             </div>
         </div>
     )
 }
 
-function StatCard({ label, value, sub, progress, icon, link }: any) {
+function DashboardError({ onRetry }: any) {
     return (
-        <div className="glass-card p-8 group">
-            <div className="flex justify-between items-center mb-6">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">{label}</p>
-                {icon}
-            </div>
-            <div className="flex items-end justify-between mb-4">
-                <p className="text-4xl font-black italic tracking-tighter uppercase">{value}</p>
-                {link && (
-                    <Link href={link.href} className="text-blue-400 text-[10px] font-black uppercase tracking-widest hover:underline">
-                        {link.label} →
-                    </Link>
-                )}
-            </div>
-            {progress !== undefined && (
-                <div className="h-1 bg-white/5 rounded-full overflow-hidden mb-3">
-                    <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${progress}%` }} />
-                </div>
-            )}
-            <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{sub}</p>
+        <div className="max-w-xl mx-auto px-6 py-24 text-center">
+            <div className="text-6xl mb-6">😕</div>
+            <h3 className="text-xl font-bold font-syne uppercase italic text-white mb-2">Neural Link Severed</h3>
+            <p className="text-slate-400 font-body mb-8">We couldn't load your dashboard. Your neural connection might be unstable.</p>
+            <button onClick={onRetry} className="btn-primary w-full">Reconnect Interface</button>
         </div>
     )
+}
+
+// Helper since I can't import it easily here without verifying path
+function getResetTime(resetAt: string) {
+    if (!resetAt) return "24h"
+    const now = new Date()
+    const reset = new Date(resetAt)
+    const diff = reset.getTime() - now.getTime()
+    if (diff <= 0) return "soon"
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    return `${hours}h ${minutes}m`
 }

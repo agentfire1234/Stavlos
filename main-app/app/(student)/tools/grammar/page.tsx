@@ -1,128 +1,133 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft, Send, Sparkles, Languages, CheckCircle2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+    CheckSquare,
+    ArrowLeft,
+    Send,
+    Copy,
+    Check,
+    RotateCcw,
+    Loader2,
+    ShieldCheck
+} from 'lucide-react'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 export default function GrammarFixPage() {
-    const [text, setText] = useState('')
+    const [input, setInput] = useState('')
+    const [output, setOutput] = useState('')
     const [loading, setLoading] = useState(false)
-    const [fixed, setFixed] = useState<{
-        content: string;
-        changes: string[];
-    } | null>(null)
+    const [copied, setCopied] = useState(false)
 
-    const fixGrammar = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!text.trim()) return
-        
+    async function handleFix() {
+        if (!input.trim()) return
         setLoading(true)
         try {
-            const res = await fetch('/api/chat', {
+            const res = await fetch('/api/tools/grammar', {
                 method: 'POST',
-                body: JSON.stringify({ 
-                    message: `Please fix the grammar and spelling in this text, and provide a short list of key changes made: ${text}`,
-                    taskType: 'grammar_fix'
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ input })
             })
+            if (!res.ok) throw new Error('Request failed')
             const data = await res.json()
-            setFixed({
-                content: data.response,
-                changes: data.steps || ["Corrected spelling errors", "Improved sentence flow", "Standardized punctuation"]
-            })
+            setOutput(data.result)
         } catch (error) {
-            console.error(error)
+            toast.error("Grammar engine failed.")
         } finally {
             setLoading(false)
         }
     }
 
+    const copy = () => {
+        navigator.clipboard.writeText(output)
+        setCopied(true)
+        toast.success("Text corrected & copied.")
+        setTimeout(() => setCopied(false), 2000)
+    }
+
     return (
-        <div className="max-w-4xl mx-auto px-6 py-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <Link href="/dashboard" className="flex items-center gap-2 text-white/40 hover:text-white transition-colors group">
-                    <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                    <span className="text-sm font-bold uppercase tracking-widest">Back to Dashboard</span>
-                </Link>
-                <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                    Professional Editor
+        <div className="max-w-6xl mx-auto px-6 py-12 space-y-12">
+            <Link href="/tools" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-emerald-500 transition-colors font-syne italic">
+                <ArrowLeft className="w-3 h-3" /> Back to Toolbox
+            </Link>
+
+            <header className="space-y-2">
+                <div className="w-12 h-12 rounded-2xl glass-card border-emerald-500/20 flex items-center justify-center mb-6">
+                    <CheckSquare className="w-6 h-6 text-emerald-500" />
                 </div>
-            </div>
+                <h1 className="text-4xl font-black font-syne uppercase italic tracking-tight">Grammar <span className="text-emerald-500">Fix</span></h1>
+                <p className="text-xs font-bold font-dm-sans text-white/30 italic">Professional tone correction, preserve your specific voice.</p>
+            </header>
 
-            <div>
-                <h1 className="text-5xl font-black tracking-tighter mb-4 flex items-center gap-4">
-                    <Languages className="w-10 h-10 text-emerald-500" />
-                    Grammar Fix
-                </h1>
-                <p className="text-white/40 font-medium text-lg max-w-2xl">
-                    Make your writing flawless. Paste your essay draft, email, or post and we'll fix the grammar while keeping your unique voice.
-                </p>
-            </div>
-
-            {/* Input Area */}
-            <form onSubmit={fixGrammar} className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-600 to-blue-500 rounded-[2rem] blur opacity-10 group-focus-within:opacity-25 transition duration-500" />
-                <div className="relative glass-card p-2 rounded-[2rem] flex flex-col gap-2">
-                    <textarea 
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        placeholder="Paste your writing here..."
-                        className="flex-1 bg-transparent border-none focus:ring-0 p-6 text-lg placeholder:text-white/20 resize-none min-h-[160px]"
-                    />
-                    <div className="p-2 flex justify-end">
-                        <button 
-                            type="submit"
-                            disabled={loading || !text.trim()}
-                            className="bg-white text-black px-8 py-4 rounded-[1.5rem] font-black flex items-center justify-center gap-2 hover:bg-emerald-50 transition-all active:scale-95 disabled:opacity-50"
-                        >
-                            {loading ? (
-                                <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                            ) : (
-                                <>
-                                    Fix Writing
-                                    <Send className="w-4 h-4" />
-                                </>
-                            )}
-                        </button>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div className="space-y-6">
+                    <div className="glass-card p-2 border-white/10 focus-within:border-emerald-500/50 transition-all">
+                        <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Paste the original text..."
+                            className="w-full bg-transparent border-none outline-none resize-none p-4 text-sm font-dm-sans italic min-h-[300px] placeholder:text-white/10"
+                        />
                     </div>
-                </div>
-            </form>
 
-            {/* Results Area */}
-            {fixed && (
-                <div className="grid md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                    <div className="md:col-span-2 glass-card p-8 bg-emerald-500/[0.02]">
-                        <div className="flex items-center gap-2 mb-6 text-emerald-400">
-                            <CheckCircle2 className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Corrected Version</span>
-                        </div>
-                        <div className="text-white/90 text-lg leading-relaxed whitespace-pre-wrap">
-                            {fixed.content}
-                        </div>
-                        <div className="mt-8 pt-6 border-t border-white/5 flex justify-end">
-                            <button 
-                                onClick={() => navigator.clipboard.writeText(fixed.content)}
-                                className="px-6 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold hover:bg-white/10 transition-all"
-                            >
-                                Copy Text
+                    <button
+                        onClick={handleFix}
+                        disabled={loading || !input.trim()}
+                        className="btn-primary w-full py-4 bg-emerald-600 hover:bg-emerald-500 border-none shadow-emerald-500/20 text-sm font-black uppercase tracking-[0.3em] font-syne italic"
+                    >
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Scan & Correct <ShieldCheck className="w-4 h-4 ml-2" /></>}
+                    </button>
+                </div>
+
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 font-syne italic">Refined Output</h2>
+                        {output && (
+                            <button onClick={copy} className="text-[10px] font-bold text-emerald-500 hover:underline uppercase tracking-widest font-dm-sans flex items-center gap-2">
+                                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {copied ? 'Copied' : 'Copy Corrected'}
                             </button>
-                        </div>
+                        )}
                     </div>
 
-                    <div className="glass-card p-6 border-emerald-500/20">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4">Improvements Made</div>
-                        <div className="space-y-4">
-                            {fixed.changes.map((change, idx) => (
-                                <div key={idx} className="flex items-start gap-3">
-                                    <div className="mt-1 w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                    <p className="text-sm text-white/60">{change}</p>
+                    <div className="glass-card min-h-[360px] p-10 relative group bg-emerald-500/[0.01]">
+                        <AnimatePresence mode="wait">
+                            {loading ? (
+                                <motion.div
+                                    key="loading"
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    className="h-full flex flex-col items-center justify-center space-y-4 opacity-20"
+                                >
+                                    <Loader2 className="w-8 h-8 animate-spin" />
+                                    <p className="text-[10px] font-black uppercase tracking-widest font-syne italic">Scanning Syntax...</p>
+                                </motion.div>
+                            ) : output ? (
+                                <motion.div
+                                    key="output"
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                    className="font-dm-sans text-sm leading-relaxed italic text-white/90 whitespace-pre-wrap"
+                                >
+                                    {output}
+                                </motion.div>
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center text-center opacity-10 space-y-4">
+                                    <CheckSquare className="w-12 h-12" />
+                                    <p className="text-[10px] font-black uppercase tracking-widest font-syne italic">Neutral System Idle</p>
                                 </div>
-                            ))}
-                        </div>
+                            )}
+                        </AnimatePresence>
                     </div>
+                    {output && (
+                        <button
+                            onClick={() => { setOutput(''); setInput(''); }}
+                            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-white mx-auto font-syne italic mt-2"
+                        >
+                            <RotateCcw className="w-3 h-3" /> Clear Module
+                        </button>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     )
 }

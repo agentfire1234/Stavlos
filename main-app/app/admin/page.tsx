@@ -1,290 +1,269 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import {
+    Users,
+    Euro,
+    Cpu,
+    Activity,
+    BarChart3,
+    Power,
+    Loader2,
+    Clock,
+    Database
+} from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function AdminDashboard() {
-    const [budget, setBudget] = useState(20)
-    const [overrides, setOverrides] = useState<Record<string, string>>({})
     const [stats, setStats] = useState<any>(null)
     const [loading, setLoading] = useState(true)
-    const [saving, setSaving] = useState(false)
+    const [killSwitch, setKillSwitch] = useState(false)
+    const [budgetValue, setBudgetValue] = useState(20)
+    const [savingConfig, setSavingConfig] = useState(false)
 
     useEffect(() => {
-        fetchAdminData()
+        loadStats()
     }, [])
 
-    async function fetchAdminData() {
-        setLoading(true)
+    async function loadStats() {
         try {
-            // Get Configs
-            const configResp = await fetch('/api/admin/config')
-            const configs = await configResp.json()
-
-            const budgetConfig = configs.find((c: any) => c.key === 'daily_budget_eur')
-            const overridesConfig = configs.find((c: any) => c.key === 'model_overrides')
-
-            if (budgetConfig) setBudget(parseFloat(budgetConfig.value))
-            if (overridesConfig) setOverrides(JSON.parse(overridesConfig.value))
-
-            // Get Stats
-            const statsResp = await fetch('/api/admin/stats')
-            const statsData = await statsResp.json()
-            setStats(statsData)
-        } catch (e) {
-            console.error(e)
+            const res = await fetch('/api/admin/stats')
+            if (res.ok) {
+                const data = await res.json()
+                setStats(data)
+                setKillSwitch(data.killSwitch || false)
+                setBudgetValue(data.limit || 20)
+            }
+        } catch {
+            toast.error('Failed to load admin stats.')
         } finally {
             setLoading(false)
         }
     }
 
-    async function updateConfig(key: string, value: any) {
-        setSaving(true)
+    async function toggleKillSwitch() {
+        const newValue = !killSwitch
+        setSavingConfig(true)
         try {
-            await fetch('/api/admin/config', {
+            const res = await fetch('/api/admin/config', {
                 method: 'POST',
-                body: JSON.stringify({ key, value })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: 'kill_switch', value: String(newValue) })
             })
-            if (key === 'daily_budget_eur') setBudget(value)
-            if (key === 'model_overrides') setOverrides(value)
-        } catch (e) {
-            alert('Failed to update config')
+            if (res.ok) {
+                setKillSwitch(newValue)
+                toast.success(newValue ? 'Kill switch activated.' : 'System restored.')
+            }
+        } catch {
+            toast.error('Failed to toggle kill switch.')
         } finally {
-            setSaving(false)
+            setSavingConfig(false)
         }
     }
 
-    if (loading) return (
-        <div className="flex items-center justify-center h-screen bg-black">
-            <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-        </div>
-    )
+    async function saveBudget() {
+        setSavingConfig(true)
+        try {
+            const res = await fetch('/api/admin/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: 'daily_budget_eur', value: String(budgetValue) })
+            })
+            if (res.ok) toast.success(`Budget set to €${budgetValue}/day`)
+        } catch {
+            toast.error('Failed to save budget.')
+        } finally {
+            setSavingConfig(false)
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="max-w-7xl mx-auto px-6 py-12 space-y-8">
+                <div className="h-24 glass-card animate-pulse bg-white/[0.02]" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {[1, 2, 3, 4].map(i => <div key={i} className="glass-card h-32 animate-pulse bg-white/[0.02]" />)}
+                </div>
+                <div className="glass-card h-64 animate-pulse bg-white/[0.02]" />
+            </div>
+        )
+    }
+
+    const phase = stats?.phase || 'NORMAL'
+    const spent = stats?.spent || 0
+    const limit = stats?.limit || budgetValue
+    const percentUsed = limit > 0 ? Math.round((spent / limit) * 100) : 0
+
+    const phaseColors: Record<string, string> = {
+        NORMAL: 'text-emerald-500',
+        CAUTIOUS: 'text-amber-500',
+        RESTRICTED: 'text-orange-500',
+        EMERGENCY: 'text-red-500',
+    }
 
     return (
-        <div className="min-h-screen bg-black text-white p-8 md:p-12 space-y-12">
-            <header className="flex justify-between items-end">
-                <div>
-                    <h1 className="text-5xl font-black tracking-tight mb-2">Platform Command</h1>
-                    <p className="text-white/40 font-medium">Abraham's private control center for Stavlos.</p>
+        <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
+            <header className="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-white/5 pb-12">
+                <div className="space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-red-500 font-syne italic leading-none">Administrative Node</p>
+                    <h1 className="text-5xl font-black font-syne uppercase italic tracking-tight">System <span className="text-red-500">Core</span></h1>
                 </div>
-                <div className="flex gap-4">
-                    <button onClick={fetchAdminData} className="px-6 py-2 bg-white/5 border border-white/10 rounded-full font-bold text-xs hover:bg-white/10 transition">REFRESH DATA</button>
-                    <div className="px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs font-black uppercase tracking-tighter self-center">System Live</div>
+                <div className="flex items-center gap-4">
+                    <div className={`px-6 py-3 rounded-2xl flex items-center gap-3 ${!killSwitch ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
+                        <div className={`w-2 h-2 rounded-full ${!killSwitch ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+                        <span className={`text-[10px] font-black uppercase tracking-widest font-syne ${!killSwitch ? 'text-emerald-500' : 'text-red-500'}`}>
+                            {!killSwitch ? 'System Live' : 'Kill Switch Active'}
+                        </span>
+                    </div>
+                    <button
+                        onClick={toggleKillSwitch}
+                        disabled={savingConfig}
+                        className={`p-3 rounded-xl transition-all ${!killSwitch
+                            ? 'bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500/20'
+                            : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20'
+                            }`}
+                    >
+                        <Power className="w-5 h-5" />
+                    </button>
                 </div>
             </header>
 
-            {/* Financial Overview */}
-            <div className="grid lg:grid-cols-4 gap-8">
-                {/* Budget Controller */}
-                <div className="lg:col-span-2 glass-card p-10 border-blue-500/10">
-                    <div className="flex justify-between items-start mb-10">
-                        <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">Financial Safety</p>
-                            <h2 className="text-3xl font-black">Daily Burn Limit</h2>
-                        </div>
-                        <div className="flex flex-col items-end">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-2">Global Kill Switch</span>
-                            <button
-                                onClick={() => updateConfig('kill_switch', !stats?.killSwitch)}
-                                className={`
-                                    px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all
-                                    ${stats?.killSwitch ? 'bg-red-600 text-white animate-pulse' : 'bg-white/5 text-white/40 hover:bg-white/10'}
-                                `}
-                            >
-                                {stats?.killSwitch ? 'SYSTEM STOPPED' : 'SYSTEM LIVE'}
-                            </button>
-                        </div>
-                    </div>
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <AdminStat icon={Users} label="Total Users" value={stats?.totalUsers || 0} color="blue" trend={`${stats?.totalCalls || 0} AI calls today`} />
+                <AdminStat icon={Euro} label="Today's Spend" value={`€${spent.toFixed(2)}`} color="amber" trend={`Phase: ${phase}`} />
+                <AdminStat icon={Database} label="Syllabuses" value={stats?.totalSyllabi || 0} color="purple" trend="RAG uploads" />
+                <AdminStat icon={Clock} label="Resets In" value={stats?.resetsIn || '—'} color="emerald" trend="Budget cycle" />
+            </div>
 
-                    <div className="space-y-8">
-                        <div className="flex justify-between items-end">
-                            <span className="text-7xl font-black tracking-tighter">€{budget}</span>
-                            <div className="text-right">
-                                <p className="text-white/20 text-[10px] font-black uppercase tracking-widest mb-1">Current Protection</p>
-                                <p className={`text-sm font-bold ${stats?.phase === 'NORMAL' ? 'text-green-400' : 'text-orange-400'}`}>
-                                    PHASE: {stats?.phase || 'NORMAL'}
-                                </p>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                {/* Budget Control */}
+                <div className="lg:col-span-8 space-y-8">
+                    <section className="space-y-6">
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 font-syne italic px-2">Budget Governor</h2>
+                        <div className="glass-card p-10 space-y-8 border-white/10 overflow-hidden relative">
+                            <div className="absolute top-0 right-0 p-12 opacity-5">
+                                <BarChart3 className="w-40 h-40 text-blue-500" />
+                            </div>
+
+                            <div className="space-y-6 relative z-10">
+                                <div className="flex justify-between items-center text-[10px] font-black tracking-widest uppercase font-syne">
+                                    <span className="text-white/40">Daily AI Budget</span>
+                                    <span className={phaseColors[phase]}>{phase} — €{spent.toFixed(2)} / €{limit}</span>
+                                </div>
+                                <div className="h-3 bg-white/5 rounded-full overflow-hidden">
+                                    <motion.div
+                                        className={`h-full rounded-full ${percentUsed > 90 ? 'bg-red-500' : percentUsed > 75 ? 'bg-orange-500' : percentUsed > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${Math.min(percentUsed, 100)}%` }}
+                                        transition={{ duration: 1.2, ease: 'easeOut' }}
+                                    />
+                                </div>
+
+                                <div className="flex items-center gap-6 pt-4">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-white/20 font-syne whitespace-nowrap">Budget Cap</label>
+                                    <input
+                                        type="range"
+                                        min={1}
+                                        max={100}
+                                        value={budgetValue}
+                                        onChange={(e) => setBudgetValue(Number(e.target.value))}
+                                        className="flex-1 accent-blue-500"
+                                    />
+                                    <span className="text-sm font-black font-syne italic text-white min-w-[60px] text-right">€{budgetValue}</span>
+                                    <button
+                                        onClick={saveBudget}
+                                        disabled={savingConfig}
+                                        className="px-4 py-2 rounded-lg bg-blue-600 text-[9px] font-black uppercase tracking-widest font-syne italic hover:bg-blue-500 transition-all disabled:opacity-50"
+                                    >
+                                        {savingConfig ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Save'}
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-8 pt-4">
+                                    <div className="space-y-1">
+                                        <p className="text-2xl font-black font-syne italic tracking-tighter">{stats?.totalCalls || 0}</p>
+                                        <p className="text-[8px] font-black uppercase text-white/20 tracking-widest">Calls Today</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-2xl font-black font-syne italic tracking-tighter">€{stats?.revenue || '0.00'}</p>
+                                        <p className="text-[8px] font-black uppercase text-white/20 tracking-widest">Revenue</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-2xl font-black font-syne italic tracking-tighter">€{stats?.estProfit || '0.00'}</p>
+                                        <p className="text-[8px] font-black uppercase text-white/20 tracking-widest">Est. Profit</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-
-                        <input
-                            type="range"
-                            min="5"
-                            max="500"
-                            step="5"
-                            value={budget}
-                            onChange={(e) => setBudget(parseInt(e.target.value))}
-                            onMouseUp={() => updateConfig('daily_budget_eur', budget)}
-                            className="w-full h-3 bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-600 focus:outline-none"
-                        />
-
-                        <div className="flex justify-between text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
-                            <span>€5 MIN</span>
-                            <span>€250 MID</span>
-                            <span>€500 MAX</span>
-                        </div>
-                    </div>
+                    </section>
                 </div>
 
-                {/* Profit / Revenue Tracker */}
-                <div className="glass-card p-10 border-green-500/10 flex flex-col justify-between">
-                    <div>
-                        <div className="flex justify-between items-start mb-8">
-                            <h2 className="text-xl font-black uppercase tracking-widest text-green-400">Net Profit</h2>
-                            <div className="text-3xl">📈</div>
-                        </div>
-                        <p className="text-6xl font-black tracking-tighter mb-2">€{stats?.estProfit || '0.00'}</p>
-                        <p className="text-white/30 text-[10px] font-black uppercase tracking-widest">Revenue: €{stats?.revenue || '0.00'}</p>
-                    </div>
-
-                    <div className="mt-8 pt-6 border-t border-white/5 space-y-2">
-                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                            <span className="text-white/40">Gross Margin</span>
-                            <span className="text-green-400">
-                                {stats?.revenue > 0 ? ((stats.estProfit / stats.revenue) * 100).toFixed(1) : 0}%
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Consumption Meter */}
-                <div className="glass-card p-10 border-purple-500/10 flex flex-col justify-between">
-                    <div>
-                        <div className="flex justify-between items-start mb-8">
-                            <h2 className="text-xl font-black uppercase tracking-widest text-purple-400">Burn</h2>
-                            <div className="text-3xl">🔥</div>
-                        </div>
-                        <p className="text-4xl font-black tracking-tighter mb-2">€{stats?.spent?.toFixed(3) || '0.00'}</p>
-                        <p className="text-white/30 text-xs font-bold uppercase tracking-widest">Resets in: {stats?.resetsIn}</p>
-                    </div>
-
-                    <div className="mt-8 space-y-2">
-                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                            <span className="text-white/40">Used</span>
-                            <span className="text-purple-400">{stats?.percentUsed?.toFixed(1) || 0}%</span>
-                        </div>
-                        <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-blue-600 transition-all duration-1000"
-                                style={{ width: `${Math.min(stats?.percentUsed || 0, 100)}%` }}
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Platform Stats & Model Control */}
-            <div className="grid lg:grid-cols-4 gap-8">
-                {/* Stats Grid */}
-                <div className="lg:col-span-1 space-y-6">
-                    <MiniStat label="Users" value={stats?.totalUsers} color="text-blue-400" />
-                    <MiniStat label="Files" value={stats?.totalSyllabi} color="text-purple-400" />
-                    <MiniStat label="Calls" value={stats?.totalCalls} color="text-pink-400" />
-                    <MiniStat label="Profit" value={`€${stats?.estProfit}`} color="text-green-400" />
-                </div>
-
-                {/* Model Overrides / Config Editor */}
-                <div className="lg:col-span-3 glass rounded-[2.5rem] p-10 border-white/5">
-                    <div className="flex justify-between items-center mb-8">
-                        <div>
-                            <h2 className="text-2xl font-black italic">Dynamic Model Routing</h2>
-                            <p className="text-white/30 text-xs font-bold uppercase tracking-widest mt-1">Override factory defaults for specific tasks.</p>
-                        </div>
-                        {saving && <span className="text-[10px] font-black text-blue-500 animate-pulse tracking-widest">PUSHING CONFIG...</span>}
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <ModelSelector
-                            task="General Chat"
-                            current={overrides['general_chat'] || 'llama-3.1-70b'}
-                            onChange={(val) => updateConfig('model_overrides', { ...overrides, 'general_chat': val })}
-                        />
-                        <ModelSelector
-                            task="Syllabus QA (RAG)"
-                            current={overrides['syllabus_qa'] || 'llama-3.1-70b'}
-                            onChange={(val) => updateConfig('model_overrides', { ...overrides, 'syllabus_qa': val })}
-                        />
-                        <ModelSelector
-                            task="Essay Generator"
-                            current={overrides['essay_outline'] || 'llama-3.1-70b'}
-                            onChange={(val) => updateConfig('model_overrides', { ...overrides, 'essay_outline': val })}
-                        />
-                        <ModelSelector
-                            task="Flashcard Generator"
-                            current={overrides['flashcard'] || 'llama-3.1-8b'}
-                            onChange={(val) => updateConfig('model_overrides', { ...overrides, 'flashcard': val })}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Audit Logs */}
-            <div className="glass rounded-[2.5rem] p-10 border-white/5 overflow-hidden">
-                <h2 className="text-2xl font-black mb-8 px-2">Activity Audit Log</h2>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 border-b border-white/5">
-                                <th className="pb-6 pl-4">Timestamp</th>
-                                <th className="pb-6">Operation</th>
-                                <th className="pb-6">Engine</th>
-                                <th className="pb-6 text-right">Cost</th>
-                                <th className="pb-6 text-center pr-4">Cache</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-sm font-medium">
-                            {stats?.recentLogs?.map((log: any) => (
-                                <tr key={log.id} className="border-b border-white/5 group hover:bg-white/[0.02] transition-colors">
-                                    <td className="py-5 text-white/30 pl-4">{new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
-                                    <td className="py-5">
-                                        <span className="bg-white/5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter border border-white/10 group-hover:border-white/20 transition-colors">
-                                            {log.event_type}
-                                        </span>
-                                    </td>
-                                    <td className="py-5 font-mono text-[11px] text-white/50">{log.model_used}</td>
-                                    <td className="py-5 text-right font-mono text-blue-400">€{log.cost.toFixed(5)}</td>
-                                    <td className="py-5 text-center pr-4">
-                                        <div className={`w-2 h-2 rounded-full mx-auto ${log.cache_hit ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-white/10'}`} />
-                                    </td>
-                                </tr>
+                {/* Phase Info + Recent Logs */}
+                <div className="lg:col-span-4 space-y-8">
+                    <section className="space-y-6">
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 font-syne italic px-2">Phase Breakdown</h2>
+                        <div className="space-y-3">
+                            {[
+                                { phase: 'NORMAL', range: '0-50%', desc: 'All models active', color: 'emerald' },
+                                { phase: 'CAUTIOUS', range: '50-75%', desc: 'Force 8B model', color: 'amber' },
+                                { phase: 'RESTRICTED', range: '75-90%', desc: 'Free users queued', color: 'orange' },
+                                { phase: 'EMERGENCY', range: '90%+', desc: 'Cache only', color: 'red' },
+                            ].map((p) => (
+                                <div
+                                    key={p.phase}
+                                    className={`glass-card p-4 flex items-center gap-4 ${phase === p.phase ? 'border-white/20' : 'border-white/5'}`}
+                                >
+                                    <div className={`w-2 h-2 rounded-full ${p.color === 'emerald' ? 'bg-emerald-500' : p.color === 'amber' ? 'bg-amber-500' : p.color === 'orange' ? 'bg-orange-500' : 'bg-red-500'} ${phase === p.phase ? 'animate-pulse' : 'opacity-30'}`} />
+                                    <div className="flex-1">
+                                        <p className={`text-[10px] font-black uppercase tracking-widest font-syne ${phase === p.phase ? 'text-white' : 'text-white/30'}`}>{p.phase}</p>
+                                        <p className="text-[9px] text-white/20 font-dm-sans">{p.range} — {p.desc}</p>
+                                    </div>
+                                </div>
                             ))}
-                        </tbody>
-                    </table>
+                        </div>
+                    </section>
+
+                    {stats?.recentLogs?.length > 0 && (
+                        <section className="space-y-6">
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 font-syne italic px-2">Recent Activity</h2>
+                            <div className="space-y-2">
+                                {stats.recentLogs.slice(0, 5).map((log: any, i: number) => (
+                                    <div key={i} className="glass-card p-3 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[10px] font-bold text-white/50 font-dm-sans truncate max-w-[180px]">{log.event_type || log.model_used || 'query'}</p>
+                                            <p className="text-[9px] text-white/20">{log.tokens_used || 0} tokens</p>
+                                        </div>
+                                        <span className="text-[9px] font-black text-amber-500 font-syne">€{Number(log.cost || 0).toFixed(4)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
                 </div>
             </div>
         </div>
     )
 }
 
-function MiniStat({ label, value, color }: any) {
+function AdminStat({ icon: Icon, label, value, color, trend }: any) {
+    const colorMap: Record<string, string> = {
+        blue: 'border-blue-500/10 bg-blue-500/5',
+        emerald: 'border-emerald-500/10 bg-emerald-500/5',
+        amber: 'border-amber-500/10 bg-amber-500/5',
+        purple: 'border-purple-500/10 bg-purple-500/5',
+    }
     return (
-        <div className="glass rounded-3xl p-6 border-white/5 flex flex-col justify-center">
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-1">{label}</p>
-            <p className={`text-3xl font-black tracking-tighter ${color}`}>{value || 0}</p>
-        </div>
-    )
-}
-
-function ModelSelector({ task, current, onChange }: { task: string, current: string, onChange: (val: string) => void }) {
-    const models = [
-        { id: 'llama-3.1-8b-instant', label: '8B Instant (Cheap)', info: '€0.05/1M' },
-        { id: 'llama-3.1-70b-versatile', label: '70B Versatile (Best)', info: '€0.70/1M' }
-    ]
-
-    return (
-        <div className="p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-3">
-            <div className="flex justify-between items-center">
-                <span className="text-xs font-black uppercase tracking-widest text-white/60">{task}</span>
+        <div className={`glass-card p-6 space-y-4 border ${colorMap[color] || colorMap.blue}`}>
+            <div className="flex items-center justify-between">
+                <Icon className="w-5 h-5 text-white/40" />
+                <span className="text-[8px] font-black uppercase tracking-widest text-white/30 font-syne">{trend}</span>
             </div>
-            <select
-                value={current}
-                onChange={(e) => onChange(e.target.value)}
-                className="bg-black border border-white/10 rounded-lg px-3 py-2 text-xs font-bold focus:border-blue-500 outline-none appearance-none cursor-pointer"
-            >
-                {models.map(m => (
-                    <option key={m.id} value={m.id}>{m.label}</option>
-                ))}
-            </select>
-            <span className="text-[9px] font-black text-white/20 tracking-tighter self-end">{models.find(m => m.id === current)?.info}</span>
+            <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase text-white/40 font-syne leading-none mb-1">{label}</p>
+                <p className="text-3xl font-black italic text-white font-syne tracking-tighter">{value}</p>
+            </div>
         </div>
     )
 }

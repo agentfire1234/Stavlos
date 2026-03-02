@@ -2,74 +2,116 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Logo } from '@/components/logo'
+import { motion } from 'framer-motion'
+import {
+    LayoutDashboard,
+    MessageSquare,
+    BookOpen,
+    Wrench,
+    Settings,
+    Zap,
+    User
+} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 
-interface NavItemProps {
-    href: string
-    icon: string
-    label: string
-}
-
-function NavItem({ href, icon, label }: NavItemProps) {
-    const pathname = usePathname()
-    const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
-
-    return (
-        <Link
-            href={href}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all group ${active
-                    ? 'bg-blue-600/10 text-blue-400 border border-blue-600/20 shadow-lg shadow-blue-600/5'
-                    : 'text-white/40 hover:text-white hover:bg-white/5'
-                }`}
-        >
-            <span className={`text-xl transition-transform group-hover:scale-110 ${active ? 'opacity-100' : 'opacity-50'}`}>
-                {icon}
-            </span>
-            {label}
-        </Link>
-    )
-}
+const navItems = [
+    { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
+    { label: 'Chat', icon: MessageSquare, href: '/chat' },
+    { label: 'My Syllabi', icon: BookOpen, href: '/syllabus' },
+    { label: 'Tools', icon: Wrench, href: '/tools' },
+]
 
 export function Sidebar() {
+    const pathname = usePathname()
+    const [profile, setProfile] = useState<any>(null)
+
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
+    useEffect(() => {
+        async function getProfile() {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single()
+                setProfile(data)
+            }
+        }
+        getProfile()
+    }, [])
+
+    if (pathname === '/' || pathname.startsWith('/auth') || pathname === '/login' || pathname === '/signup' || pathname === '/offline' || pathname === '/pricing') return null
+
     return (
-        <aside className="w-64 border-r border-white/10 bg-black/50 backdrop-blur-xl hidden md:flex flex-col h-screen sticky top-0 overflow-hidden">
+        <aside className="hidden md:flex flex-col w-60 bg-[#0a0a0f] border-r border-white/8 fixed h-screen z-50">
+            {/* Logo */}
             <div className="p-8">
-                <Link href="/dashboard" className="flex items-center gap-3">
-                    <Logo size={24} className="text-teal-400" href="/dashboard" />
-                    <span className="text-2xl font-black tracking-tighter bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-                        STAVLOS
+                <Link href="/dashboard" className="flex items-center gap-2 group">
+                    <span className="text-2xl font-black font-syne tracking-tighter">
+                        <span className="text-blue-500">S</span>TAVLOS
                     </span>
                 </Link>
             </div>
 
+            {/* Navigation */}
             <nav className="flex-1 px-4 space-y-1">
-                <NavItem href="/dashboard" icon="📊" label="Overview" />
-                <NavItem href="/chat" icon="💬" label="AI Partner" />
-                <NavItem href="/syllabus" icon="📚" label="Syllabi" />
-                <NavItem href="/flashcards" icon="✨" label="Flashcards" />
-                <NavItem href="/essays" icon="✍️" label="Essay Help" />
+                {navItems.map((item) => {
+                    const isActive = pathname.startsWith(item.href)
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group ${isActive
+                                ? 'bg-white/5 text-white border border-white/8 shadow-[0_0_20px_rgba(59,130,246,0.1)]'
+                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                }`}
+                        >
+                            <item.icon className={`w-5 h-5 transition-colors ${isActive ? 'text-blue-500' : 'group-hover:text-blue-400'}`} />
+                            <span className="font-body">{item.label}</span>
+                        </Link>
+                    )
+                })}
             </nav>
 
-            <div className="p-4 border-t border-white/5">
-                <div className="glass rounded-2xl p-4 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-blue-600/10 blur-2xl rounded-full" />
-                    <p className="text-[10px] text-blue-400 font-bold tracking-widest uppercase mb-2">Free Account</p>
-                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mb-2">
-                        <div className="h-full bg-blue-500 w-[45%]" />
-                    </div>
-                    <p className="text-[11px] text-white/40 mb-3">Daily usage: 9 / 20</p>
-                    <button className="w-full py-2 bg-white text-black rounded-lg text-xs font-bold hover:bg-gray-100 transition-all active:scale-95">
-                        Upgrade to Pro
-                    </button>
-                </div>
+            <div className="p-4 border-t border-white/8 space-y-4">
+                {/* Upgrade Button */}
+                {profile && !profile.is_pro && (
+                    <Link
+                        href="/settings/billing"
+                        className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(59,130,246,0.4)]"
+                    >
+                        <Zap className="w-4 h-4 fill-white" />
+                        <span className="text-sm">Upgrade to Pro</span>
+                    </Link>
+                )}
 
-                <div className="mt-4 flex items-center justify-between px-2">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 border border-white/20" />
-                        <span className="text-xs font-bold text-white/50">Student</span>
-                    </div>
-                    <Link href="/settings" className="text-white/20 hover:text-white transition">
-                        ⚙️
+                {/* User Info */}
+                <div className="flex items-center justify-between px-2">
+                    <Link href="/settings/profile" className="flex items-center gap-3 group overflow-hidden">
+                        <div className="w-10 h-10 rounded-full glass-card border-white/10 flex items-center justify-center font-bold text-xs uppercase flex-shrink-0 group-hover:border-blue-500/50 transition-all">
+                            {profile?.avatar_url ? (
+                                <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                                profile?.display_name?.slice(0, 2) || <User className="w-5 h-5 text-slate-500" />
+                            )}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-semibold text-white truncate font-body">
+                                {profile?.display_name || 'Loading...'}
+                            </span>
+                            <span className={`text-[10px] font-bold uppercase tracking-widest ${profile?.is_pro ? 'text-blue-400' : 'text-slate-500'}`}>
+                                {profile?.is_pro ? 'Pro Plan' : 'Free Plan'}
+                            </span>
+                        </div>
+                    </Link>
+                    <Link href="/settings" className="text-slate-500 hover:text-white transition-colors">
+                        <Settings className="w-5 h-5" />
                     </Link>
                 </div>
             </div>

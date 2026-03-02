@@ -1,113 +1,138 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft, Send, Sparkles, Layout, ListChecks } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+    PenTool,
+    ArrowLeft,
+    Send,
+    Copy,
+    Check,
+    RotateCcw,
+    Loader2,
+    ChevronRight,
+    Layout
+} from 'lucide-react'
 import Link from 'next/link'
+import ReactMarkdown from 'react-markdown'
+import toast from 'react-hot-toast'
 
-export default function EssayOutlinePage() {
+export default function EssayOutlinerPage() {
     const [topic, setTopic] = useState('')
+    const [structure, setStructure] = useState('PEEL')
+    const [outline, setOutline] = useState('')
     const [loading, setLoading] = useState(false)
-    const [outline, setOutline] = useState<string | null>(null)
+    const [copied, setCopied] = useState(false)
 
-    const generateOutline = async (e: React.FormEvent) => {
-        e.preventDefault()
+    async function handleGenerate() {
         if (!topic.trim()) return
-
         setLoading(true)
         try {
-            const res = await fetch('/api/chat', {
+            const res = await fetch('/api/tools/essay-outline', {
                 method: 'POST',
-                body: JSON.stringify({
-                    message: `Please generate a detailed essay outline for this topic, including a strong thesis statement and PEEL-method points for body paragraphs: ${topic}`,
-                    taskType: 'essay_outline'
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ topic, structure })
             })
+            if (!res.ok) throw new Error('Request failed')
             const data = await res.json()
-            setOutline(data.response)
+            setOutline(data.result)
         } catch (error) {
-            console.error(error)
+            toast.error("Outline generator failed.")
         } finally {
             setLoading(false)
         }
     }
 
+    const copy = () => {
+        navigator.clipboard.writeText(outline)
+        setCopied(true)
+        toast.success("Outline copied.")
+        setTimeout(() => setCopied(false), 2000)
+    }
+
     return (
-        <div className="max-w-4xl mx-auto px-6 py-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <Link href="/dashboard" className="flex items-center gap-2 text-white/40 hover:text-white transition-colors group">
-                    <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                    <span className="text-sm font-bold uppercase tracking-widest">Back to Dashboard</span>
-                </Link>
-                <div className="px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-[10px] font-black uppercase tracking-widest text-orange-400">
-                    High Structure: GPT-4o
+        <div className="max-w-5xl mx-auto px-6 py-12 space-y-12">
+            <Link href="/tools" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-purple-500 transition-colors font-syne italic">
+                <ArrowLeft className="w-3 h-3" /> Back to Toolbox
+            </Link>
+
+            <header className="space-y-2">
+                <div className="w-12 h-12 rounded-2xl glass-card border-purple-500/20 flex items-center justify-center mb-6">
+                    <PenTool className="w-6 h-6 text-purple-500" />
                 </div>
-            </div>
+                <h1 className="text-4xl font-black font-syne uppercase italic tracking-tight">Essay <span className="text-purple-500 text-glow-purple">Outliner</span></h1>
+                <p className="text-xs font-bold font-dm-sans text-white/30 italic">Generate structured academic plans with PEEL and 5-paragraph frameworks.</p>
+            </header>
 
-            <div>
-                <h1 className="text-5xl font-black tracking-tighter mb-4 flex items-center gap-4">
-                    <Layout className="w-10 h-10 text-orange-500" />
-                    Essay Outliner
-                </h1>
-                <p className="text-white/40 font-medium text-lg max-w-2xl">
-                    Kill writer's block. Provide your essay prompt or topic, and we'll build a structured roadmap with thesis, arguments, and evidence.
-                </p>
-            </div>
-
-            {/* Input Area */}
-            <form onSubmit={generateOutline} className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 to-red-500 rounded-[2rem] blur opacity-10 group-focus-within:opacity-25 transition duration-500" />
-                <div className="relative glass-card p-2 rounded-[2rem] flex flex-col gap-2">
-                    <textarea
-                        value={topic}
-                        onChange={(e) => setTopic(e.target.value)}
-                        placeholder="What are you writing about? (e.g. The impact of the industrial revolution on urban families)..."
-                        className="flex-1 bg-transparent border-none focus:ring-0 p-6 text-lg placeholder:text-white/20 resize-none min-h-[140px]"
-                    />
-                    <div className="p-2 flex justify-end">
-                        <button
-                            type="submit"
-                            disabled={loading || !topic.trim()}
-                            className="bg-white text-black px-8 py-4 rounded-[1.5rem] font-black flex items-center justify-center gap-2 hover:bg-orange-50 transition-all active:scale-95 disabled:opacity-50"
-                        >
-                            {loading ? (
-                                <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                            ) : (
-                                <>
-                                    Build Outline
-                                    <Send className="w-4 h-4" />
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </form>
-
-            {/* Results Area */}
-            {outline && (
-                <div className="glass-card p-8 animate-in fade-in slide-in-from-top-4 duration-500 bg-orange-500/[0.01]">
-                    <div className="flex items-center gap-2 mb-6 text-orange-400">
-                        <ListChecks className="w-4 h-4" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Essay Roadmap</span>
-                    </div>
-
-                    <div className="prose prose-invert max-w-none">
-                        <div className="text-white/90 text-sm leading-loose font-medium whitespace-pre-wrap">
-                            {outline}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                {/* Inputs */}
+                <div className="lg:col-span-1 space-y-6">
+                    <div className="space-y-4">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-white/20 font-syne italic">Framework</label>
+                        <div className="flex flex-col gap-2">
+                            {['PEEL', '5-Paragraph', 'Argumentative', 'Compare'].map(s => (
+                                <button
+                                    key={s}
+                                    onClick={() => setStructure(s)}
+                                    className={`w-full py-3 px-4 text-[9px] font-black uppercase tracking-widest font-syne italic rounded-xl border text-left transition-all flex items-center justify-between ${structure === s ? 'bg-purple-600/10 border-purple-500/50 text-purple-400' : 'bg-white/5 border-white/5 text-white/20 hover:text-white/40'
+                                        }`}
+                                >
+                                    {s}
+                                    {structure === s && <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />}
+                                </button>
+                            ))}
                         </div>
                     </div>
-
-                    <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-white/20 uppercase">Structured using PEEL Method</span>
-                        <button
-                            onClick={() => navigator.clipboard.writeText(outline)}
-                            className="bg-white/5 border border-white/10 px-6 py-2 rounded-xl text-xs font-bold hover:bg-white/10 transition-all"
-                        >
-                            Copy Outline
-                        </button>
-                    </div>
                 </div>
-            )}
+
+                {/* Textarea Area */}
+                <div className="lg:col-span-3 space-y-6">
+                    <div className="glass-card p-2 border-white/10 focus-within:border-purple-500/50 transition-all">
+                        <textarea
+                            value={topic}
+                            onChange={(e) => setTopic(e.target.value)}
+                            placeholder="Describe your essay topic in detail..."
+                            className="w-full bg-transparent border-none outline-none resize-none p-4 text-sm font-dm-sans italic min-h-[160px] placeholder:text-white/10"
+                        />
+                    </div>
+
+                    <button
+                        onClick={handleGenerate}
+                        disabled={loading || !topic.trim()}
+                        className="btn-primary w-full py-4 bg-purple-600 hover:bg-purple-500 border-none shadow-purple-500/20 text-sm font-black uppercase tracking-[0.3em] font-syne italic"
+                    >
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Construct Infrastructure <Layout className="w-4 h-4 ml-2" /></>}
+                    </button>
+                </div>
+            </div>
+
+            <AnimatePresence mode="wait">
+                {outline && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-6"
+                    >
+                        <div className="flex items-center justify-between px-2">
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 font-syne italic">Neural Infrastructure</h2>
+                            <button onClick={copy} className="text-[10px] font-bold text-purple-500 hover:underline uppercase tracking-widest font-dm-sans flex items-center gap-2">
+                                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {copied ? 'Copied' : 'Copy Outline'}
+                            </button>
+                        </div>
+                        <div className="glass-card p-12 relative group bg-purple-500/[0.01]">
+                            <div className="prose prose-invert prose-sm max-w-none font-dm-sans leading-relaxed italic">
+                                <ReactMarkdown>{outline}</ReactMarkdown>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => { setOutline(''); setTopic(''); }}
+                            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-white mx-auto font-syne italic mt-2"
+                        >
+                            <RotateCcw className="w-3 h-3" /> Purge Outline
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }

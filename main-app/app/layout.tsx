@@ -1,32 +1,37 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from 'next/font/google'
+import { Syne, DM_Sans } from 'next/font/google'
 import "./globals.css";
+import { CommandBar } from "@/components/layout/command-bar";
+import { MobileNav } from "@/components/layout/mobile-nav";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Toaster } from 'react-hot-toast'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' })
-
-// Helper to ensure URL has a protocol
-const getBaseUrl = () => {
-  const url = process.env.NEXT_PUBLIC_URL || 'https://stavlos.com';
-  return url.startsWith('http') ? url : `https://${url}`;
-};
+const syne = Syne({
+  subsets: ['latin'],
+  weight: ['400', '700', '800'],
+  variable: '--font-syne'
+})
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-dm-sans'
+})
 
 export const metadata: Metadata = {
-  title: "STAVLOS - Master Your Studies with AI",
-  description: "The AI study partner that knows your syllabus. Stop staring, start mastering.",
-  metadataBase: new URL(getBaseUrl()),
+  title: "STAVLOS - AI Study Partner",
+  description: "Stop searching. Start knowing.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Stavlos",
   },
+  icons: {
+    apple: [{ url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" }]
+  }
 };
-
-import { MobileNav } from '@/components/layout/mobile-nav'
-import { CommandBar } from '@/components/layout/command-bar'
-import { Analytics } from '@vercel/analytics/react'
-import { SpeedInsights } from '@vercel/speed-insights/next'
 
 export default function RootLayout({
   children,
@@ -34,41 +39,37 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${outfit.variable} scroll-smooth`}>
-      <head>
-        {/* Umami Analytics - Privacy-First & Zero Cookies */}
-        <script
-          async
-          defer
-          data-website-id={process.env.NEXT_PUBLIC_UMAMI_ID}
-          src="https://cloud.umami.is/script.js"
-        />
-      </head>
-      <body
-        className="antialiased bg-black text-white selection:bg-blue-500 selection:text-white font-sans pb-24 md:pb-0"
-        suppressHydrationWarning
-      >
-        {children}
-        <Analytics />
-        <SpeedInsights />
+    <html lang="en" className={`${syne.variable} ${dmSans.variable} scroll-smooth`}>
+      <body className="font-body bg-[#0a0a0f] text-white">
+        <div className="flex min-h-screen">
+          {/* Desktop Sidebar */}
+          <Sidebar />
+
+          {/* Main Content Area */}
+          <main className="flex-1 ml-0 md:ml-60 pb-20 md:pb-0">
+            {children}
+          </main>
+        </div>
+
         <CommandBar />
         <MobileNav />
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            className: 'glass-card text-white border-white/10 backdrop-blur-xl',
+            duration: 4000,
+          }}
+        />
+        <Analytics />
+        <SpeedInsights />
 
-        {/* PWA & IRON DOME INFRA */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js');
+                  navigator.serviceWorker.register('/sw.js').catch(console.error);
                 });
-              }
-
-              // Push Notification Request (Iron Dome)
-              if ('Notification' in window && Notification.permission === 'default') {
-                setTimeout(() => {
-                  Notification.requestPermission();
-                }, 10000); // Wait 10s to not disrupt UX
               }
             `,
           }}

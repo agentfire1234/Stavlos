@@ -43,15 +43,12 @@ export async function POST(req: Request) {
 
             if (error) {
                 console.error('Failed to update profile to PRO:', error.message)
-            } else {
-                console.log(`User ${userId} upgraded to PRO via Stripe.`)
             }
             break
         }
 
         case 'customer.subscription.deleted': {
             const subscription = event.data.object as any
-            // Remove Pro Access (find profile by customer ID)
             const { error } = await supabaseAdmin
                 .from('profiles')
                 .update({ is_pro: false })
@@ -62,8 +59,9 @@ export async function POST(req: Request) {
         }
 
         default:
-            console.log(`Unhandled event type ${event.type}`)
+            break
     }
 
     return NextResponse.json({ received: true })
 }
+

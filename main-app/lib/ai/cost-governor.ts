@@ -89,7 +89,7 @@ export class CostGovernor {
                 return {
                     allowed: true,
                     queue: false,
-                    model: 'llama-3.1-8b-instant', // Force instant
+                    model: 'meta-llama/llama-3.1-8b-instruct:free',
                     message: null
                 }
 
@@ -99,7 +99,7 @@ export class CostGovernor {
                     return {
                         allowed: false,
                         queue: true,
-                        model: 'llama-3.1-8b-instant',
+                        model: 'meta-llama/llama-3.1-8b-instruct:free',
                         message: "⚡ High demand! Queued for 1 hour.\n\n💡 Upgrade to Pro for instant responses"
                     }
                 }
@@ -116,7 +116,7 @@ export class CostGovernor {
                     return {
                         allowed: false,
                         queue: false,
-                        model: 'llama-3.1-8b-instant',
+                        model: 'meta-llama/llama-3.1-8b-instruct:free',
                         message: "📊 Daily limit reached. Resets at midnight.\n\n⚡ Upgrade to Pro for 24/7 access"
                     }
                 }
@@ -140,17 +140,17 @@ export class CostGovernor {
 
         // 2. Fallback to hardcoded routing
         const routing: Record<string, string> = {
-            'grammar_fix': 'llama-3.1-8b-instant',
-            'flashcard': 'llama-3.1-8b-instant',
-            'summary': 'llama-3.1-8b-instant',
-            'essay_outline': 'llama-3.1-70b-versatile',
-            'code_debug': 'llama-3.1-70b-versatile',
-            'general_chat': 'llama-3.1-70b-versatile',
-            'math_solver': 'llama-3.1-70b-versatile',
-            'syllabus_qa': 'llama-3.1-70b-versatile'
+            'grammar_fix': 'meta-llama/llama-3.1-8b-instruct:free',
+            'flashcard': 'meta-llama/llama-3.1-8b-instruct:free',
+            'summary': 'meta-llama/llama-3.1-8b-instruct:free',
+            'essay_outline': 'meta-llama/llama-3.3-70b-instruct:free',
+            'code_debug': 'meta-llama/llama-3.3-70b-instruct:free',
+            'general_chat': 'meta-llama/llama-3.3-70b-instruct:free',
+            'math_solver': 'meta-llama/llama-3.3-70b-instruct:free',
+            'syllabus_qa': 'meta-llama/llama-3.3-70b-instruct:free'
         }
 
-        return routing[taskType] || 'llama-3.1-70b-versatile'
+        return routing[taskType] || 'meta-llama/llama-3.3-70b-instruct:free'
     }
 
     static async recordCost(inputTokens: number, outputTokens: number, model: string, taskType: string = 'chat'): Promise<number> {
@@ -159,13 +159,15 @@ export class CostGovernor {
 
         // Groq Pricing (Approximate)
         const costPer1K: Record<string, number> = {
-            'llama-3.1-70b-versatile': 0.0007,
-            'llama-3.1-8b-instant': 0.00005,
-            'openai/text-embedding-3-small': 0.00002 // Via OpenRouter
+            'meta-llama/llama-3.3-70b-instruct:free': 0,
+            'meta-llama/llama-3.1-8b-instruct:free': 0,
+            'google/gemini-2.0-flash-exp:free': 0,
+            'mistralai/mistral-small-3.1-24b-instruct:free': 0,
+            'openai/text-embedding-3-small': 0.00002
         }
 
-        // Fallback to instant price if unknown
-        const price = costPer1K[model] || costPer1K['llama-3.1-8b-instant']
+        // Free models cost 0, fallback to 0
+        const price = costPer1K[model] ?? 0
 
         const totalTokens = inputTokens + outputTokens
         const cost = (totalTokens / 1000) * price

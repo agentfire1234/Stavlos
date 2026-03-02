@@ -4,7 +4,8 @@ import { RAGSystem } from './rag-system'
 import { AIClient } from './ai-client'
 
 export interface OrchestratorResult {
-    response: string
+    response?: string
+    stream?: any
     model: string
     cacheHit: boolean
     cost: number
@@ -19,13 +20,14 @@ export class AIOrchestrator {
         query: string,
         userId: string,
         userTier: 'free' | 'pro' = 'free',
-        taskType: string = 'general_chat'
+        taskType: string = 'general_chat',
+        stream: boolean = false
     ): Promise<OrchestratorResult> {
         const steps: string[] = []
 
         // 0. Global Kill Switch Check
-        const killSwitch = await CacheSystem.getConfig('kill_switch')
-        if (killSwitch === 'true') {
+        const killStatus = await CacheSystem.getConfig('system_status')
+        if (killStatus === '0') {
             return {
                 response: 'System is currently undergoing essential maintenance. Please try again shortly.',
                 model: 'emergency-offline',
@@ -37,7 +39,7 @@ export class AIOrchestrator {
             }
         }
 
-        // 1. Check Cache
+        // 1. Check Cache (Only for non-streaming for now, or always if we want hits)
         steps.push("Searching platform knowledge...")
         const cached = await CacheSystem.get(query, userId)
         if (cached && cached.response) {
@@ -56,7 +58,6 @@ export class AIOrchestrator {
         const allowed = await CostGovernor.shouldProcess(userId, userTier, taskType)
         if (!allowed.allowed) {
             return {
-                response: '',
                 model: allowed.model,
                 cacheHit: false,
                 cost: 0,
@@ -67,35 +68,47 @@ export class AIOrchestrator {
         }
         steps.push(`Routing to ${allowed.model.includes('70b') ? 'High-Performance Engine' : 'Instant Engine'}...`)
 
-        // 3. RAG Context (if syllabus related)
+        // 3. RAG Context
         let context = ''
         let sources: any[] = []
         if (taskType === 'syllabus_qa' || query.toLowerCase().includes('syllabus')) {
-            steps.push("Consulting your course syllabuses...")
+            steps.push("Consulting course syllabuses...")
             const ragResult = await RAGSystem.querySyllabus(query, userId)
             if (ragResult.found) {
                 context = ragResult.context || ''
                 sources = ragResult.ids || []
-                steps.push(`Found relevant course content in ${sources.length} matching sections.`)
+                steps.push(`Found relevant context in ${sources.length} matching sections.`)
             } else {
                 steps.push("No direct course context found. Using global knowledge.")
             }
         }
 
         // 4. Execute AI
-        steps.push("Synthesizing response...")
-        const completion = await AIClient.chat(query, context, allowed.model, taskType)
-        const responseText = completion.choices[0].message.content || ''
+        steps.push(stream ? "Initializing secure stream..." : "Synthesizing response...")
+        const aiResponse = await AIClient.chat(query, context, allowed.model, taskType, stream)
 
-        // 5. Record Cost & Usage
+        if (stream) {
+            return {
+                stream: aiResponse,
+                model: allowed.model,
+                cacheHit: false,
+                cost: 0,
+                steps,
+                sources: sources.length > 0 ? sources : undefined
+            }
+        }
+
+        const responseText = aiResponse.choices[0].message.content || ''
+
+        // 5. Record Cost
         const cost = await CostGovernor.recordCost(
-            completion.usage?.prompt_tokens || 0,
-            completion.usage?.completion_tokens || 0,
+            aiResponse.usage?.prompt_tokens || 0,
+            aiResponse.usage?.completion_tokens || 0,
             allowed.model,
             taskType
         )
 
-        // 6. Cache for future (if appropriate)
+        // 6. Cache
         if (responseText.length > 50) {
             await CacheSystem.set(query, responseText, userId)
         }

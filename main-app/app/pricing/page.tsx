@@ -1,120 +1,165 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import {
+    Check,
+    Zap,
+    Crown,
+    ArrowRight,
+    Lock,
+    Users,
+    Star,
+    Sparkles,
+    Shield
+} from 'lucide-react'
+import { createBrowserClient } from '@supabase/ssr'
 import Link from 'next/link'
-import { Check, ArrowRight, Zap, Target } from 'lucide-react'
 
-export default async function PricingPage() {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return cookieStore.getAll()
-                },
-            },
-        }
-    )
-
-    const { data: { user } } = await supabase.auth.getUser()
-
-    // Fetch Rank & Referrals for Dynamic Pricing Display
-    const { data: waitlist } = await supabase
-        .from('waitlist_with_rank')
-        .select('current_rank, referral_count')
-        .eq('email', user?.email || '')
-        .single()
-
-    const rank = waitlist?.current_rank || 10000
-    const refs = waitlist?.referral_count || 0
-
-    // Pricing Logic (Waitlist Promises)
-    const isPriceLocked = rank <= 2000 || refs >= 1
-    const hasFreeTrial = refs >= 2
-
-    const basePrice = 8
-    const finalPrice = isPriceLocked ? 5 : 8
-
-    return (
-        <div className="min-h-screen bg-black text-white p-6 md:p-12 pb-32">
-            <div className="max-w-4xl mx-auto space-y-16 py-12">
-
-                <header className="text-center space-y-4">
-                    <h1 className="text-6xl font-black tracking-tighter italic">Stavlos Pro</h1>
-                    <p className="text-white/40 font-medium max-w-lg mx-auto">
-                        Unlock the full power of the AI Student OS. One price, unlimited mastery.
-                    </p>
-                </header>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                    {/* Features List */}
-                    <div className="space-y-8">
-                        <Feature icon={Zap} title="Unlimited AI Study Sessions" desc="No daily message limits on Llama 3.1 70B." />
-                        <Feature icon={Target} title="Priority Course Indexing" desc="Get your syllabuses processed instantly." />
-                        <Feature icon={Check} title="Founding Member Badge" desc="Exclusive status in the global leaderboard." />
-                        <Feature icon={Check} title="Mobile PWA Access" desc="Install Stavlos on your phone for on-the-go study." />
-                    </div>
-
-                    {/* Price Card */}
-                    <div className="glass-card p-12 border-blue-500/20 bg-blue-500/[0.02] relative overflow-hidden group">
-                        <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px] group-hover:bg-blue-500/20 transition-all duration-1000" />
-
-                        <div className="relative z-10 space-y-8 text-center">
-                            <div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 mb-2">
-                                    {isPriceLocked ? 'Founding Member Price Locked' : 'Early Bird Claim'}
-                                </p>
-                                <div className="flex items-center justify-center gap-1">
-                                    <span className="text-3xl font-black text-white/30 mt-4">€</span>
-                                    <span className="text-8xl font-black tracking-tighter">{finalPrice}</span>
-                                    <span className="text-lg font-bold text-white/20 ml-2">/mo</span>
-                                </div>
-                                {hasFreeTrial && (
-                                    <p className="text-blue-400 text-[10px] font-black uppercase mt-2">
-                                        + 1st Month Free Unlocked
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="space-y-3 pt-6 border-t border-white/5">
-                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
-                                    <span>Waitlist Rank #{rank}</span>
-                                    <span>{isPriceLocked ? '€5 Locked' : '€8 Standard'}</span>
-                                </div>
-                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-blue-400">
-                                    <span>Referral Quest</span>
-                                    <span>
-                                        {refs === 0 ? '0 refs' : refs === 1 ? '1 ref: Price Locked' : `${refs} refs: Free Month`}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <button className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-tighter hover:bg-blue-50 transition-all flex items-center justify-center gap-2 group/btn">
-                                Upgrade to Pro <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                            </button>
-
-                            <p className="text-[10px] font-bold text-white/20 italic">
-                                * Pricing locked in as a Founding Member
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
+const container = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
 }
 
-function Feature({ icon: Icon, title, desc }: any) {
+const item = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    show: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } }
+}
+
+export default function PricingPage() {
+    const [data, setData] = useState<any>(null)
+    const [seats, setSeats] = useState(0)
+
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
+    useEffect(() => {
+        async function load() {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                const { data: waitlist } = await supabase
+                    .from('waitlist')
+                    .select('*')
+                    .eq('email', user.email)
+                    .single()
+                setData(waitlist)
+            }
+            const { count } = await supabase.from('waitlist').select('*', { count: 'exact', head: true })
+            setSeats(count || 0)
+        }
+        load()
+    }, [])
+
+    const isLocked = (data?.current_rank || 10000) <= 2000 || (data?.referral_count || 0) >= 1
+    const hasFreeMonth = (data?.referral_count || 0) >= 2
+    const price = isLocked ? 5 : 8
+
     return (
-        <div className="flex gap-4 group">
-            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/40 group-hover:text-blue-400 transition-colors">
-                <Icon className="w-5 h-5" />
+        <motion.div
+            variants={container}
+            initial="hidden"
+            animate="show"
+            className="max-w-4xl mx-auto px-6 py-20 space-y-20 flex flex-col items-center"
+        >
+            <header className="text-center space-y-4">
+                <div className="inline-flex gap-2 items-center bg-blue-500/10 border border-blue-500/20 px-4 py-1.5 rounded-full">
+                    <Sparkles className="w-3 h-3 text-blue-500" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 font-syne italic">Exclusive Founder Access</span>
+                </div>
+                <h1 className="text-6xl font-black font-syne uppercase italic tracking-tighter">Secure Your <span className="text-blue-500 text-glow-blue">Spot</span></h1>
+                <p className="text-xs font-bold font-dm-sans text-white/30 italic">Personalized pricing based on your waitlist rank and impact.</p>
+            </header>
+
+            {/* Dynamic Status Badges */}
+            <div className="flex flex-wrap justify-center gap-4">
+                {isLocked && (
+                    <motion.div variants={item} className="flex items-center gap-3 px-6 py-3 rounded-2xl glass-card border-emerald-500/40 bg-emerald-500/5">
+                        <Shield className="w-5 h-5 text-emerald-500 shadow-emerald-500/20" />
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black uppercase text-emerald-500/60 font-syne leading-none">Price Protocol</span>
+                            <span className="text-xs font-black uppercase text-white font-syne italic">Locked at €5 Forever</span>
+                        </div>
+                    </motion.div>
+                )}
+                {hasFreeMonth && (
+                    <motion.div variants={item} className="flex items-center gap-3 px-6 py-3 rounded-2xl glass-card border-blue-500/40 bg-blue-500/5">
+                        <Star className="w-5 h-5 text-blue-500 shadow-blue-500/20" />
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black uppercase text-blue-500/60 font-syne leading-none">Impact Reward</span>
+                            <span className="text-xs font-black uppercase text-white font-syne italic">First Month Free</span>
+                        </div>
+                    </motion.div>
+                )}
             </div>
-            <div>
-                <h3 className="font-bold text-sm uppercase tracking-tight">{title}</h3>
-                <p className="text-xs text-white/40 font-medium">{desc}</p>
-            </div>
-        </div>
+
+            {/* Pricing Card */}
+            <motion.div
+                variants={item}
+                className={`relative w-full max-w-lg glass-card p-12 space-y-12 border-2 overflow-hidden transition-all duration-700 ${isLocked ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-white/10'
+                    }`}
+            >
+                <div className="absolute top-0 right-0 p-12 opacity-[0.03] rotate-12 -translate-y-4">
+                    <Zap className="w-64 h-64 text-blue-500" />
+                </div>
+
+                <div className="flex justify-between items-start relative z-10">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                            <Crown className={`w-4 h-4 ${isLocked ? 'text-amber-500 fill-amber-500' : 'text-slate-500'}`} />
+                            <span className="text-[11px] font-black uppercase tracking-[0.3em] font-syne italic">Founding Student</span>
+                        </div>
+                        <h2 className="text-7xl font-black font-syne italic tracking-tighter">€{price}<span className="text-lg font-bold text-white/20 not-italic ml-2">/mo</span></h2>
+                    </div>
+                </div>
+
+                <div className="space-y-6 relative z-10">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 font-syne italic border-b border-white/5 pb-4">Inclusive Systems</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
+                        {[
+                            'Unlimited RAG Memory',
+                            'Llama 3.3 70B Access',
+                            'Six specialized modules',
+                            'Smart exam triggers',
+                            'Priority neural link',
+                            'Early feature entry'
+                        ].map(feat => (
+                            <div key={feat} className="flex items-center gap-3">
+                                <Check className="w-4 h-4 text-emerald-500" strokeWidth={3} />
+                                <span className="text-xs font-bold font-dm-sans text-white/80 italic">{feat}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="space-y-6 relative z-10 pt-4">
+                    <button className="btn-primary w-full py-5 text-sm font-black uppercase tracking-[0.3em] font-syne italic group">
+                        Enter Neural Link <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                    <p className="text-center text-[10px] font-bold text-white/20 font-dm-sans italic">Payments launch at general release — June 2026</p>
+                </div>
+            </motion.div>
+
+            {/* Referal CTA if not locked */}
+            {!isLocked && (
+                <Link href="/leaderboard" className="group">
+                    <div className="flex items-center gap-3 px-8 py-4 rounded-2xl glass-card border-amber-500/20 bg-amber-500/5 group-hover:border-amber-500/50 transition-all">
+                        <p className="text-xs font-black uppercase tracking-widest text-amber-500 font-syne italic">Want €5 forever? Refer 1 friend →</p>
+                    </div>
+                </Link>
+            )}
+
+            {/* Global Progress */}
+            <motion.div variants={item} className="w-full max-w-sm space-y-4">
+                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest font-syne italic">
+                    <span className="text-white/30">Founding Seating</span>
+                    <span className="text-blue-500">{seats} / 2000 Claimed</span>
+                </div>
+                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]" style={{ width: `${(seats / 2000) * 100}%` }} />
+                </div>
+            </motion.div>
+        </motion.div>
     )
 }

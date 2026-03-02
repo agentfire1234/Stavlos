@@ -36,8 +36,9 @@ export async function middleware(request: NextRequest) {
     // 1. Protected Student Routes
     if (request.nextUrl.pathname.startsWith('/dashboard') ||
         request.nextUrl.pathname.startsWith('/chat') ||
-        request.nextUrl.pathname.startsWith('/library') ||
-        request.nextUrl.pathname.startsWith('/tools')) {
+        request.nextUrl.pathname.startsWith('/syllabus') ||
+        request.nextUrl.pathname.startsWith('/tools') ||
+        request.nextUrl.pathname.startsWith('/settings')) {
         if (!user) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
@@ -45,7 +46,7 @@ export async function middleware(request: NextRequest) {
 
     // 2. Admin Route Protection
     if (request.nextUrl.pathname.startsWith('/admin')) {
-        const isAdmin = user?.email === 'Japonendeutch@gmail.com'
+        const isAdmin = user?.email === process.env.ADMIN_EMAIL
         if (!isAdmin) {
             return NextResponse.redirect(new URL('/dashboard', request.url))
         }
