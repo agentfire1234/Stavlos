@@ -1,7 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
-import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 import type { EmailOtpType } from '@supabase/supabase-js'
+import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,8 +13,7 @@ export async function GET(request: NextRequest) {
     const type = requestUrl.searchParams.get('type') as EmailOtpType | null
     const next = requestUrl.searchParams.get('next') ?? '/dashboard'
 
-    // Create the redirect response immediately so we can attach cookies directly to it
-    const response = NextResponse.redirect(new URL(next, requestUrl.origin))
+    const cookieStore = await cookies()
 
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,25 +21,27 @@ export async function GET(request: NextRequest) {
         {
             cookies: {
                 getAll() {
-                    return request.cookies.getAll()
+                    return cookieStore.getAll()
                 },
                 setAll(cookiesToSet: { name: string; value: string; options: Partial<ResponseCookie> }[]) {
-                    cookiesToSet.forEach(({ name, value, options }) => {
-                        // This applies the cookie directly to the redirect response
-                        request.cookies.set(name, value)
-                        response.cookies.set(name, value, options)
-                    })
+                    try {
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options)
+                        )
+                    } catch (error) {
+                        // setAll might be called from a context where cookies cannot be set
+                        console.error('Error setting cookies', error)
+                    }
                 },
             },
         }
     )
 
-    // 1. Bulletproof Token Hash Flow (Cross-browser safe)
+    // 1. Bulletproof Token Hash Flow
     if (token_hash && type) {
         const { error } = await supabase.auth.verifyOtp({ token_hash, type })
         if (!error) {
-            // Cookies were successfully attached to 'response' via setAll
-            return response
+            return NextResponse.redirect(new URL(next, requestUrl.origin))
         } else {
             return NextResponse.redirect(
                 new URL(`/login?error=${encodeURIComponent(error.message)}`, requestUrl.origin)
@@ -47,12 +49,11 @@ export async function GET(request: NextRequest) {
         }
     }
 
-    // 2. Legacy PKCE Code Flow (Fails if opened in different browser/device context)
+    // 2. Legacy PKCE Code Flow
     if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
-            // Cookies were successfully attached to 'response' via setAll
-            return response
+            return NextResponse.redirect(new URL(next, requestUrl.origin))
         } else {
             return NextResponse.redirect(
                 new URL(`/login?error=${encodeURIComponent(error.message)}`, requestUrl.origin)
@@ -65,6 +66,3 @@ export async function GET(request: NextRequest) {
         new URL('/login?error=auth_callback_missing_params', requestUrl.origin)
     )
 }
-
-
-
