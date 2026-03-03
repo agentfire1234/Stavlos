@@ -4,7 +4,7 @@ import "./globals.css";
 import { CommandBar } from "@/components/layout/command-bar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Sidebar } from "@/components/layout/sidebar";
-
+import Script from 'next/script'
 import { Toaster } from 'react-hot-toast'
 
 const syne = Syne({
@@ -59,19 +59,23 @@ export default function RootLayout({
             duration: 4000,
           }}
         />
-        <script
-          defer src="https://cloud.umami.is/script.js" data-website-id="33970a75-02a0-4b85-9078-e9b876bd6ba2">
-        </script>
-
-        <script
+        <Script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="33970a75-02a0-4b85-9078-e9b876bd6ba2"
+          strategy="afterInteractive"
+        />
+        <Script
+          id="service-worker"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(console.error);
-                });
-              }
-            `,
+          if ('serviceWorker' in navigator) {
+           window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js').catch(console.error);
+        });
+      }
+    `,
           }}
         />
       </body>
