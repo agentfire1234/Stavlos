@@ -1,5 +1,4 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 import type { EmailOtpType } from '@supabase/supabase-js'
@@ -13,19 +12,23 @@ export async function GET(request: NextRequest) {
     const type = requestUrl.searchParams.get('type') as EmailOtpType | null
     const next = requestUrl.searchParams.get('next') ?? '/dashboard'
 
-    const cookieStore = await cookies()
+    // Create the redirect response immediately so we can attach cookies directly to it
+    const response = NextResponse.redirect(new URL(next, requestUrl.origin))
+
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
                 getAll() {
-                    return cookieStore.getAll()
+                    return request.cookies.getAll()
                 },
                 setAll(cookiesToSet: { name: string; value: string; options: Partial<ResponseCookie> }[]) {
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        cookieStore.set(name, value, options)
-                    )
+                    cookiesToSet.forEach(({ name, value, options }) => {
+                        // This applies the cookie directly to the redirect response
+                        request.cookies.set(name, value)
+                        response.cookies.set(name, value, options)
+                    })
                 },
             },
         }
@@ -35,7 +38,8 @@ export async function GET(request: NextRequest) {
     if (token_hash && type) {
         const { error } = await supabase.auth.verifyOtp({ token_hash, type })
         if (!error) {
-            return NextResponse.redirect(new URL(next, requestUrl.origin))
+            // Cookies were successfully attached to 'response' via setAll
+            return response
         } else {
             return NextResponse.redirect(
                 new URL(`/login?error=${encodeURIComponent(error.message)}`, requestUrl.origin)
@@ -47,7 +51,8 @@ export async function GET(request: NextRequest) {
     if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
-            return NextResponse.redirect(new URL(next, requestUrl.origin))
+            // Cookies were successfully attached to 'response' via setAll
+            return response
         } else {
             return NextResponse.redirect(
                 new URL(`/login?error=${encodeURIComponent(error.message)}`, requestUrl.origin)
@@ -60,5 +65,6 @@ export async function GET(request: NextRequest) {
         new URL('/login?error=auth_callback_missing_params', requestUrl.origin)
     )
 }
+
 
 
