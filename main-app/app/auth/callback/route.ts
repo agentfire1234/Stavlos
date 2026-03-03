@@ -32,11 +32,17 @@ export async function GET(request: NextRequest) {
         if (!error) {
             // Successfully verified — send to dashboard
             return NextResponse.redirect(new URL(next, requestUrl.origin))
+        } else {
+            // Include explicit error message string in redirect
+            return NextResponse.redirect(
+                new URL(`/login?error=${encodeURIComponent(error.message)}`, requestUrl.origin)
+            )
         }
     }
 
-    // Something went wrong — send back to login with an error hint
+    // No code present
     return NextResponse.redirect(
-        new URL('/login?error=auth_callback_failed', requestUrl.origin)
+        new URL('/login?error=auth_callback_no_code', requestUrl.origin)
     )
 }
+
