@@ -32,7 +32,8 @@ export default function SignupPage() {
             email: email.trim().toLowerCase(),
             password,
             options: {
-                data: { display_name: name.trim() || undefined }
+                data: { display_name: name.trim() || undefined },
+                emailRedirectTo: `${window.location.origin}/auth/callback`
             }
         })
         if (error) {
