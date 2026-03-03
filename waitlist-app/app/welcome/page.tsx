@@ -1,14 +1,15 @@
 'use client'
 
-import React, { useState, useEffect, Suspense } from 'react'
+import React, { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Check, Copy, Share2, Trophy, Clock, ArrowRight } from 'lucide-react'
+import { Check, Copy, Share2, Trophy, Clock, ArrowRight, Radio } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { Logo } from '@/components/logo'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { calculatePrice, getBadge } from '@/lib/referral'
 import Link from 'next/link'
+import { createBrowserClient } from '@supabase/ssr'
 
 function WelcomeContent() {
     const searchParams = useSearchParams()
@@ -19,6 +20,34 @@ function WelcomeContent() {
     const [leaderboard, setLeaderboard] = useState<any[]>([])
     const [copied, setCopied] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
+    const [rankFlash, setRankFlash] = useState(false)
+    const prevRankRef = useRef<number | null>(null)
+
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
+    async function fetchData() {
+        try {
+            const queryParam = code ? `code=${encodeURIComponent(code)}` : `email=${encodeURIComponent(email || '')}`
+            const res = await fetch(`/api/user?${queryParam}`)
+            const data = await res.json()
+            if (res.ok) {
+                setUserData((prev: any) => {
+                    // Flash animation if rank changed
+                    if (prev && prev.rank !== data.user.rank) {
+                        setRankFlash(true)
+                        setTimeout(() => setRankFlash(false), 2000)
+                    }
+                    return data.user
+                })
+                setLeaderboard(data.leaderboard || [])
+            }
+        } catch (e) {
+            console.error('Failed to fetch user data')
+        }
+    }
 
     useEffect(() => {
         if (!email && !code) {
@@ -26,7 +55,7 @@ function WelcomeContent() {
             return
         }
 
-        async function fetchData() {
+        async function initialLoad() {
             try {
                 const queryParam = code ? `code=${encodeURIComponent(code)}` : `email=${encodeURIComponent(email || '')}`
                 const res = await fetch(`/api/user?${queryParam}`)
@@ -34,8 +63,8 @@ function WelcomeContent() {
                 if (res.ok) {
                     setUserData(data.user)
                     setLeaderboard(data.leaderboard || [])
+                    prevRankRef.current = data.user.rank
 
-                    // Trigger Confetti
                     confetti({
                         particleCount: 150,
                         spread: 70,
@@ -49,8 +78,22 @@ function WelcomeContent() {
                 setIsLoading(false)
             }
         }
-        fetchData()
+        initialLoad()
+
+        // Supabase Realtime: re-fetch rank whenever anyone new joins
+        const channel = supabase
+            .channel('waitlist-inserts')
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'waitlist' },
+                () => { fetchData() }
+            )
+            .subscribe()
+
+        return () => { supabase.removeChannel(channel) }
     }, [email, code])
+
+
 
     const copyLink = () => {
         if (userData?.referralLink) {
@@ -91,7 +134,10 @@ function WelcomeContent() {
                     <Logo size={32} />
                     <span className="font-black tracking-tighter uppercase italic text-xl">Stavlos</span>
                 </div>
-                <Badge variant="primary">#{userData.rank} in line</Badge>
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-black uppercase tracking-widest transition-all duration-500 ${rankFlash ? 'border-[var(--primary-blue)] bg-[var(--primary-blue)]/20 scale-110' : 'border-[var(--border)] bg-transparent'}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${rankFlash ? 'bg-[var(--primary-blue)] animate-ping' : 'bg-green-500'}`} />
+                    #{userData.rank} in line
+                </div>
             </nav>
 
             <main className="max-w-4xl mx-auto px-6 py-12 space-y-12">
