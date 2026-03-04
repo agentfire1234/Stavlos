@@ -69,6 +69,6 @@ export const config = {
          * - favicon.ico (favicon file)
          * - public files (manifest.json, sw.js, etc)
          */
-        '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw|auth/callback).*)',
+        '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw|auth/callback|auth/confirm).*)',
     ],
 }
