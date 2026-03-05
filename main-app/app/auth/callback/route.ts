@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
@@ -11,50 +12,49 @@ export async function GET(request: NextRequest) {
     const type = requestUrl.searchParams.get('type') as EmailOtpType | null
     const next = requestUrl.searchParams.get('next') ?? '/dashboard'
 
-    // Collect every cookie Supabase wants to set — we'll attach them to the redirect response
-    const pendingCookies: { name: string; value: string; options: Record<string, unknown> }[] = []
-
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return request.cookies.getAll()
-                },
-                setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-                    // Don't set yet — collect and apply to response after auth
-                    cookiesToSet.forEach(({ name, value, options }) => {
-                        pendingCookies.push({ name, value, options: (options ?? {}) as Record<string, unknown> })
-                    })
-                },
-            },
-        }
-    )
-
-    const loginError = (msg: string) =>
-        NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(msg)}`, requestUrl.origin))
-
-    // 1. Token Hash Flow (used by our email template)
+    // Token hash flow: forward to client-side confirm page.
+    // The browser client (createBrowserClient) stores the session via document.cookie,
+    // which is immediately readable by the middleware on the next navigation.
     if (token_hash && type) {
-        const { error } = await supabase.auth.verifyOtp({ token_hash, type })
-        if (error) return loginError(error.message)
+        const params = new URLSearchParams({ token_hash, type, next })
+        return NextResponse.redirect(new URL(`/auth/confirm?${params}`, requestUrl.origin))
     }
-    // 2. PKCE Code Flow (fallback)
-    else if (code) {
+
+    // PKCE code flow: handle server-side
+    if (code) {
+        const cookieStore = await cookies()
+
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    getAll() {
+                        return cookieStore.getAll()
+                    },
+                    setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+                        try {
+                            cookiesToSet.forEach(({ name, value, options }) =>
+                                cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2])
+                            )
+                        } catch {
+                            // In some server contexts cookies cannot be set
+                        }
+                    },
+                },
+            }
+        )
+
         const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (error) return loginError(error.message)
-    }
-    else {
-        return loginError('auth_callback_missing_params')
+        if (!error) {
+            return NextResponse.redirect(new URL(next, requestUrl.origin))
+        }
+        return NextResponse.redirect(
+            new URL(`/login?error=${encodeURIComponent(error.message)}`, requestUrl.origin)
+        )
     }
 
-    // Build the redirect and stamp every session cookie onto it
-    const response = NextResponse.redirect(new URL(next, requestUrl.origin))
-    pendingCookies.forEach(({ name, value, options }) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        response.cookies.set(name, value, options as any)
-    })
-
-    return response
+    return NextResponse.redirect(
+        new URL('/login?error=auth_callback_missing_params', requestUrl.origin)
+    )
 }
