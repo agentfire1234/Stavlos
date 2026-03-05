@@ -7,10 +7,18 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
     const requestUrl = new URL(request.url)
-    const code = requestUrl.searchParams.get('code')
-    const token_hash = requestUrl.searchParams.get('token_hash')
+    let code = requestUrl.searchParams.get('code')
+    let token_hash = requestUrl.searchParams.get('token_hash')
     const type = requestUrl.searchParams.get('type') as EmailOtpType | null
     const next = requestUrl.searchParams.get('next') ?? '/dashboard'
+
+    // In PKCE flow, Supabase still populates {{ .TokenHash }} with the PKCE code.
+    // If the email template forces "?token_hash={{.TokenHash}}", detect the "pkce_" 
+    // prefix and correctly treat it as an authorization code.
+    if (token_hash && token_hash.startsWith('pkce_')) {
+        code = token_hash
+        token_hash = null
+    }
 
     // Token hash flow: forward to client-side confirm page
     if (token_hash && type) {
