@@ -32,7 +32,12 @@ function ConfirmInner() {
                 setErrorMsg(error.message)
                 setStatus('error')
             } else {
-                router.replace(next)
+                // IMPORTANT: Add a slight delay to allow document.cookie to fully register 
+                // in the browser before Next.js router navigates to the dashboard.
+                // Without this, the middleware might check cookies before they are written.
+                setTimeout(() => {
+                    router.replace(next)
+                }, 500)
             }
         })
     }, [searchParams, router])
