@@ -1,8 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
-import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +11,12 @@ export async function GET(request: NextRequest) {
     const type = requestUrl.searchParams.get('type') as EmailOtpType | null
     const next = requestUrl.searchParams.get('next') ?? '/dashboard'
 
-    const cookieStore = await cookies()
+    const redirectTo = new URL(next, requestUrl.origin)
+    const loginError = (msg: string) =>
+        NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(msg)}`, requestUrl.origin))
+
+    // Build the response first so we can attach cookies to it
+    let response = NextResponse.redirect(redirectTo)
 
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,48 +24,33 @@ export async function GET(request: NextRequest) {
         {
             cookies: {
                 getAll() {
-                    return cookieStore.getAll()
+                    return request.cookies.getAll()
                 },
-                setAll(cookiesToSet: { name: string; value: string; options: Partial<ResponseCookie> }[]) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        )
-                    } catch (error) {
-                        // setAll might be called from a context where cookies cannot be set
-                        console.error('Error setting cookies', error)
-                    }
+                setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+                    // Set cookies on BOTH the request (for this handler) and the response (so the browser gets them)
+                    cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+                    response = NextResponse.redirect(redirectTo)
+                    cookiesToSet.forEach(({ name, value, options }) =>
+                        response.cookies.set(name, value, options)
+                    )
                 },
             },
         }
     )
 
-    // 1. Bulletproof Token Hash Flow
+    // 1. Token Hash Flow (used by our email template)
     if (token_hash && type) {
         const { error } = await supabase.auth.verifyOtp({ token_hash, type })
-        if (!error) {
-            return NextResponse.redirect(new URL(next, requestUrl.origin))
-        } else {
-            return NextResponse.redirect(
-                new URL(`/login?error=${encodeURIComponent(error.message)}`, requestUrl.origin)
-            )
-        }
+        if (error) return loginError(error.message)
+        return response
     }
 
-    // 2. Legacy PKCE Code Flow
+    // 2. PKCE Code Flow (fallback)
     if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error) {
-            return NextResponse.redirect(new URL(next, requestUrl.origin))
-        } else {
-            return NextResponse.redirect(
-                new URL(`/login?error=${encodeURIComponent(error.message)}`, requestUrl.origin)
-            )
-        }
+        if (error) return loginError(error.message)
+        return response
     }
 
-    // No valid token or code found
-    return NextResponse.redirect(
-        new URL('/login?error=auth_callback_missing_params', requestUrl.origin)
-    )
+    return loginError('auth_callback_missing_params')
 }

@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
-export default function ConfirmPage() {
+function ConfirmInner() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const [status, setStatus] = useState<'verifying' | 'error'>('verifying')
@@ -32,7 +32,6 @@ export default function ConfirmPage() {
                 setErrorMsg(error.message)
                 setStatus('error')
             } else {
-                // Session is now set in browser cookies — navigate to dashboard
                 router.replace(next)
             }
         })
@@ -56,5 +55,18 @@ export default function ConfirmPage() {
             <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
             <p className="text-[#94a3b8] text-sm">Verifying your email...</p>
         </div>
+    )
+}
+
+export default function ConfirmPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center justify-center px-5 gap-6 text-center">
+                <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-[#94a3b8] text-sm">Verifying your email...</p>
+            </div>
+        }>
+            <ConfirmInner />
+        </Suspense>
     )
 }
