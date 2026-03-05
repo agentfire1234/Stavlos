@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
                 getAll() {
                     return request.cookies.getAll()
                 },
-                setAll(cookiesToSet) {
+                setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
                     // Don't set yet — collect and apply to response after auth
                     cookiesToSet.forEach(({ name, value, options }) => {
                         pendingCookies.push({ name, value, options: (options ?? {}) as Record<string, unknown> })
