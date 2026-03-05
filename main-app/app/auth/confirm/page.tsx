@@ -14,9 +14,10 @@ function ConfirmInner() {
     useEffect(() => {
         const token_hash = searchParams.get('token_hash')
         const type = searchParams.get('type') as EmailOtpType | null
+        const code = searchParams.get('code')
         const next = searchParams.get('next') ?? '/dashboard'
 
-        if (!token_hash || !type) {
+        if (!token_hash && !code) {
             setErrorMsg('Invalid confirmation link. Please try signing up again.')
             setStatus('error')
             return
@@ -27,19 +28,25 @@ function ConfirmInner() {
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
         )
 
-        supabase.auth.verifyOtp({ token_hash, type }).then(({ error }) => {
-            if (error) {
-                setErrorMsg(error.message)
-                setStatus('error')
-            } else {
-                // IMPORTANT: Add a slight delay to allow document.cookie to fully register 
-                // in the browser before Next.js router navigates to the dashboard.
-                // Without this, the middleware might check cookies before they are written.
-                setTimeout(() => {
-                    router.replace(next)
-                }, 500)
-            }
-        })
+        if (code) {
+            supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+                if (error) {
+                    setErrorMsg(error.message)
+                    setStatus('error')
+                } else {
+                    setTimeout(() => router.replace(next), 500)
+                }
+            })
+        } else if (token_hash && type) {
+            supabase.auth.verifyOtp({ token_hash, type }).then(({ error }) => {
+                if (error) {
+                    setErrorMsg(error.message)
+                    setStatus('error')
+                } else {
+                    setTimeout(() => router.replace(next), 500)
+                }
+            })
+        }
     }, [searchParams, router])
 
     if (status === 'error') {
