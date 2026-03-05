@@ -16,6 +16,11 @@ export async function GET(request: NextRequest) {
 
     if (actualCode) {
         const cookieStore = await cookies()
+
+        // Explicitly create the redirect response FIRST so the client can append cookies to it.
+        const forwardedUrl = new URL(next, requestUrl.origin)
+        let response = NextResponse.redirect(forwardedUrl)
+
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -26,13 +31,14 @@ export async function GET(request: NextRequest) {
                     },
                     setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
                         try {
-                            cookiesToSet.forEach(({ name, value, options }) =>
+                            cookiesToSet.forEach(({ name, value, options }) => {
+                                // Set on the request
                                 cookieStore.set(name, value, options)
-                            )
+                                // AND set on the response object
+                                response.cookies.set(name, value, options)
+                            })
                         } catch {
-                            // The `setAll` method was called from a Server Component.
-                            // This can be ignored if you have middleware refreshing
-                            // user sessions.
+                            // Ignored
                         }
                     },
                 },
@@ -41,9 +47,7 @@ export async function GET(request: NextRequest) {
 
         const { error } = await supabase.auth.exchangeCodeForSession(actualCode)
         if (!error) {
-            // Forward trailing slash / next param
-            const forwardedUrl = new URL(next, requestUrl.origin)
-            return NextResponse.redirect(forwardedUrl)
+            return response
         }
 
         return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, requestUrl.origin))
