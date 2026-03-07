@@ -6,7 +6,6 @@ import { Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
 import { Logo } from '@/components/logo'
-import { signInWithGoogleAction } from '@/app/actions/auth'
 import toast from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -103,7 +102,7 @@ export default function SignupPage() {
                 password: data.password,
                 options: {
                     data: { display_name: data.name.trim() },
-                    emailRedirectTo: `${process.env.NEXT_PUBLIC_URL || ''}/auth/callback`
+                    emailRedirectTo: `${window.location.origin}/auth/callback`
                 }
             })
 
@@ -120,7 +119,16 @@ export default function SignupPage() {
     async function onGoogleLogin() {
         try {
             setGoogleLoading(true)
-            await signInWithGoogleAction()
+            const supabase = createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            )
+            await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback`,
+                },
+            })
         } catch {
             toast.error('Google sign in failed. Please try again.')
             setGoogleLoading(false)
