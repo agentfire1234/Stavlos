@@ -5,6 +5,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
+    const allCookies = request.cookies.getAll()
+    console.log('CALLBACK COOKIES:', JSON.stringify(allCookies.map(c => c.name)))
+
     const requestUrl = new URL(request.url)
     const code = requestUrl.searchParams.get('code')
     const next = requestUrl.searchParams.get('next') ?? '/dashboard'
