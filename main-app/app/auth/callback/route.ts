@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -11,7 +11,9 @@ export async function GET(request: NextRequest) {
 
     if (code) {
         const cookieStore = await cookies()
-        const response = NextResponse.redirect(new URL(next, requestUrl.origin))
+        const response = NextResponse.redirect(
+            new URL(next, requestUrl.origin)
+        )
 
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,7 +23,7 @@ export async function GET(request: NextRequest) {
                     getAll() {
                         return cookieStore.getAll()
                     },
-                    setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+                    setAll(cookiesToSet) {
                         cookiesToSet.forEach(({ name, value, options }) => {
                             response.cookies.set(name, value, options)
                         })
@@ -33,7 +35,7 @@ export async function GET(request: NextRequest) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
 
         if (!error) {
-            return response // ← same response, cookies intact
+            return response
         }
 
         console.error('Auth callback exchange error:', error.message)
