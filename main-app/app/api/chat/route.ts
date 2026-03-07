@@ -46,16 +46,6 @@ export async function POST(req: Request) {
             .from('messages')
             .insert({ chat_id: currentChatId, role: 'user', content: message })
 
-        let context = ''
-        if (mode === 'syllabus' && syllabusId) {
-            try {
-                const rag = await RAGSystem.querySyllabus(message, userId)
-                if (rag.found) context = rag.context
-            } catch {
-                // RAG failure is non-fatal, continue without context
-            }
-        }
-
         const taskTypeMap: Record<string, string> = {
             general: 'general_chat',
             syllabus: 'syllabus_qa',
@@ -68,10 +58,12 @@ export async function POST(req: Request) {
         const taskType = taskTypeMap[mode] || 'general_chat'
 
         const result = await AIOrchestrator.handleQuery(
-            context ? `Context:\n${context}\n\nQuestion: ${message}` : message,
+            message,
             userId,
             userTier,
-            taskType
+            taskType,
+            false,
+            syllabusId
         )
 
         if (!result.blocked) {

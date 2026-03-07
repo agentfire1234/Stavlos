@@ -21,7 +21,8 @@ export class AIOrchestrator {
         userId: string,
         userTier: 'free' | 'pro' = 'free',
         taskType: string = 'general_chat',
-        stream: boolean = false
+        stream: boolean = false,
+        syllabusId?: string
     ): Promise<OrchestratorResult> {
         const steps: string[] = []
 
@@ -69,7 +70,7 @@ export class AIOrchestrator {
         let sources: any[] = []
         if (taskType === 'syllabus_qa' || query.toLowerCase().includes('syllabus')) {
             steps.push("Consulting course syllabuses...")
-            const ragResult = await RAGSystem.querySyllabus(query, userId)
+            const ragResult = await RAGSystem.querySyllabus(query, syllabusId || '', userId)
             if (ragResult.found) {
                 context = ragResult.context || ''
                 sources = ragResult.ids || []
