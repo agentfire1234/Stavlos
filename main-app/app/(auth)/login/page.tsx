@@ -66,7 +66,7 @@ export default function LoginPage() {
         }
     }
 
-    const handleGoogleLogin = async () => {
+    async function onGoogleLogin() {
         try {
             setGoogleLoading(true)
             await signInWithGoogleAction()
@@ -106,7 +106,7 @@ export default function LoginPage() {
 
                 <button
                     type="button"
-                    onClick={handleGoogleLogin}
+                    onClick={onGoogleLogin}
                     disabled={googleLoading}
                     className="w-full flex items-center justify-center gap-3 transition-all outline-none"
                     style={{

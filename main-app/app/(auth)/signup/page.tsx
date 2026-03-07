@@ -103,7 +103,7 @@ export default function SignupPage() {
                 password: data.password,
                 options: {
                     data: { display_name: data.name.trim() },
-                    emailRedirectTo: `${window.location.origin}/auth/callback`
+                    emailRedirectTo: `${process.env.NEXT_PUBLIC_URL || ''}/auth/callback`
                 }
             })
 
@@ -117,7 +117,7 @@ export default function SignupPage() {
         }
     }
 
-    const handleGoogleLogin = async () => {
+    async function onGoogleLogin() {
         try {
             setGoogleLoading(true)
             await signInWithGoogleAction()
@@ -180,7 +180,7 @@ export default function SignupPage() {
                         >
                             <button
                                 type="button"
-                                onClick={handleGoogleLogin}
+                                onClick={onGoogleLogin}
                                 disabled={googleLoading}
                                 className="w-full flex items-center justify-center gap-3 transition-all outline-none"
                                 style={{
