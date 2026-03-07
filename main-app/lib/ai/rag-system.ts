@@ -39,7 +39,12 @@ export class RAGSystem {
 
         // Generate embeddings using Supabase's free built-in model
         // Process in batches of 10 to avoid timeouts
-        const chunkRecords = []
+        const chunkRecords: {
+            syllabus_id: string;
+            chunk_text: string;
+            chunk_index: number;
+            embedding: number[];
+        }[] = []
 
         for (let i = 0; i < chunks.length; i += 10) {
             const batch = chunks.slice(i, i + 10)
