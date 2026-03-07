@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
 
         const { error } = await supabase.auth.exchangeCodeForSession(actualCode)
         if (!error) {
-            return response
+            // Re-create the redirect with the now-updated cookies in the response
+            return NextResponse.redirect(forwardedUrl)
         }
 
         console.error('Auth callback exchange error:', error.message)
