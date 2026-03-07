@@ -155,9 +155,8 @@ export default function SignupPage() {
                 }}
             >
                 <div className="text-center mb-8">
-                    <div className="flex items-center justify-center gap-2 mb-6">
-                        <Logo size={32} className="text-white" />
-                        <span className="text-2xl font-bold font-syne tracking-tight text-white"><span className="text-[#3b82f6]">S</span>TAVLOS</span>
+                    <div className="flex items-center justify-center mb-6">
+                        <Logo size={48} className="text-white" />
                     </div>
                     <h1 className="text-[24px] font-syne font-bold text-white mb-2">Create an account</h1>
                     <p className="text-[14px] text-[#94a3b8] font-dm-sans">Join the smartest students online.</p>

@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
             return response
         }
 
+        console.error('Auth callback exchange error:', error.message)
         return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, requestUrl.origin))
     }
 
