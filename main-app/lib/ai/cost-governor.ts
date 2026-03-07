@@ -191,8 +191,9 @@ export class CostGovernor {
 
     static async logUsage(date: string, model: string, tokens: number, cost: number) {
         const logKey = `usage:${date}:${model}`
-        const currentStr = await redis.get(logKey) as string
-        const current = currentStr
+        const currentRaw = await redis.get(logKey)
+        const currentStr = typeof currentRaw === 'string' ? currentRaw : JSON.stringify(currentRaw)
+        const current = currentStr && currentStr !== 'null'
             ? JSON.parse(currentStr)
             : { calls: 0, tokens: 0, cost: 0 }
 
