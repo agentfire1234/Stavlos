@@ -10,49 +10,79 @@ const openrouter = new OpenAI({
     }
 })
 
+const FALLBACK_MODELS = [
+    'mistralai/mistral-7b-instruct:free',
+    'google/gemma-2-9b-it:free',
+    'mistralai/mistral-small-3.1-24b-instruct:free',
+    'meta-llama/llama-3.2-3b-instruct:free'
+]
+
 export class AIClient {
     static async chat(query: string, context: string, model: string, taskType: string, stream: boolean = false) {
-        const primaryModel = model.includes('/') ? model : `meta-llama/${model}`
         const systemPrompt = this.getSystemPrompt(taskType)
-
         const messages: any[] = [
             { role: "system", content: systemPrompt },
             { role: "user", content: context ? `CONTEXT FROM SYLLABUS:\n${context}\n\nUSER QUESTION: ${query}` : query }
         ]
 
-        try {
-            console.log(`[AI] Attempting ${taskType} with ${primaryModel} via OpenRouter (Stream: ${stream})...`)
+        // Create a list of models to try: starting with the requested one, then fallbacks
+        const requestedModel = model.includes('/') ? model : `meta-llama/${model}`
+        const modelsToTry = [
+            requestedModel,
+            ...FALLBACK_MODELS.filter(m => m !== requestedModel)
+        ]
 
-            if (stream) {
-                return await openrouter.chat.completions.create({
-                    model: primaryModel,
+        let lastError: any = null
+
+        for (const targetModel of modelsToTry) {
+            try {
+                console.log(`[AI] Attempting ${taskType} with ${targetModel} via OpenRouter (Stream: ${stream})...`)
+
+                if (stream) {
+                    return await openrouter.chat.completions.create({
+                        model: targetModel,
+                        messages: messages,
+                        temperature: 0.7,
+                        max_tokens: 2000,
+                        stream: true,
+                    })
+                }
+
+                const response = await openrouter.chat.completions.create({
+                    model: targetModel,
                     messages: messages,
                     temperature: 0.7,
                     max_tokens: 2000,
-                    stream: true,
                 })
+
+                // If we succeeded but weren't on the first model, log it
+                if (targetModel !== modelsToTry[0]) {
+                    console.log(`[AI] Resilience Success: Recovered using ${targetModel} after primary failure.`)
+                }
+
+                return response
+
+            } catch (error: any) {
+                lastError = error
+                const statusCode = error.status || 500
+                const isRetryable = [401, 404, 408, 429, 500, 502, 503, 504].includes(statusCode)
+
+                console.error(`[AI] Model Failure (${targetModel}): ${error.message} (Status: ${statusCode})`)
+
+                if (!isRetryable) {
+                    break // Non-retryable error, don't bother trying other models
+                }
+
+                console.log(`[AI] Attempting next fallback model...`)
             }
-
-            const response = await openrouter.chat.completions.create({
-                model: primaryModel,
-                messages: messages,
-                temperature: 0.7,
-                max_tokens: 2000,
-            })
-            return response
-
-        } catch (error: any) {
-            console.error(`[AI] OpenRouter Failure (${primaryModel}):`, {
-                message: error.message,
-                status: error.status,
-                details: error.error || error
-            })
-
-            // Re-throw with a user-friendly message
-            throw new Error(error.status === 401
-                ? "AI Authentication failed. Please check system configuration."
-                : "AI Service Temporarily Unavailable. Please try again soon.")
         }
+
+        // If we get here, all models failed
+        console.error(`[AI] Critical Failure: All ${modelsToTry.length} models failed.`)
+
+        throw new Error(lastError?.status === 401
+            ? "AI Authentication failed. Please check system configuration."
+            : "AI Service Temporarily Unavailable. Please try again soon.")
     }
 
     private static getSystemPrompt(taskType: string): string {
