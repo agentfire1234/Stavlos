@@ -13,7 +13,7 @@ import {
     Sparkles,
     Shield
 } from 'lucide-react'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 const container = {
@@ -30,10 +30,7 @@ export default function PricingPage() {
     const [data, setData] = useState<any>(null)
     const [seats, setSeats] = useState(0)
 
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const supabase = createClient()
 
     useEffect(() => {
         async function load() {

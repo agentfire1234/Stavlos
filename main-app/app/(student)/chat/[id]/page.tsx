@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@/lib/supabase/client'
 import {
     Send,
     Paperclip,
@@ -50,10 +50,7 @@ export default function ChatConversationPage() {
     const [loading, setLoading] = useState(true)
     const scrollRef = useRef<HTMLDivElement>(null)
 
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const supabase = createClient()
 
     useEffect(() => {
         loadConversation()
@@ -186,9 +183,11 @@ export default function ChatConversationPage() {
                                     ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/10 italic font-bold'
                                     : 'glass-card border-white/5 text-white/80'
                                     }`}>
-                                    <ReactMarkdown className="prose prose-invert prose-sm max-w-none">
-                                        {msg.content}
-                                    </ReactMarkdown>
+                                    <div className="prose prose-invert prose-sm max-w-none">
+                                        <ReactMarkdown>
+                                            {msg.content}
+                                        </ReactMarkdown>
+                                    </div>
                                 </div>
                                 <p className="text-[9px] font-black uppercase tracking-widest text-white/20 text-right px-2">
                                     {msg.role === 'user' ? 'Student' : 'Stavlos AI'}

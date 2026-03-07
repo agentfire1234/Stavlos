@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { RAGSystem } from '@/lib/ai/rag-system'
 
 export async function POST(req: Request) {
@@ -9,18 +8,7 @@ export async function POST(req: Request) {
         const fileInput = formData.get('file') as File | null
 
         // 1. Auth Check (Real Supabase Auth)
-        const cookieStore = await cookies()
-        const supabaseServer = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() {
-                        return cookieStore.getAll()
-                    },
-                },
-            }
-        )
+        const supabaseServer = await createClient()
         const { data: { user } } = await supabaseServer.auth.getUser()
 
         if (!user || !fileInput) {

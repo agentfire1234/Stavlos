@@ -1,5 +1,4 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { CostGovernor } from "@/lib/ai/cost-governor";
@@ -12,18 +11,7 @@ const redis = new Redis({
 
 export async function GET() {
     try {
-        const cookieStore = await cookies();
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() {
-                        return cookieStore.getAll();
-                    },
-                },
-            }
-        );
+        const supabase = await createClient();
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user || user.email !== process.env.ADMIN_EMAIL) {

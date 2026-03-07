@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Loader2, Mail, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@/lib/supabase/client'
 import { Logo } from '@/components/logo'
 import toast from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
@@ -27,10 +27,7 @@ export default function ForgotPasswordPage() {
         }
     })
 
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const supabase = createClient()
 
     const onSubmit = async (data: ForgotPasswordFormValues) => {
         try {

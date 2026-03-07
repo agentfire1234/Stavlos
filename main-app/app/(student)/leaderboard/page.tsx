@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, Variants } from 'framer-motion'
 import {
     Trophy,
     Crown,
@@ -13,15 +13,15 @@ import {
     Check,
     Zap
 } from 'lucide-react'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
-const container = {
+const container: Variants = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.1 } }
 }
 
-const item = {
+const item: Variants = {
     hidden: { opacity: 0, scale: 0.95, y: 20 },
     show: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } }
 }
@@ -32,10 +32,7 @@ export default function LeaderboardPage() {
     const [userRank, setUserRank] = useState<any>(null)
     const [copied, setCopied] = useState(false)
 
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const supabase = createClient()
 
     useEffect(() => {
         loadData()

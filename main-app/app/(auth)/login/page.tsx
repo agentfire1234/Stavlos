@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@/lib/supabase/client'
 import { Logo } from '@/components/logo'
 import toast from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
@@ -43,10 +43,7 @@ export default function LoginPage() {
         }
     })
 
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const supabase = createClient()
 
     const onSubmit = async (data: LoginFormValues) => {
         try {
@@ -68,10 +65,7 @@ export default function LoginPage() {
     async function onGoogleLogin() {
         try {
             setGoogleLoading(true)
-            const supabase = createBrowserClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-            )
+            const supabase = createClient()
             await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {

@@ -1,5 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export const dynamic = 'force-dynamic'
@@ -15,35 +14,9 @@ export async function GET(request: NextRequest) {
     const actualCode = code || (token_hash?.startsWith('pkce_') ? token_hash : null)
 
     if (actualCode) {
-        const cookieStore = await cookies()
-
-        // Explicitly create the redirect response FIRST so the client can append cookies to it.
+        const supabase = await createClient()
         const forwardedUrl = new URL(next, requestUrl.origin)
         let response = NextResponse.redirect(forwardedUrl)
-
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() {
-                        return cookieStore.getAll()
-                    },
-                    setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
-                        try {
-                            cookiesToSet.forEach(({ name, value, options }) => {
-                                // Set on the request
-                                cookieStore.set(name, value, options)
-                                // AND set on the response object
-                                response.cookies.set(name, value, options)
-                            })
-                        } catch {
-                            // Ignored
-                        }
-                    },
-                },
-            }
-        )
 
         const { error } = await supabase.auth.exchangeCodeForSession(actualCode)
         if (!error) {

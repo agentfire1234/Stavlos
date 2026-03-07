@@ -1,21 +1,9 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { CreditCard, ExternalLink, Zap, Shield, ArrowLeft, ArrowRight } from 'lucide-react'
 
 export default async function BillingSettingsPage() {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return cookieStore.getAll()
-                },
-            },
-        }
-    )
+    const supabase = await createClient()
 
     const { data: { user } } = await supabase.auth.getUser()
 

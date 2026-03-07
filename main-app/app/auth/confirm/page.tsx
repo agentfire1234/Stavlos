@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@/lib/supabase/client'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
 function ConfirmInner() {
@@ -23,10 +23,7 @@ function ConfirmInner() {
             return
         }
 
-        const supabase = createBrowserClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
+        const supabase = createClient()
 
         if (code) {
             supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
