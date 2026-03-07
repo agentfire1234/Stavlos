@@ -1,12 +1,6 @@
 import { OpenAI } from 'openai'
 
-// Initialize Groq Client (Speed + Low Cost)
-const groq = new OpenAI({
-    baseURL: "https://api.groq.com/openai/v1",
-    apiKey: process.env.GROQ_API_KEY,
-})
-
-// Initialize OpenRouter Client (Backup + Specialized Models)
+// Initialize OpenRouter Client (Consolidated AI Provider)
 const openrouter = new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
     apiKey: process.env.OPENROUTER_API_KEY,
@@ -18,22 +12,19 @@ const openrouter = new OpenAI({
 
 export class AIClient {
     static async chat(query: string, context: string, model: string, taskType: string, stream: boolean = false) {
-        let primary = openrouter
-        let secondary = groq
-        let primaryModel = model.includes(':free') ? model : 'meta-llama/llama-3.1-8b-instruct:free'
-        let secondaryModel = model
-
+        const primaryModel = model.includes('/') ? model : `meta-llama/${model}`
         const systemPrompt = this.getSystemPrompt(taskType)
+
         const messages: any[] = [
             { role: "system", content: systemPrompt },
             { role: "user", content: context ? `CONTEXT FROM SYLLABUS:\n${context}\n\nUSER QUESTION: ${query}` : query }
         ]
 
         try {
-            console.log(`[AI] Attempting ${taskType} with ${primaryModel} (Stream: ${stream})...`)
+            console.log(`[AI] Attempting ${taskType} with ${primaryModel} via OpenRouter (Stream: ${stream})...`)
 
             if (stream) {
-                return await primary.chat.completions.create({
+                return await openrouter.chat.completions.create({
                     model: primaryModel,
                     messages: messages,
                     temperature: 0.7,
@@ -42,7 +33,7 @@ export class AIClient {
                 })
             }
 
-            const response = await primary.chat.completions.create({
+            const response = await openrouter.chat.completions.create({
                 model: primaryModel,
                 messages: messages,
                 temperature: 0.7,
@@ -51,30 +42,16 @@ export class AIClient {
             return response
 
         } catch (error: any) {
-            console.warn(`[AI] Primary failed (${error.message}). Switching to Fallback...`)
+            console.error(`[AI] OpenRouter Failure (${primaryModel}):`, {
+                message: error.message,
+                status: error.status,
+                details: error.error || error
+            })
 
-            try {
-                if (stream) {
-                    return await secondary.chat.completions.create({
-                        model: secondaryModel,
-                        messages: messages,
-                        temperature: 0.7,
-                        max_tokens: 2000,
-                        stream: true,
-                    })
-                }
-
-                const response = await secondary.chat.completions.create({
-                    model: secondaryModel,
-                    messages: messages,
-                    temperature: 0.7,
-                    max_tokens: 2000,
-                })
-                return response
-            } catch (fallbackError: any) {
-                console.error(`[AI] Critical Failure: Both providers failed.`, fallbackError)
-                throw new Error("AI Service Unavailable. Please try again later.")
-            }
+            // Re-throw with a user-friendly message
+            throw new Error(error.status === 401
+                ? "AI Authentication failed. Please check system configuration."
+                : "AI Service Temporarily Unavailable. Please try again soon.")
         }
     }
 

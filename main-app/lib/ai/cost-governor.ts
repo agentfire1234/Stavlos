@@ -103,7 +103,7 @@ export class CostGovernor {
                 return {
                     allowed: true,
                     queue: false,
-                    model: 'llama-3.1-8b-instant',
+                    model: 'meta-llama/llama-3.1-8b-instruct:free',
                     message: null
                 }
 
@@ -120,7 +120,7 @@ export class CostGovernor {
                 return {
                     allowed: true, // Pro still allowed but maybe queued
                     queue: true,
-                    model: 'llama-3.1-8b-instant',
+                    model: 'meta-llama/llama-3.1-8b-instruct:free',
                     message: "Queued for priority processing"
                 }
         }
