@@ -1,12 +1,12 @@
 import { OpenAI } from 'openai'
-import Groq from 'groq-sdk'
 
-// Initialize Groq Client
-const groq = new Groq({
+// Initialize Groq Client (using the OpenAI-compatible endpoint)
+const groq = new OpenAI({
     apiKey: process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1"
 })
 
-// Initialize OpenRouter Client (Consolidated AI Provider)
+// Initialize OpenRouter Client
 const openrouter = new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
     apiKey: process.env.OPENROUTER_API_KEY,
