@@ -24,7 +24,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        // 1. Get User Profile & Waitlist Rank
         const { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('referral_count, email')
@@ -38,7 +37,6 @@ export async function POST(req: Request) {
             .eq('email', user.email)
             .single()
 
-        // 2. Determine Price Tier & Rewards (Waitlist Promises)
         const { data: waitlistData } = await supabaseAdmin
             .from('waitlist')
             .select('referral_count')
@@ -48,9 +46,7 @@ export async function POST(req: Request) {
         const referrals = waitlistData?.referral_count || profile?.referral_count || 0
         const isTop2000 = (waitlist?.current_rank || 99999) <= 2000
 
-        // Promises:
-        // 1. Rank <= 2000 OR 1+ Referral = €5/mo Lock
-        // 2. 2+ Referrals = 1st Month Free (30-day trial)
+
         const isPriceLocked = isTop2000 || referrals >= 1
         const hasFreeTrial = referrals >= 2
 
@@ -63,7 +59,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Billing system configuration error' }, { status: 500 })
         }
 
-        // 3. Create Checkout Session
         const session = await stripe.checkout.sessions.create({
             customer_email: profile?.email || user.email,
             line_items: [

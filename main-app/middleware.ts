@@ -33,8 +33,6 @@ export async function middleware(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    // 1. Iron Dome - Global Kill Switch Check
-    // We allow the /admin route and /offline page to be accessed even in maintenance
     const isMaintenancePath =
         request.nextUrl.pathname.startsWith('/admin') ||
         request.nextUrl.pathname === '/offline' ||
@@ -44,9 +42,6 @@ export async function middleware(request: NextRequest) {
 
     if (!isMaintenancePath) {
         try {
-            // Using a direct fetch to Redis or a simplified check to avoid heavy dependencies in middleware
-            // Since we already have @upstash/redis in the project, we can use it.
-            // However, we must ensure it's edge compatible. The 'Redis' class is.
             const { Redis } = await import('@upstash/redis')
             const redis = new Redis({
                 url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -59,12 +54,9 @@ export async function middleware(request: NextRequest) {
             }
         } catch (e) {
             console.error('Middleware Kill Switch Check Failed:', e)
-            // Fail open to avoid blocking the whole site if Redis is down? 
-            // Or fail closed for security? Usually best to fail open for UX if it's just a status check.
         }
     }
 
-    // 2. Protected Student Routes
     if (request.nextUrl.pathname.startsWith('/dashboard') ||
         request.nextUrl.pathname.startsWith('/chat') ||
         request.nextUrl.pathname.startsWith('/syllabus') ||
@@ -75,7 +67,6 @@ export async function middleware(request: NextRequest) {
         }
     }
 
-    // 3. Admin Route Protection
     if (request.nextUrl.pathname.startsWith('/admin')) {
         const adminId = process.env.NEXT_PUBLIC_ADMIN_USER_ID
         const isAdmin = user && (user.id === adminId || user.email === process.env.ADMIN_EMAIL)
@@ -84,7 +75,6 @@ export async function middleware(request: NextRequest) {
         }
     }
 
-    // 4. Auth Redirect (If logged in, don't show login/signup)
     if (user && (request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup'))) {
         return NextResponse.redirect(new URL('/dashboard', request.url))
     }

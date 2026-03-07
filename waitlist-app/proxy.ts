@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// BUG 005 FIX: Modified Proxy to use exact pathname matching.
-// Previously, /admin-something would be incorrectly blocked.
-// Also switched to cookie-based auth consistently.
-
 export function isProtectedRoute(pathname: string): boolean {
     return pathname.startsWith('/api/admin')
 }

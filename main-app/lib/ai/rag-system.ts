@@ -11,14 +11,11 @@ const openai = new OpenAI({
 export class RAGSystem {
 
     static async processSyllabus(pdfBuffer: Buffer, userId: string, courseName: string): Promise<string> {
-        // 1. Extract text
         const pdfData = await pdfParse(pdfBuffer)
         const text = pdfData.text
 
-        // 2. Chunk text
         const chunks = this.chunkText(text, 500)
 
-        // 3. Create Syllabus record
         const { data: syllabus, error } = await supabaseAdmin
             .from('syllabuses')
             .insert({ user_id: userId, course_name: courseName })
@@ -27,7 +24,6 @@ export class RAGSystem {
 
         if (error) throw new Error(`Failed to create syllabus: ${error.message}`)
 
-        // 4. Generate Embeddings & Store Chunks
         // Process in batches to avoid rate limits
         const embeddings: number[][] = []
 
@@ -82,13 +78,11 @@ export class RAGSystem {
     }
 
     static async querySyllabus(question: string, userId: string) {
-        // 1. Embed query
         const questionEmb = await openai.embeddings.create({
             model: 'openai/text-embedding-3-small',
             input: question
         })
 
-        // 2. Search specific user's syllabuses
         const { data: chunks, error } = await supabaseAdmin.rpc('match_syllabus_chunks', {
             query_embedding: questionEmb.data[0].embedding,
             match_threshold: 0.5, // Lower threshold to find more context
@@ -108,10 +102,8 @@ export class RAGSystem {
             }
         }
 
-        // 3. Format context
         const context = chunks.map((c: any) => c.chunk_text).join('\n\n')
 
-        // 4. Generate answer uses OpenRouter via Orchestrator, but RAG system creates the context
         // We return the context to the orchestrator to perform the final generation
         return {
             found: true,

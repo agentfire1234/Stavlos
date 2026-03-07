@@ -23,11 +23,9 @@ export class CostGovernor {
 
     static async getDailyBudget(): Promise<number> {
         try {
-            // 1. Try Redis Cache
             const cached = await redis.get(BUDGET_KEY)
             if (cached) return parseFloat(cached as string)
 
-            // 2. Try Supabase
             const { data } = await supabaseAdmin
                 .from('system_config')
                 .select('value')
@@ -36,7 +34,6 @@ export class CostGovernor {
 
             const budget = data ? parseFloat(data.value) : DEFAULT_BUDGET
 
-            // 3. Cache in Redis for 1 hour
             await redis.set(BUDGET_KEY, budget.toString(), { ex: 3600 })
 
             return budget
@@ -130,7 +127,6 @@ export class CostGovernor {
     }
 
     static async getOptimalModel(taskType: string): Promise<string> {
-        // 1. Try to get overrides from Redis
         const overridesStr = await redis.get('system:config:model_overrides') as string
         const overrides = overridesStr ? JSON.parse(overridesStr) : null
 
@@ -138,7 +134,6 @@ export class CostGovernor {
             return overrides[taskType]
         }
 
-        // 2. Fallback to hardcoded routing
         const routing: Record<string, string> = {
             'grammar_fix': 'meta-llama/llama-3.1-8b-instruct:free',
             'flashcard': 'meta-llama/llama-3.1-8b-instruct:free',

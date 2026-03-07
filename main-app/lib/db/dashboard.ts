@@ -1,21 +1,18 @@
 import { supabaseAdmin } from '@/lib/supabase'
 
 export async function getDashboardData(userId: string) {
-    // 1. Get User Profile (Source of Truth for usage, streak, total)
     const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single()
 
-    // 2. Get Syllabuses
     const { data: syllabuses } = await supabaseAdmin
         .from('syllabuses')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
 
-    // 3. Get Recent Chats
     const { data: chats } = await supabaseAdmin
         .from('chats')
         .select('*')
@@ -23,7 +20,6 @@ export async function getDashboardData(userId: string) {
         .order('updated_at', { ascending: false })
         .limit(5)
 
-    // 4. Get Weekly Activity for the 7-dot tracker
     // Query messages sent by user in the last 7 days
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)

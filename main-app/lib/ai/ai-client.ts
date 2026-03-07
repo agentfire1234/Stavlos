@@ -18,7 +18,6 @@ const openrouter = new OpenAI({
 
 export class AIClient {
     static async chat(query: string, context: string, model: string, taskType: string, stream: boolean = false) {
-        // 1. Determine Primary & Fallback Clients based on Task
         let primary = openrouter
         let secondary = groq
         let primaryModel = model.includes(':free') ? model : 'meta-llama/llama-3.3-70b-instruct:free'

@@ -7,9 +7,6 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 // Public client for browser use (uses Anon Key)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Admin client for server use ONLY (uses Service Role Key)
-// BUG 012 FIX: Strictly separate admin client to prevent service key leakage.
-// This should never be imported into a client component.
 export const supabaseAdmin = supabaseServiceKey
     ? createClient(supabaseUrl, supabaseServiceKey, {
         auth: {

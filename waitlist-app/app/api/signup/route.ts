@@ -7,12 +7,7 @@ export async function POST(request: Request) {
     try {
         const { email: rawEmail, referredBy: rawRef } = await request.json()
 
-        // BUG 007 FIX: Normalize email to lowercase before any processing.
-        // A@b.com and a@b.com are treated as the same user.
         const email = rawEmail?.trim().toLowerCase()
-
-        // BUG 009 FIX: Trim referral codes from URLs — they often carry
-        // trailing spaces or %20 characters that silently break lookups.
         const referredBy = rawRef?.trim().replace(/%20/g, '')
 
         // Validate email
@@ -23,9 +18,7 @@ export async function POST(request: Request) {
             )
         }
 
-        // --- Simple Rate Limiting (In-memory for now, consider Upstash for production) ---
-        // BUG 020: Use a simple in-memory map or check DB timestamps to prevent spam.
-        // For this implementation, we'll assume basic protection is enough for now.
+
 
         // Race-condition proof signup
         const db = supabaseAdmin || supabase
@@ -42,7 +35,7 @@ export async function POST(request: Request) {
             referrerId = referrer?.id || null
         }
 
-        // 1. Try to insert first
+
         const referralCode = generateReferralCode()
         const { data: newUser, error: insertError } = await db
             .from('waitlist')
@@ -57,7 +50,7 @@ export async function POST(request: Request) {
         let userRecord = newUser
         let isNewUser = !!newUser
 
-        // 2. If insert fails due to duplicate email, fetch existing user instead
+
         if (insertError || !newUser) {
             const { data: existingUser } = await db
                 .from('waitlist')
@@ -75,7 +68,7 @@ export async function POST(request: Request) {
             }
         }
 
-        // 3. Get rank using view
+
         const { data: rankedUser } = await db
             .from('waitlist_with_rank')
             .select('*')
@@ -87,7 +80,7 @@ export async function POST(request: Request) {
         const activeReferralCode = userRecord.referral_code
         const referralLink = `https://waitlist.stavlos.com?ref=${activeReferralCode}`
 
-        // 4. Send email ONLY for new users (Unified Dynamic Template)
+
         if (isNewUser && rankedUser) {
             sendWelcomeEmail({ to: email, rank, referralLink }).catch(console.error)
         }

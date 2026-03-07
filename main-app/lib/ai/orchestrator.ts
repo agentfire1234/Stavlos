@@ -25,7 +25,6 @@ export class AIOrchestrator {
     ): Promise<OrchestratorResult> {
         const steps: string[] = []
 
-        // 0. Global Kill Switch Check
         const killStatus = await CacheSystem.getConfig('system_status')
         if (killStatus === '0') {
             return {
@@ -39,7 +38,6 @@ export class AIOrchestrator {
             }
         }
 
-        // 1. Check Cache (Only for non-streaming for now, or always if we want hits)
         steps.push("Searching platform knowledge...")
         const cached = await CacheSystem.get(query, userId)
         if (cached && cached.response) {
@@ -53,7 +51,6 @@ export class AIOrchestrator {
             }
         }
 
-        // 2. Check Budget & Model Routing
         steps.push("Checking resource availability...")
         const allowed = await CostGovernor.shouldProcess(userId, userTier, taskType)
         if (!allowed.allowed) {
@@ -68,7 +65,6 @@ export class AIOrchestrator {
         }
         steps.push(`Routing to ${allowed.model.includes('70b') ? 'High-Performance Engine' : 'Instant Engine'}...`)
 
-        // 3. RAG Context
         let context = ''
         let sources: any[] = []
         if (taskType === 'syllabus_qa' || query.toLowerCase().includes('syllabus')) {
@@ -83,7 +79,6 @@ export class AIOrchestrator {
             }
         }
 
-        // 4. Execute AI
         steps.push(stream ? "Initializing secure stream..." : "Synthesizing response...")
         const aiResponse = await AIClient.chat(query, context, allowed.model, taskType, stream)
 
@@ -98,17 +93,16 @@ export class AIOrchestrator {
             }
         }
 
-        const responseText = aiResponse.choices[0].message.content || ''
+        const completion = aiResponse as any
+        const responseText = completion.choices[0].message.content || ''
 
-        // 5. Record Cost
         const cost = await CostGovernor.recordCost(
-            aiResponse.usage?.prompt_tokens || 0,
-            aiResponse.usage?.completion_tokens || 0,
+            completion.usage?.prompt_tokens || 0,
+            completion.usage?.completion_tokens || 0,
             allowed.model,
             taskType
         )
 
-        // 6. Cache
         if (responseText.length > 50) {
             await CacheSystem.set(query, responseText, userId)
         }

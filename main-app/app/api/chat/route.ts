@@ -13,7 +13,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Message is required' }, { status: 400 })
         }
 
-        // 1. Auth Check
         const cookieStore = await cookies()
         const supabaseServer = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,7 +25,6 @@ export async function POST(req: Request) {
         }
         const userId = user.id
 
-        // 2. Get User Tier
         const { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('is_pro, daily_usage')
@@ -35,7 +33,6 @@ export async function POST(req: Request) {
 
         const userTier = profile?.is_pro ? 'pro' : 'free'
 
-        // 3. Create or reuse chat
         let currentChatId = chatId
         if (!currentChatId) {
             const { data: newChat } = await supabaseAdmin
@@ -51,12 +48,10 @@ export async function POST(req: Request) {
             currentChatId = newChat?.id
         }
 
-        // 4. Persist user message
         await supabaseAdmin
             .from('messages')
             .insert({ chat_id: currentChatId, role: 'user', content: message })
 
-        // 5. RAG context for syllabus mode
         let context = ''
         if (mode === 'syllabus' && syllabusId) {
             try {
@@ -67,7 +62,6 @@ export async function POST(req: Request) {
             }
         }
 
-        // 6. Map mode to task type
         const taskTypeMap: Record<string, string> = {
             general: 'general_chat',
             syllabus: 'syllabus_qa',
@@ -79,7 +73,6 @@ export async function POST(req: Request) {
         }
         const taskType = taskTypeMap[mode] || 'general_chat'
 
-        // 7. Orchestrate
         const result = await AIOrchestrator.handleQuery(
             context ? `Context:\n${context}\n\nQuestion: ${message}` : message,
             userId,
@@ -87,7 +80,6 @@ export async function POST(req: Request) {
             taskType
         )
 
-        // 8. Persist assistant response
         if (!result.blocked) {
             await supabaseAdmin
                 .from('messages')

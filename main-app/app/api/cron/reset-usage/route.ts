@@ -8,7 +8,6 @@ const redis = new Redis({
 })
 
 export async function GET(req: Request) {
-    // 1. Security Check (Vercel Cron Secret)
     const authHeader = req.headers.get('authorization')
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
         return new Response('Unauthorized', { status: 401 })
@@ -19,11 +18,9 @@ export async function GET(req: Request) {
         yesterday.setDate(yesterday.getDate() - 1)
         const dateStr = yesterday.toISOString().split('T')[0]
 
-        // 2. Fetch yesterday's stats from Redis
         const spendKey = `spend:${dateStr}`
         const totalSpent = await redis.get(spendKey) as number || 0
 
-        // 3. Persist to Analytics History (Supabase)
         if (totalSpent > 0) {
             await supabaseAdmin.from('daily_analytics').insert({
                 date: dateStr,
@@ -31,7 +28,6 @@ export async function GET(req: Request) {
             })
         }
 
-        // 4. Reset all user daily usage counters
         await supabaseAdmin
             .from('profiles')
             .update({
@@ -40,7 +36,7 @@ export async function GET(req: Request) {
             })
             .gte('daily_usage', 0)
 
-        // 5. Reset AI Consumption Keys
+
         // We don't actually delete them, we let them expire via Redis TTL (set to 48h in recordCost)
         // But we ensure the "Current Phase" in Admin UI resets naturally by shifting to the new day's key.
 
