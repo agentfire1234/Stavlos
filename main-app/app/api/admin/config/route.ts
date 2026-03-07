@@ -34,7 +34,7 @@ export async function GET() {
         const { data: configs } = await supabaseAdmin
             .from('system_config')
             .select('*')
-            .in('key', ['daily_budget_eur', 'model_overrides', 'kill_switch']);
+            .in('key', ['daily_budget_eur', 'model_overrides', 'system_status']);
 
         return NextResponse.json(configs || []);
     } catch (error: any) {

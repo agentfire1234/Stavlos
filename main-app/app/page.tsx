@@ -22,6 +22,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { Logo } from '@/components/logo'
+import { LandingNav } from '@/components/layout/landing-nav'
+import { LandingFooter } from '@/components/layout/landing-footer'
 
 /* ─────────────────── ANIMATIONS ─────────────────── */
 const fadeUp = {
@@ -89,26 +91,7 @@ export default function LandingPage() {
     <div className="bg-[#0a0a0f] text-white overflow-x-hidden -ml-0 md:-ml-60">
 
       {/* ── S1: NAVIGATION ── */}
-      <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-200 ${scrolled ? 'bg-[#0a0a0f]/80 backdrop-blur-2xl border-b border-white/[0.06]' : ''}`}>
-        <div className="max-w-[1100px] mx-auto px-5 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Logo size={24} className="text-blue-500" />
-            <span className="text-xl font-bold font-syne tracking-tight"><span className="text-blue-500">S</span>TAVLOS</span>
-          </div>
-          <div className="hidden md:flex items-center gap-8">
-            {['features', 'tools', 'pricing', 'faq'].map(s => (
-              <a key={s} href={`#${s}`} className={`text-sm font-medium transition-colors relative ${activeSection === s ? 'text-white' : 'text-[#94a3b8] hover:text-white'}`}>
-                {s.charAt(0).toUpperCase() + s.slice(1)}
-                {activeSection === s && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-500" />}
-              </a>
-            ))}
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="hidden sm:inline-flex px-4 h-9 items-center text-sm font-medium text-[#94a3b8] hover:text-white transition-colors">Log In</Link>
-            <Link href="/signup" className="px-5 h-9 inline-flex items-center text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all">Get Started Free <ArrowRight className="w-3.5 h-3.5 ml-1.5" /></Link>
-          </div>
-        </div>
-      </nav>
+      <LandingNav />
 
       {/* ── S2: HERO ── */}
       <section className="relative min-h-screen flex flex-col items-center justify-center pt-16 px-5 text-center">
@@ -361,21 +344,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── S12: FOOTER ── */}
-      <footer className="border-t border-white/[0.06] py-16 px-5">
-        <div className="max-w-[1100px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
-          <div className="col-span-2 md:col-span-1 space-y-3">
-            <div className="flex items-center gap-2"><Logo size={20} className="text-blue-500" /><span className="text-lg font-bold font-syne tracking-tight"><span className="text-blue-500">S</span>TAVLOS</span></div>
-            <p className="text-sm text-[#94a3b8] leading-relaxed">Study smarter, not harder. The AI study tool built by a student, for students.</p>
-          </div>
-          <FooterCol title="Product" links={[['Dashboard', '/dashboard'], ['How It Works', '#features'], ['Pricing', '#pricing'], ['Tools', '/tools'], ['FAQ', '#faq']]} />
-          <FooterCol title="Legal" links={[['Privacy Policy', '/legal/privacy'], ['Terms of Service', '/legal/terms']]} />
-          <FooterCol title="Connect" links={[['Twitter / X', 'https://x.com/TheStavlos'], ['hello@stavlos.com', 'mailto:hello@stavlos.com']]} />
-        </div>
-        <div className="max-w-[1100px] mx-auto mt-12 pt-6 border-t border-white/[0.06] flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-[#475569]">© 2026 Stavlos. Built by a student, for students.</p>
-          <p className="text-xs text-[#475569]">Amersfoort · Built in Public · v1.2.0</p>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   )
 }
@@ -575,19 +544,6 @@ function WaitlistDiscount() {
   )
 }
 
-/* ── Footer Column ── */
-function FooterCol({ title, links }: { title: string; links: [string, string][] }) {
-  return (
-    <div className="space-y-3">
-      <p className="text-[11px] uppercase tracking-[0.15em] text-[#475569] font-semibold">{title}</p>
-      <ul className="space-y-2">
-        {links.map(([label, href]) => (
-          <li key={label}><Link href={href} className="text-[14px] text-[#94a3b8] hover:text-white transition-colors">{label}</Link></li>
-        ))}
-      </ul>
-    </div>
-  )
-}
 
 /* ── Social Proof Bar (real data) ── */
 function SocialProofBar() {

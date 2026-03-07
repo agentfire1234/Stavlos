@@ -21,7 +21,7 @@ const mobileItems = [
 export function MobileNav() {
     const pathname = usePathname()
 
-    if (pathname === '/' || pathname.startsWith('/auth') || pathname === '/login' || pathname === '/signup' || pathname === '/offline' || pathname === '/pricing') return null
+    if (pathname === '/' || pathname.startsWith('/auth') || pathname === '/login' || pathname === '/signup' || pathname === '/offline' || pathname === '/pricing' || pathname.startsWith('/legal') || pathname === '/terms' || pathname === '/privacy' || pathname.startsWith('/waitlist')) return null
 
     return (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[60] pb-safe bg-[#0a0a0f]/80 backdrop-blur-xl border-t border-white/8">

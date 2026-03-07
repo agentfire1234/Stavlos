@@ -52,14 +52,14 @@ export async function GET() {
             if (usage) totalCalls += usage.calls;
         }
 
-        // 4. Get Platform Configs (Revenue & Kill Switch)
+        // 4. Get Platform Configs (Revenue & System Status)
         const { data: configs } = await supabaseAdmin
             .from('system_config')
             .select('*')
-            .in('key', ['platform_revenue_total', 'kill_switch'])
+            .in('key', ['platform_revenue_total', 'system_status', 'daily_budget_eur', 'model_overrides'])
 
         const revenue = parseFloat(configs?.find(c => c.key === 'platform_revenue_total')?.value || '0')
-        const isKillSwitchActive = configs?.find(c => c.key === 'kill_switch')?.value === 'true'
+        const systemStatus = configs?.find(c => c.key === 'system_status')?.value || '1'
         const estProfit = revenue - budget.spent
 
         // 5. Get Recent Logs
@@ -76,7 +76,9 @@ export async function GET() {
             totalCalls: totalCalls || 0,
             estProfit: estProfit.toFixed(2),
             revenue: revenue.toFixed(2),
-            killSwitch: isKillSwitchActive,
+            systemStatus: systemStatus,
+            killSwitch: systemStatus === '0',
+            configs: configs || [],
             resetsIn: getResetsIn(),
             recentLogs: recentLogs || []
         })

@@ -30,6 +30,12 @@ const TOOLS = [
         desc: 'Step-by-step equation solving with full workings',
         icon: Calculator,
         color: 'amber',
+        classes: {
+            bg: 'bg-amber-500',
+            border: 'border-amber-500/20',
+            borderHover: 'group-hover:border-amber-500/50',
+            text: 'text-amber-500'
+        },
         href: '/tools/math-solver'
     },
     {
@@ -38,6 +44,12 @@ const TOOLS = [
         desc: 'Condense any text into clear bullet points',
         icon: FileText,
         color: 'blue',
+        classes: {
+            bg: 'bg-blue-500',
+            border: 'border-blue-500/20',
+            borderHover: 'group-hover:border-blue-500/50',
+            text: 'text-blue-500'
+        },
         href: '/tools/summarizer'
     },
     {
@@ -46,6 +58,12 @@ const TOOLS = [
         desc: 'Professional tone correction, preserve your voice',
         icon: CheckSquare,
         color: 'emerald',
+        classes: {
+            bg: 'bg-emerald-500',
+            border: 'border-emerald-500/20',
+            borderHover: 'group-hover:border-emerald-500/50',
+            text: 'text-emerald-500'
+        },
         href: '/tools/grammar'
     },
     {
@@ -54,6 +72,12 @@ const TOOLS = [
         desc: 'PEEL and 5-paragraph structure generator',
         icon: PenTool,
         color: 'purple',
+        classes: {
+            bg: 'bg-purple-500',
+            border: 'border-purple-500/20',
+            borderHover: 'group-hover:border-purple-500/50',
+            text: 'text-purple-500'
+        },
         href: '/tools/essay-outline'
     },
     {
@@ -62,6 +86,12 @@ const TOOLS = [
         desc: 'APA, MLA, Chicago — formatted instantly',
         icon: BookMarked,
         color: 'pink',
+        classes: {
+            bg: 'bg-pink-500',
+            border: 'border-pink-500/20',
+            borderHover: 'group-hover:border-pink-500/50',
+            text: 'text-pink-500'
+        },
         href: '/tools/citations'
     },
     {
@@ -70,6 +100,12 @@ const TOOLS = [
         desc: 'Active recall cards from any notes',
         icon: Layers,
         color: 'orange',
+        classes: {
+            bg: 'bg-orange-500',
+            border: 'border-orange-500/20',
+            borderHover: 'group-hover:border-orange-500/50',
+            text: 'text-orange-500'
+        },
         href: '/tools/flashcards'
     },
 ]
@@ -102,10 +138,10 @@ export default function ToolsPage() {
                         className={`glass-card p-8 space-y-6 group cursor-pointer relative overflow-hidden`}
                     >
                         {/* Soft Glow Background */}
-                        <div className={`absolute -top-12 -right-12 w-32 h-32 blur-[80px] rounded-full opacity-20 bg-${tool.color}-500`} />
+                        <div className={`absolute -top-12 -right-12 w-32 h-32 blur-[80px] rounded-full opacity-20 ${tool.classes.bg}`} />
 
-                        <div className={`w-14 h-14 rounded-2xl glass-card flex items-center justify-center border-${tool.color}-500/20 group-hover:border-${tool.color}-500/50 transition-all`}>
-                            <tool.icon className={`w-7 h-7 text-${tool.color}-500 transition-transform group-hover:scale-110`} />
+                        <div className={`w-14 h-14 rounded-2xl glass-card flex items-center justify-center ${tool.classes.border} ${tool.classes.borderHover} transition-all`}>
+                            <tool.icon className={`w-7 h-7 ${tool.classes.text} transition-transform group-hover:scale-110`} />
                         </div>
 
                         <div className="space-y-2">
@@ -115,7 +151,7 @@ export default function ToolsPage() {
 
                         <Link
                             href={tool.href}
-                            className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-${tool.color}-500 group-hover:gap-3 transition-all font-syne italic`}
+                            className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${tool.classes.text} group-hover:gap-3 transition-all font-syne italic`}
                         >
                             Open Module <ArrowRight className="w-4 h-4" />
                         </Link>

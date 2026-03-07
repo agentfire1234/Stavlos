@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Logo } from '@/components/logo'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
@@ -46,16 +47,14 @@ export function Sidebar() {
         getProfile()
     }, [])
 
-    if (pathname === '/' || pathname.startsWith('/auth') || pathname === '/login' || pathname === '/signup' || pathname === '/offline' || pathname === '/pricing') return null
+    if (pathname === '/' || pathname.startsWith('/auth') || pathname === '/login' || pathname === '/signup' || pathname === '/offline' || pathname === '/pricing' || pathname.startsWith('/legal') || pathname === '/terms' || pathname === '/privacy' || pathname.startsWith('/waitlist')) return null
 
     return (
         <aside className="hidden md:flex flex-col w-60 bg-[#0a0a0f] border-r border-white/8 fixed h-screen z-50">
             {/* Logo */}
             <div className="p-8">
                 <Link href="/dashboard" className="flex items-center gap-2 group">
-                    <span className="text-2xl font-black font-syne tracking-tighter">
-                        <span className="text-blue-500">S</span>TAVLOS
-                    </span>
+                    <Logo size={32} className="text-white group-hover:text-blue-500 transition-colors" />
                 </Link>
             </div>
 

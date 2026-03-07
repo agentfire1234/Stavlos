@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, Variants } from 'framer-motion'
+import { formatDistanceToNow } from 'date-fns'
 import {
     Zap,
     Flame,

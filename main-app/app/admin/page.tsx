@@ -32,8 +32,10 @@ export default function AdminDashboard() {
             if (res.ok) {
                 const data = await res.json()
                 setStats(data)
-                setKillSwitch(data.killSwitch || false)
-                setBudgetValue(data.limit || 20)
+                const sysStatus = data.configs?.find((c: any) => c.key === 'system_status')?.value
+                setKillSwitch(sysStatus === '0')
+                const budget = data.configs?.find((c: any) => c.key === 'daily_budget_eur')?.value
+                setBudgetValue(budget ? parseFloat(budget) : 20)
             }
         } catch {
             toast.error('Failed to load admin stats.')
@@ -49,7 +51,7 @@ export default function AdminDashboard() {
             const res = await fetch('/api/admin/config', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: 'kill_switch', value: String(newValue) })
+                body: JSON.stringify({ key: 'system_status', value: newValue ? '0' : '1' })
             })
             if (res.ok) {
                 setKillSwitch(newValue)
