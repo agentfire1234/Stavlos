@@ -20,7 +20,7 @@ export class AIClient {
     static async chat(query: string, context: string, model: string, taskType: string, stream: boolean = false) {
         let primary = openrouter
         let secondary = groq
-        let primaryModel = model.includes(':free') ? model : 'meta-llama/llama-3.3-70b-instruct:free'
+        let primaryModel = model.includes(':free') ? model : 'meta-llama/llama-3.1-8b-instruct:free'
         let secondaryModel = model
 
         const systemPrompt = this.getSystemPrompt(taskType)
