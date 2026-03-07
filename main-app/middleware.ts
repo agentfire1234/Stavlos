@@ -2,7 +2,13 @@ import { updateSession } from '@/lib/supabase/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-    const { supabase, user, supabaseResponse } = await updateSession(request)
+    // Skip ALL supabase session logic for auth callback
+    // The route handler manages its own session exchange
+    if (request.nextUrl.pathname.startsWith('/auth/callback')) {
+        return NextResponse.next()
+    }
+
+    const { user, supabaseResponse } = await updateSession(request)
 
     let response = supabaseResponse
 
