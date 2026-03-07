@@ -99,7 +99,7 @@ export default function SignupPage() {
                 password: data.password,
                 options: {
                     data: { display_name: data.name.trim() },
-                    emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+                    emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/dashboard`
                 }
             })
 
@@ -120,7 +120,7 @@ export default function SignupPage() {
             await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+                    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/dashboard`,
                 },
             })
         } catch {
