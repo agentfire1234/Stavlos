@@ -80,7 +80,7 @@ export default function LeaderboardPage() {
     if (loading) return (
         <div className="min-h-[80vh] flex flex-col items-center justify-center gap-6">
             <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
-            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 font-syne italic">Accessing Hall of Fame...</p>
+            <p className="text-[13px] font-semibold text-[#64748b]">Loading rankings...</p>
         </div>
     )
 
@@ -95,11 +95,11 @@ export default function LeaderboardPage() {
             className="max-w-4xl mx-auto px-6 py-12 space-y-20"
         >
             <header className="text-center space-y-4">
-                <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full glass-card border-amber-500/20 shadow-2xl shadow-amber-500/10">
+                <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20">
                     <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-500 font-syne italic">Live Data Integration</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-amber-500 font-syne italic">Live Rankings</span>
                 </div>
-                <h1 className="text-6xl font-black font-syne uppercase italic tracking-tighter">Hall of <span className="text-amber-500">Fame</span></h1>
+                <h1 className="text-6xl font-black font-syne uppercase italic tracking-tighter">Student <span className="text-amber-500">Leaderboard</span></h1>
                 <p className="text-xs font-bold font-dm-sans text-white/30 italic">The students who believed earliest.</p>
             </header>
 
@@ -154,11 +154,11 @@ export default function LeaderboardPage() {
             {/* List View */}
             <motion.section variants={item} className="glass-card overflow-hidden border-white/5 bg-white/[0.01]">
                 <table className="w-full text-left">
-                    <thead className="border-b border-white/5">
-                        <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 font-syne italic">
+                    <thead className="border-b border-[#2d3139]">
+                        <tr className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#64748b] font-syne italic">
                             <th className="px-8 py-6">Rank</th>
-                            <th className="px-8 py-6">Identity</th>
-                            <th className="px-8 py-6">Impact</th>
+                            <th className="px-8 py-6">Student</th>
+                            <th className="px-8 py-6">Referrals</th>
                             <th className="px-8 py-6 text-right">Status</th>
                         </tr>
                     </thead>
@@ -199,8 +199,8 @@ export default function LeaderboardPage() {
 
                     <div className="flex items-center gap-2">
                         <div className="hidden md:flex flex-col items-end px-3">
-                            <p className="text-[8px] font-black uppercase tracking-widest text-white/10 font-syne leading-none mb-1">Your Protocol</p>
-                            <p className="text-[10px] font-bold text-blue-500 font-dm-sans italic">stavlos.com/ref?={userRank?.referral_code || '...'}</p>
+                            <p className="text-[8px] font-bold uppercase tracking-widest text-[#64748b] font-syne leading-none mb-1">Your Link</p>
+                            <p className="text-[10px] font-medium text-[#3b82f6] font-dm-sans italic">stavlos.com/ref?={userRank?.referral_code || '...'}</p>
                         </div>
                         <button
                             onClick={copyLink}

@@ -48,35 +48,37 @@ export default function MathSolverPage() {
     }
 
     return (
-        <div className="max-w-3xl mx-auto px-6 py-12 space-y-12">
-            <Link href="/tools" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-amber-500 transition-colors font-syne italic">
-                <ArrowLeft className="w-3 h-3" /> Back to Toolbox
+        <div className="max-w-3xl mx-auto px-6 py-8 space-y-8">
+            <Link href="/tools" className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#64748b] hover:text-[#e2e8f0] transition-colors font-syne">
+                <ArrowLeft className="w-4 h-4" /> Back to Tools
             </Link>
 
-            <header className="space-y-2">
-                <div className="w-12 h-12 rounded-2xl glass-card border-amber-500/20 flex items-center justify-center mb-6">
+            <header className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                     <Calculator className="w-6 h-6 text-amber-500" />
                 </div>
-                <h1 className="text-4xl font-black font-syne uppercase italic tracking-tight">Math <span className="text-amber-500">Solver</span></h1>
-                <p className="text-xs font-bold font-dm-sans text-white/30 italic">Paste any equation or word problem. Get every step explained.</p>
+                <div className="space-y-1">
+                    <h1 className="text-2xl font-bold font-syne text-[#e2e8f0]">Math Solver</h1>
+                    <p className="text-[15px] font-medium text-[#94a3b8]">Paste any equation or word problem. Get every step explained.</p>
+                </div>
             </header>
 
             <div className="space-y-6">
-                <div className="glass-card p-2 border-white/10 focus-within:border-amber-500/50 transition-all">
+                <div className="bg-[#1e2128] border border-[#2d3139] rounded-xl p-2 focus-within:border-amber-500/50 transition-all">
                     <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Paste your math problem here..."
-                        className="w-full bg-transparent border-none outline-none resize-none p-4 text-sm font-dm-sans italic min-h-[160px] placeholder:text-white/10"
+                        className="w-full bg-transparent border-none outline-none resize-none p-4 text-[15px] text-[#e2e8f0] min-h-[160px] placeholder:text-[#475569]"
                     />
                 </div>
 
                 <button
                     onClick={handleSolve}
                     disabled={loading || !input.trim()}
-                    className="btn-primary w-full py-4 bg-amber-600 hover:bg-amber-500 border-none shadow-amber-500/20 text-sm font-black uppercase tracking-[0.3em] font-syne italic"
+                    className="w-full py-4 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:hover:bg-amber-500 rounded-xl text-[14px] font-semibold text-[#111318] flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-500/10"
                 >
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Solve Step by Step <Send className="w-4 h-4 ml-2" /></>}
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Solve step-by-step <Send className="w-4 h-4" /></>}
                 </button>
             </div>
 
@@ -87,25 +89,25 @@ export default function MathSolverPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="space-y-6"
                     >
-                        <div className="flex items-center justify-between px-2">
-                            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 font-syne italic">Neural Solution</h2>
-                            <button onClick={copy} className="text-[10px] font-bold text-amber-500 hover:underline uppercase tracking-widest font-dm-sans flex items-center gap-2">
-                                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {copied ? 'Copied' : 'Copy Full Workings'}
+                        <div className="flex items-center justify-between px-1">
+                            <h2 className="text-[12px] font-semibold uppercase tracking-wider text-[#64748b]">Solution</h2>
+                            <button onClick={copy} className="text-[12px] font-semibold text-amber-500 hover:text-amber-400 flex items-center gap-2 transition-colors">
+                                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} {copied ? 'Copied' : 'Copy workings'}
                             </button>
                         </div>
-                        <div className="glass-card p-10 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-8 opacity-5">
+                        <div className="bg-[#1e2128] border border-[#2d3139] rounded-xl p-8 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-8 opacity-5 -rotate-12 group-hover:rotate-0 transition-transform duration-500">
                                 <Calculator className="w-32 h-32 text-amber-500" />
                             </div>
-                            <div className="prose prose-invert prose-sm max-w-none font-dm-sans leading-loose relative z-10">
+                            <div className="prose prose-invert prose-sm max-w-none text-[#e2e8f0] leading-relaxed relative z-10">
                                 <ReactMarkdown>{solution}</ReactMarkdown>
                             </div>
                         </div>
                         <button
                             onClick={() => { setSolution(''); setInput(''); }}
-                            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-white mx-auto font-syne italic"
+                            className="flex items-center gap-2 text-[13px] font-semibold text-[#64748b] hover:text-[#e2e8f0] mx-auto transition-colors"
                         >
-                            <RotateCcw className="w-3 h-3" /> Clear Module
+                            <RotateCcw className="w-4 h-4" /> Clear and solve another
                         </button>
                     </motion.div>
                 )}

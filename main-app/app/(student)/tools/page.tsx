@@ -19,8 +19,8 @@ const container = {
 }
 
 const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } }
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } }
 }
 
 const TOOLS = [
@@ -30,12 +30,7 @@ const TOOLS = [
         desc: 'Step-by-step equation solving with full workings',
         icon: Calculator,
         color: 'amber',
-        classes: {
-            bg: 'bg-amber-500',
-            border: 'border-amber-500/20',
-            borderHover: 'group-hover:border-amber-500/50',
-            text: 'text-amber-500'
-        },
+        accent: '#f59e0b',
         href: '/tools/math-solver'
     },
     {
@@ -44,12 +39,7 @@ const TOOLS = [
         desc: 'Condense any text into clear bullet points',
         icon: FileText,
         color: 'blue',
-        classes: {
-            bg: 'bg-blue-500',
-            border: 'border-blue-500/20',
-            borderHover: 'group-hover:border-blue-500/50',
-            text: 'text-blue-500'
-        },
+        accent: '#3b82f6',
         href: '/tools/summarizer'
     },
     {
@@ -58,12 +48,7 @@ const TOOLS = [
         desc: 'Professional tone correction, preserve your voice',
         icon: CheckSquare,
         color: 'emerald',
-        classes: {
-            bg: 'bg-emerald-500',
-            border: 'border-emerald-500/20',
-            borderHover: 'group-hover:border-emerald-500/50',
-            text: 'text-emerald-500'
-        },
+        accent: '#10b981',
         href: '/tools/grammar'
     },
     {
@@ -72,12 +57,7 @@ const TOOLS = [
         desc: 'PEEL and 5-paragraph structure generator',
         icon: PenTool,
         color: 'purple',
-        classes: {
-            bg: 'bg-purple-500',
-            border: 'border-purple-500/20',
-            borderHover: 'group-hover:border-purple-500/50',
-            text: 'text-purple-500'
-        },
+        accent: '#8b5cf6',
         href: '/tools/essay-outline'
     },
     {
@@ -86,12 +66,7 @@ const TOOLS = [
         desc: 'APA, MLA, Chicago — formatted instantly',
         icon: BookMarked,
         color: 'pink',
-        classes: {
-            bg: 'bg-pink-500',
-            border: 'border-pink-500/20',
-            borderHover: 'group-hover:border-pink-500/50',
-            text: 'text-pink-500'
-        },
+        accent: '#ec4899',
         href: '/tools/citations'
     },
     {
@@ -100,12 +75,7 @@ const TOOLS = [
         desc: 'Active recall cards from any notes',
         icon: Layers,
         color: 'orange',
-        classes: {
-            bg: 'bg-orange-500',
-            border: 'border-orange-500/20',
-            borderHover: 'group-hover:border-orange-500/50',
-            text: 'text-orange-500'
-        },
+        accent: '#f97316',
         href: '/tools/flashcards'
     },
 ]
@@ -121,61 +91,62 @@ export default function ToolsPage() {
             variants={container}
             initial="hidden"
             animate="show"
-            className="max-w-6xl mx-auto px-6 py-12 space-y-12"
+            className="max-w-5xl mx-auto px-6 py-8 space-y-8"
         >
-            <header className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 font-syne italic leading-none">Modular Intelligence</p>
-                <h1 className="text-5xl font-black font-syne uppercase italic tracking-tight">Study OS <span className="text-blue-500">Toolbox</span></h1>
-                <p className="text-xs font-bold font-dm-sans text-white/30 italic max-w-sm">Six specialized tools. Zero searching. Just answers.</p>
+            <header>
+                <h1 className="text-2xl font-bold font-syne text-[#e2e8f0]">Study Toolbox</h1>
+                <p className="text-[15px] text-[#94a3b8] font-medium mt-1">
+                    Specialized tools to help you study smarter and faster.
+                </p>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {TOOLS.map((tool) => (
-                    <motion.div
-                        key={tool.id}
-                        variants={item}
-                        whileHover={{ y: -5, boxShadow: `0 0 30px var(--glow-${tool.color})` }}
-                        className={`glass-card p-8 space-y-6 group cursor-pointer relative overflow-hidden`}
-                    >
-                        {/* Soft Glow Background */}
-                        <div className={`absolute -top-12 -right-12 w-32 h-32 blur-[80px] rounded-full opacity-20 ${tool.classes.bg}`} />
-
-                        <div className={`w-14 h-14 rounded-2xl glass-card flex items-center justify-center ${tool.classes.border} ${tool.classes.borderHover} transition-all`}>
-                            <tool.icon className={`w-7 h-7 ${tool.classes.text} transition-transform group-hover:scale-110`} />
-                        </div>
-
-                        <div className="space-y-2">
-                            <h2 className="text-lg font-black font-syne uppercase italic tracking-wider transition-colors group-hover:text-white">{tool.name}</h2>
-                            <p className="text-xs font-bold font-dm-sans text-white/30 leading-relaxed italic">{tool.desc}</p>
-                        </div>
-
-                        <Link
-                            href={tool.href}
-                            className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${tool.classes.text} group-hover:gap-3 transition-all font-syne italic`}
+                    <Link key={tool.id} href={tool.href}>
+                        <motion.div
+                            variants={item}
+                            whileHover={{ y: -4, borderColor: '#3d4351' }}
+                            className="h-full bg-[#1e2128] border border-[#2d3139] rounded-xl p-6 flex flex-col justify-between group transition-all"
                         >
-                            Open Module <ArrowRight className="w-4 h-4" />
-                        </Link>
-                    </motion.div>
+                            <div className="space-y-4">
+                                <div
+                                    className="w-12 h-12 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110"
+                                    style={{ backgroundColor: `${tool.accent}15`, color: tool.accent }}
+                                >
+                                    <tool.icon className="w-6 h-6" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <h2 className="text-base font-semibold text-[#e2e8f0] font-syne">{tool.name}</h2>
+                                    <p className="text-[13px] text-[#94a3b8] leading-relaxed font-medium">
+                                        {tool.desc}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 flex items-center gap-2 text-[12px] font-semibold text-[#64748b] group-hover:text-[#3b82f6] transition-colors">
+                                Open tool <ArrowRight className="w-4 h-4" />
+                            </div>
+                        </motion.div>
+                    </Link>
                 ))}
             </div>
 
-            <section className="pt-20 space-y-8">
+            <section className="pt-12 space-y-6">
                 <div className="flex items-center gap-4">
-                    <div className="flex-1 h-px bg-white/5" />
-                    <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 font-syne italic leading-none">Pipeline Roadmap</h2>
-                    <div className="flex-1 h-px bg-white/5" />
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-[#64748b] font-syne">Coming Soon</h2>
+                    <div className="flex-1 h-px bg-[#2d3139]" />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-40 grayscale group hover:grayscale-0 transition-all duration-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {UPCOMING.map((tool) => (
-                        <div key={tool.name} className="glass-card p-6 flex items-center justify-between border-dashed border-white/10">
+                        <div key={tool.name} className="bg-[#1e2128]/50 border border-[#2d3139] border-dashed rounded-xl p-5 flex items-center justify-between">
                             <div className="space-y-1">
-                                <p className="text-xs font-black uppercase tracking-widest font-syne italic">{tool.name}</p>
-                                <p className="text-[10px] font-bold text-white/20 font-dm-sans">{tool.desc}</p>
+                                <p className="text-sm font-semibold text-[#64748b]">{tool.name}</p>
+                                <p className="text-[12px] text-[#475569] font-medium">{tool.desc}</p>
                             </div>
-                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10">
-                                <Lock className="w-3 h-3 text-white/20" />
-                                <span className="text-[8px] font-black uppercase tracking-widest font-syne">Offline</span>
+                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#111318]/50 border border-[#2d3139]">
+                                <Lock className="w-3 h-3 text-[#475569]" />
+                                <span className="text-[10px] font-bold text-[#475569] tracking-wider uppercase">Locked</span>
                             </div>
                         </div>
                     ))}

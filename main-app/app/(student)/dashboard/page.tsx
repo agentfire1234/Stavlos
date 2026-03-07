@@ -4,29 +4,25 @@ import { useState, useEffect } from 'react'
 import { motion, Variants } from 'framer-motion'
 import { formatDistanceToNow } from 'date-fns'
 import {
-    Zap,
-    Flame,
     MessageSquare,
     Upload,
     Calculator,
     CheckSquare,
     ChevronRight,
-    ArrowUpRight,
     BookOpen,
-    Wrench,
-    GraduationCap
+    ArrowUpRight
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 const container: Variants = {
     hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.08 } }
+    show: { opacity: 1, transition: { staggerChildren: 0.05 } }
 }
 
 const item: Variants = {
-    hidden: { opacity: 0, y: 16 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.23, 1, 0.32, 1] } }
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.3 } }
 }
 
 export default function DashboardPage() {
@@ -65,139 +61,123 @@ export default function DashboardPage() {
             variants={container}
             initial="hidden"
             animate="show"
-            className="max-w-6xl mx-auto px-6 py-12 space-y-12 pb-24 md:pb-12"
+            className="max-w-5xl mx-auto px-6 py-8 space-y-8"
         >
             {/* Header */}
-            <motion.header variants={item} className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                <div className="space-y-1">
-                    <p className="text-sm font-medium text-slate-400 font-body">
-                        {greeting}, {firstName}
-                    </p>
-                    <h1 className="text-4xl md:text-5xl font-black font-syne tracking-tight text-white uppercase italic">
-                        {new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).format(today)}
-                    </h1>
-                </div>
-
-                <div className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border transition-all ${profile?.is_pro
-                    ? 'bg-blue-600/10 border-blue-500/30 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]'
-                    : 'bg-white/5 border-white/10 text-slate-400'
-                    }`}>
-                    {profile?.is_pro ? 'Pro Plan' : 'Free Plan'}
-                </div>
+            <motion.header variants={item}>
+                <h1 className="text-2xl font-bold font-syne text-[#e2e8f0]">Dashboard</h1>
+                <p className="text-[15px] text-[#94a3b8] font-medium mt-1">
+                    {greeting}, {firstName}.
+                </p>
             </motion.header>
 
             {/* Stats Row */}
-            <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Usage Card */}
+            <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <StatsCard
-                    title="Today's Usage"
-                    value={data.usage.used}
-                    limit={data.usage.limit}
-                    subtext={data.usage.used >= data.usage.limit ? "Limit reached" : `Resets in ${getResetTime(data.usage.reset_at)}`}
+                    label="Messages Today"
+                    value={`${data.usage.used} / ${data.usage.limit}`}
+                    progress={(data.usage.used / data.usage.limit) * 100}
+                    subtext={`Resets in ${getResetTime(data.usage.reset_at)}`}
                     type="usage"
                 />
-
-                {/* Streak Card */}
                 <StatsCard
-                    title="Study Streak"
-                    value={data.streak}
-                    subtext={data.streak > 2 ? "🔥 You're on fire!" : "Start your streak today"}
-                    type="streak"
+                    label="Study Streak"
+                    value={`${data.streak} days`}
+                    subtext={data.streak === 0 ? "Start studying to begin your streak" : ""}
                     weeklyActivity={data.weeklyActivity}
+                    type="streak"
                 />
-
-                {/* Total Questions Card */}
                 <StatsCard
-                    title="Total Questions"
+                    label="Questions Answered"
                     value={data.totalQuestions}
-                    subtext={`${data.usage.used} questions today`}
+                    subtext={`${data.usage.used} today`}
                     type="total"
                 />
             </section>
 
             {/* Quick Actions */}
             <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <QuickAction icon={MessageSquare} label="New Chat" href="/chat" color="blue" />
-                <QuickAction icon={Upload} label="Upload Syllabus" href="/syllabus" color="purple" />
-                <QuickAction icon={Calculator} label="Math Solver" href="/tools/math-solver" color="amber" />
-                <QuickAction icon={CheckSquare} label="Grammar Fix" href="/tools/grammar" color="emerald" />
+                <QuickAction icon={MessageSquare} label="New Chat" href="/chat" color="#3b82f6" />
+                <QuickAction icon={Upload} label="Upload Syllabus" href="/syllabus" color="#8b5cf6" />
+                <QuickAction icon={Calculator} label="Math Solver" href="/tools/math-solver" color="#f59e0b" />
+                <QuickAction icon={CheckSquare} label="Grammar Fix" href="/tools/grammar" color="#10b981" />
             </section>
 
-            {/* Recent & Courses Split */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.6fr,1fr] gap-8">
                 {/* Recent Conversations */}
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between px-2">
-                        <h3 className="text-lg font-bold font-syne uppercase italic text-white flex items-center gap-2">
-                            <MessageSquare className="w-4 h-4 text-blue-500" />
-                            Recent Conversations
-                        </h3>
-                        <Link href="/chat" className="text-xs font-bold text-blue-500 hover:text-blue-400 font-body">View all →</Link>
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-base font-semibold font-syne text-[#e2e8f0]">Recent Conversations</h2>
+                        <Link href="/chat" className="text-[13px] font-medium text-[#3b82f6] hover:underline">View all</Link>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-1.5">
                         {data.chats.length > 0 ? (
-                            data.chats.map((chat: any) => (
+                            data.chats.slice(0, 5).map((chat: any) => (
                                 <Link
                                     key={chat.id}
                                     href={`/chat/${chat.id}`}
-                                    className="glass-card p-4 flex items-center justify-between group"
+                                    className="flex items-center justify-between h-14 px-4 bg-[#1e2128] border border-[#2d3139] rounded-lg hover:bg-[#262b35] transition-all group"
                                 >
-                                    <div className="flex items-center gap-4 min-w-0">
-                                        <div className={`p-2 rounded-lg bg-white/5 border border-white/8 group-hover:border-blue-500/50 transition-colors`}>
-                                            <MessageSquare className="w-4 h-4 text-blue-400" />
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="p-1.5 rounded bg-[#111318]">
+                                            <MessageSquare className="w-4 h-4 text-[#3b82f6]" />
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-sm font-semibold text-white truncate font-body">
+                                            <p className="text-sm font-medium text-[#e2e8f0] truncate">
                                                 {chat.title || 'Untitled Chat'}
                                             </p>
-                                            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-                                                {chat.mode} • {formatDistanceToNow(new Date(chat.updated_at))} ago
+                                            <p className="text-[12px] text-[#64748b]">
+                                                {chat.mode.charAt(0).toUpperCase() + chat.mode.slice(1)} • {formatDistanceToNow(new Date(chat.updated_at))} ago
                                             </p>
                                         </div>
                                     </div>
-                                    <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-blue-500 -translate-x-2 group-hover:translate-x-0 transition-all opacity-0 group-hover:opacity-100" />
+                                    <ChevronRight className="w-4 h-4 text-[#64748b] group-hover:text-[#e2e8f0] transition-colors" />
                                 </Link>
                             ))
                         ) : (
-                            <div className="glass-card p-8 text-center border-dashed border-white/10">
-                                <p className="text-sm text-slate-500 font-body mb-4">No conversations yet.</p>
-                                <Link href="/chat" className="btn-ghost py-2 px-4 text-xs inline-block">Start your first chat →</Link>
+                            <div className="bg-[#1e2128] border border-[#2d3139] border-dashed rounded-lg p-10 flex flex-col items-center text-center">
+                                <MessageSquare className="w-8 h-8 text-[#2d3139] mb-3" />
+                                <p className="text-sm text-[#64748b] mb-4">No conversations yet</p>
+                                <Link href="/chat" className="text-sm font-medium text-[#3b82f6] hover:underline">Start chatting</Link>
                             </div>
                         )}
                     </div>
                 </div>
 
                 {/* My Courses */}
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between px-2">
-                        <h3 className="text-lg font-bold font-syne uppercase italic text-white flex items-center gap-2">
-                            <BookOpen className="w-4 h-4 text-purple-500" />
-                            My Courses
-                        </h3>
-                        <Link href="/syllabus" className="text-xs font-bold text-purple-500 hover:text-purple-400 font-body">Manage syllabi →</Link>
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-base font-semibold font-syne text-[#e2e8f0]">My Courses</h2>
+                        <Link href="/syllabus" className="text-[13px] font-medium text-[#3b82f6] hover:underline">Manage all</Link>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         {data.syllabuses.length > 0 ? (
-                            data.syllabuses.slice(0, 3).map((s: any) => (
-                                <div key={s.id} className="glass-card p-4 flex items-center justify-between gap-4">
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-semibold text-white truncate font-body">{s.course_name}</p>
-                                        <p className="text-[10px] text-slate-500 truncate font-body uppercase tracking-wider">{s.file_name} • {s.total_chunks} chunks</p>
+                            data.syllabuses.slice(0, 4).map((s: any) => (
+                                <div key={s.id} className="bg-[#1e2128] border border-[#2d3139] rounded-lg p-4 space-y-3">
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-[#e2e8f0] truncate">{s.course_name}</p>
+                                        <p className="text-[12px] text-[#64748b] truncate mt-0.5">{s.file_name}</p>
                                     </div>
-                                    <Link
-                                        href={`/chat?syllabus=${s.id}`}
-                                        className="btn-primary py-2 px-4 text-xs whitespace-nowrap"
-                                    >
-                                        Ask AI
-                                    </Link>
+                                    <div className="flex items-center justify-between">
+                                        <span className="bg-[#1a2540] text-[#3b82f6] text-[11px] font-medium px-2 py-0.5 rounded">
+                                            {s.total_chunks} chunks
+                                        </span>
+                                        <Link
+                                            href={`/chat?syllabus=${s.id}`}
+                                            className="text-[12px] font-medium text-[#3b82f6] px-3 py-1 border border-[#3b82f6]/20 rounded-md hover:bg-[#3b82f6]/5 transition-colors"
+                                        >
+                                            Ask AI
+                                        </Link>
+                                    </div>
                                 </div>
                             ))
                         ) : (
-                            <div className="glass-card p-8 text-center border-dashed border-white/10">
-                                <p className="text-sm text-slate-500 font-body mb-4">No syllabi uploaded.</p>
-                                <Link href="/syllabus" className="btn-ghost py-2 px-4 text-xs inline-block">Upload a PDF →</Link>
+                            <div className="bg-[#1e2128] border border-[#2d3139] border-dashed rounded-lg p-10 flex flex-col items-center text-center">
+                                <BookOpen className="w-8 h-8 text-[#2d3139] mb-3" />
+                                <p className="text-sm text-[#64748b] mb-4">No syllabi yet</p>
+                                <Link href="/syllabus" className="text-sm font-medium text-[#3b82f6] hover:underline">Upload your first PDF</Link>
                             </div>
                         )}
                     </div>
@@ -207,77 +187,68 @@ export default function DashboardPage() {
     )
 }
 
-function StatsCard({ title, value, limit, subtext, type, weeklyActivity }: any) {
+function StatsCard({ label, value, progress, subtext, type, weeklyActivity }: any) {
     return (
-        <div className="glass-card p-6 relative overflow-hidden group">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#475569] mb-4 font-body">{title}</h4>
+        <div className="bg-[#1e2128] border border-[#2d3139] rounded-xl p-5 flex flex-col justify-between min-h-[140px]">
+            <div>
+                <p className="text-[12px] font-medium text-[#64748b] uppercase tracking-wider">{label}</p>
+                <p className="text-2xl font-bold font-syne text-[#e2e8f0] mt-1">{value}</p>
+            </div>
 
-            {type === 'usage' && (
-                <div className="space-y-3">
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-black font-syne italic">{value}</span>
-                        <span className="text-sm font-bold text-slate-600">/ {limit}</span>
+            <div className="mt-4">
+                {type === 'usage' && (
+                    <div className="space-y-2">
+                        <div className="h-[6px] w-full bg-[#2d3139] rounded-full overflow-hidden">
+                            <div
+                                className={`h-full transition-all duration-500 ${progress >= 80 ? 'bg-[#ef4444]' : progress >= 50 ? 'bg-[#f59e0b]' : 'bg-[#10b981]'
+                                    }`}
+                                style={{ width: `${Math.min(progress, 100)}%` }}
+                            />
+                        </div>
+                        <p className="text-[12px] text-[#64748b]">{subtext}</p>
                     </div>
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                        <div
-                            className={`h-full transition-all duration-1000 ${(value / limit) > 0.8 ? 'bg-red-500' : (value / limit) > 0.5 ? 'bg-amber-500' : 'bg-emerald-500'
-                                }`}
-                            style={{ width: `${Math.min((value / limit) * 100, 100)}%` }}
-                        />
-                    </div>
-                </div>
-            )}
+                )}
 
-            {type === 'streak' && (
-                <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                        <span className="text-4xl font-black font-syne italic">{value}</span>
-                        {value > 2 && <Flame className="w-6 h-6 text-amber-500 fill-amber-500" />}
+                {type === 'streak' && (
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                            {[0, 1, 2, 3, 4, 5, 6].map(i => {
+                                const date = new Date()
+                                date.setDate(date.getDate() - (6 - i))
+                                const dateStr = date.toISOString().split('T')[0]
+                                const active = weeklyActivity?.includes(dateStr)
+                                const isToday = i === 6
+                                return (
+                                    <div key={i} className="flex flex-col items-center gap-1.5">
+                                        <div
+                                            className={`w-[10px] h-[10px] rounded-full transition-all ${active ? 'bg-[#3b82f6]' : 'bg-[#2d3139]'
+                                                } ${isToday ? 'ring-1 ring-[#3b82f6] ring-offset-2 ring-offset-[#1e2128]' : ''}`}
+                                        />
+                                        <span className="text-[10px] text-[#64748b]">
+                                            {['M', 'T', 'W', 'T', 'F', 'S', 'S'][new Date(date).getDay() === 0 ? 6 : new Date(date).getDay() - 1]}
+                                        </span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        {subtext && <p className="text-[12px] text-[#64748b]">{subtext}</p>}
                     </div>
-                    <div className="flex gap-1">
-                        {[0, 1, 2, 3, 4, 5, 6].map(i => {
-                            const date = new Date()
-                            date.setDate(date.getDate() - (6 - i))
-                            const dateStr = date.toISOString().split('T')[0]
-                            const active = weeklyActivity?.includes(dateStr)
-                            return (
-                                <div
-                                    key={i}
-                                    className={`h-2.5 flex-1 rounded-full ${active ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-white/5'}`}
-                                    title={new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date)}
-                                />
-                            )
-                        })}
-                    </div>
-                </div>
-            )}
+                )}
 
-            {type === 'total' && (
-                <div className="flex items-baseline gap-3">
-                    <span className="text-4xl font-black font-syne italic">{value}</span>
-                </div>
-            )}
-
-            <p className="text-[11px] font-semibold text-slate-500 font-body mt-4">{subtext}</p>
+                {type === 'total' && (
+                    <p className="text-[12px] text-[#64748b]">{subtext}</p>
+                )}
+            </div>
         </div>
     )
 }
 
 function QuickAction({ icon: Icon, label, href, color }: any) {
-    const accentColors: any = {
-        blue: 'text-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.1)]',
-        purple: 'text-purple-500 shadow-[0_0_20px_rgba(139,92,246,0.1)]',
-        amber: 'text-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]',
-        emerald: 'text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.1)]',
-    }
-
     return (
         <Link href={href} className="flex-1">
-            <div className="glass-card p-6 flex flex-col items-center gap-4 transition-all hover:-translate-y-1 group cursor-pointer text-center h-full">
-                <div className={`p-3 rounded-xl bg-white/5 border border-white/8 group-hover:border-white/20 transition-all ${accentColors[color]}`}>
-                    <Icon className="w-8 h-8" />
-                </div>
-                <span className="text-[11px] font-black uppercase tracking-[0.1em] font-syne italic text-slate-400 group-hover:text-white transition-colors">{label}</span>
+            <div className="bg-[#1e2128] border border-[#2d3139] rounded-xl p-4 flex flex-col items-start min-h-[100px] hover:bg-[#262b35] hover:border-[#3d4351] transition-all group">
+                <Icon className="w-6 h-6" style={{ color }} />
+                <span className="text-sm font-medium text-[#e2e8f0] mt-auto">{label}</span>
             </div>
         </Link>
     )
@@ -285,22 +256,19 @@ function QuickAction({ icon: Icon, label, href, color }: any) {
 
 function DashboardSkeleton() {
     return (
-        <div className="max-w-6xl mx-auto px-6 py-12 space-y-12 animate-pulse">
-            <div className="flex justify-between items-end">
-                <div className="space-y-3">
-                    <div className="h-4 w-32 bg-white/5 rounded" />
-                    <div className="h-10 w-64 bg-white/5 rounded" />
-                </div>
-                <div className="h-6 w-24 bg-white/5 rounded-full" />
+        <div className="max-w-5xl mx-auto px-6 py-8 space-y-8 animate-pulse">
+            <div className="space-y-2">
+                <div className="h-8 w-40 bg-[#1e2128] rounded" />
+                <div className="h-4 w-32 bg-[#1e2128] rounded" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[1, 2, 3].map(i => (
-                    <div key={i} className="h-40 glass-card" />
+                    <div key={i} className="h-36 bg-[#1e2128] border border-[#2d3139] rounded-xl" />
                 ))}
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="h-32 glass-card" />
+                    <div key={i} className="h-24 bg-[#1e2128] border border-[#2d3139] rounded-xl" />
                 ))}
             </div>
         </div>
@@ -309,11 +277,10 @@ function DashboardSkeleton() {
 
 function DashboardError({ onRetry }: any) {
     return (
-        <div className="max-w-xl mx-auto px-6 py-24 text-center">
-            <div className="text-6xl mb-6">😕</div>
-            <h3 className="text-xl font-bold font-syne uppercase italic text-white mb-2">Neural Link Severed</h3>
-            <p className="text-slate-400 font-body mb-8">We couldn't load your dashboard. Your neural connection might be unstable.</p>
-            <button onClick={onRetry} className="btn-primary w-full">Reconnect Interface</button>
+        <div className="max-w-md mx-auto px-6 py-20 text-center">
+            <h3 className="text-xl font-bold font-syne text-[#e2e8f0] mb-2">Something went wrong</h3>
+            <p className="text-[#94a3b8] mb-8">We couldn't load your dashboard. Please check your connection and try again.</p>
+            <button onClick={onRetry} className="btn-primary w-full">Try Again</button>
         </div>
     )
 }

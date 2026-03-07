@@ -7,7 +7,6 @@ import {
     Send,
     Paperclip,
     ArrowLeft,
-    ShieldCheck,
     Sparkles,
     Calculator,
     CheckSquare,
@@ -15,6 +14,7 @@ import {
     FileText,
     PenTool,
     Layers,
+    MessageSquare,
 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -83,12 +83,11 @@ export default function ChatConversationPage() {
     }
 
     const mode = chat?.mode || 'general'
-    const ModeIcon = MODE_ICONS[mode] || Sparkles
 
     const thinkingSteps = [
-        mode === 'syllabus' ? "🔍 Searching knowledge vault..." : "💭 Initializing neural path...",
-        mode === 'syllabus' ? "📎 Context grounding active..." : "🧠 Processing request...",
-        "✍️ Generating response..."
+        mode === 'syllabus' ? "Searching knowledge..." : "Preparing request...",
+        mode === 'syllabus' ? "Grounding in syllabus..." : "Processing...",
+        "Generating response..."
     ]
 
     async function handleSend(e?: React.FormEvent) {
@@ -97,6 +96,7 @@ export default function ChatConversationPage() {
 
         const userMsg: ChatMessage = { role: 'user', content: input }
         setMessages(prev => [...prev, userMsg])
+        const currentInput = input
         setInput('')
         setIsThinking(true)
         setThinkingStep(0)
@@ -110,7 +110,7 @@ export default function ChatConversationPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: input,
+                    message: currentInput,
                     chatId: id,
                     mode,
                     syllabusId: chat?.syllabus_id || null,
@@ -125,7 +125,7 @@ export default function ChatConversationPage() {
                 setMessages(prev => [...prev, { role: 'assistant', content: data.response }])
             }
         } catch {
-            toast.error("Neural link interrupted. Try again.")
+            toast.error("Failed to get response. Try again.")
         } finally {
             clearInterval(interval)
             setIsThinking(false)
@@ -134,124 +134,104 @@ export default function ChatConversationPage() {
 
     if (loading) {
         return (
-            <div className="flex h-[calc(100vh-3rem)] md:h-screen -m-6 md:-m-8 -mt-4 items-center justify-center">
-                <div className="space-y-4 text-center opacity-30">
-                    <div className="w-10 h-10 rounded-full border-2 border-blue-500/20 animate-spin border-t-blue-500 mx-auto" />
-                    <p className="text-[10px] font-black uppercase tracking-widest font-syne italic">Loading session...</p>
-                </div>
+            <div className="flex h-screen items-center justify-center bg-[#111318] -m-6 md:-m-8 -mt-4">
+                <div className="w-8 h-8 border-2 border-[#3b82f6]/20 border-t-[#3b82f6] rounded-full animate-spin" />
             </div>
         )
     }
 
     return (
-        <div className="flex flex-col h-[calc(100vh-3rem)] md:h-screen -m-6 md:-m-8 -mt-4 bg-[#0a0a0f] overflow-hidden">
-
-            {/* Header */}
-            <header className="p-4 border-b border-white/5 flex items-center justify-between bg-black/40 backdrop-blur-md z-10">
-                <div className="flex items-center gap-4">
-                    <Link href="/chat" className="p-2 text-white/20 hover:text-white transition-colors">
-                        <ArrowLeft className="w-4 h-4" />
-                    </Link>
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl glass-card border-blue-500/20 flex items-center justify-center">
-                            <ModeIcon className="w-4 h-4 text-blue-500" />
-                        </div>
-                        <div>
-                            <h1 className="text-sm font-black font-syne uppercase italic tracking-wide truncate max-w-xs">
-                                {chat?.title || 'Untitled Session'}
-                            </h1>
-                            <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest font-dm-sans">
-                                {mode} mode · {messages.length} messages
-                            </p>
-                        </div>
-                    </div>
+        <div className="flex flex-col h-screen bg-[#111318] overflow-hidden -m-6 md:-m-8 -mt-4">
+            {/* Top Bar */}
+            <header className="h-[52px] border-b border-[#2d3139] px-4 flex items-center bg-[#111318] sticky top-0 z-10">
+                <Link href="/chat" className="p-2 text-[#64748b] hover:text-[#e2e8f0] transition-colors mr-2">
+                    <ArrowLeft className="w-5 h-5" />
+                </Link>
+                <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-sm font-medium text-[#e2e8f0] truncate max-w-[300px]">
+                        {chat?.title || 'Untitled Session'}
+                    </span>
+                    <div className="h-4 w-[1px] bg-[#2d3139] mx-1" />
+                    <span className="text-[12px] text-[#64748b]">
+                        {mode.charAt(0).toUpperCase() + mode.slice(1)} Mode
+                    </span>
                 </div>
             </header>
 
-            {/* Messages */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 md:p-12 space-y-8 scroll-smooth pb-40">
-                <AnimatePresence mode="popLayout">
-                    {messages.map((msg, i) => (
-                        <motion.div
-                            key={msg.id || i}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                            <div className="max-w-[85%] md:max-w-[70%] space-y-2">
-                                <div className={`p-5 rounded-2xl font-dm-sans leading-relaxed text-sm ${msg.role === 'user'
-                                    ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/10 italic font-bold'
-                                    : 'glass-card border-white/5 text-white/80'
-                                    }`}>
-                                    <div className="prose prose-invert prose-sm max-w-none">
-                                        <ReactMarkdown>
-                                            {msg.content}
-                                        </ReactMarkdown>
-                                    </div>
-                                </div>
-                                <p className="text-[9px] font-black uppercase tracking-widest text-white/20 text-right px-2">
-                                    {msg.role === 'user' ? 'Student' : 'Stavlos AI'}
-                                </p>
-                            </div>
-                        </motion.div>
-                    ))}
-
-                    {isThinking && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="flex justify-start"
-                        >
-                            <div className="glass-card p-6 border-blue-500/20 max-w-xs space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="relative">
-                                        <div className="w-8 h-8 rounded-full border-2 border-blue-500/20 animate-spin border-t-blue-500" />
-                                        <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 font-syne">{thinkingSteps[thinkingStep]}</p>
-                                        <div className="flex gap-1">
-                                            {[0, 1, 2].map(dot => (
-                                                <div key={dot} className={`w-1 h-1 rounded-full ${dot <= thinkingStep ? 'bg-blue-500' : 'bg-white/10'}`} />
-                                            ))}
+            {/* Messages Container */}
+            <div ref={scrollRef} className="flex-1 overflow-y-auto pt-10 pb-40 px-6 scroll-smooth">
+                <div className="max-w-[760px] mx-auto space-y-8">
+                    <AnimatePresence mode="popLayout">
+                        {messages.map((msg, i) => (
+                            <motion.div
+                                key={msg.id || i}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                            >
+                                <div className={`${msg.role === 'user' ? 'max-w-[70%]' : 'max-w-[85%]'}`}>
+                                    <div className={`p-4 rounded-2xl text-[14px] leading-[1.7] font-dm-sans ${msg.role === 'user'
+                                            ? 'bg-[#1e2128] border border-[#2d3139] text-[#e2e8f0] rounded-tr-[4px]'
+                                            : 'text-[#e2e8f0] bg-[#161b22] border border-[#2d3139] rounded-tl-[4px]'
+                                        }`}>
+                                        <div className="prose prose-invert prose-sm max-w-none">
+                                            <ReactMarkdown>{msg.content}</ReactMarkdown>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                            </motion.div>
+                        ))}
+
+                        {isThinking && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="flex justify-start"
+                            >
+                                <div className="bg-[#161b22] border border-[#2d3139] rounded-2xl rounded-tl-[4px] p-4 flex items-center gap-3">
+                                    <div className="w-4 h-4 border-2 border-[#3b82f6]/20 border-t-[#3b82f6] rounded-full animate-spin" />
+                                    <span className="text-[12px] font-medium text-[#3b82f6]">{thinkingSteps[thinkingStep]}</span>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             </div>
 
-            {/* Input Hub */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/90 to-transparent">
-                <div className="max-w-4xl mx-auto relative group">
-                    <form
-                        onSubmit={handleSend}
-                        className="glass-card p-2 pr-4 border-white/10 group-focus-within:border-blue-500/50 transition-all flex items-end gap-2"
-                    >
-                        <button type="button" className="p-3 text-white/20 hover:text-white transition-colors">
-                            <Paperclip className="w-5 h-5" />
-                        </button>
-                        <textarea
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                            placeholder="Continue the conversation..."
-                            className="flex-1 bg-transparent border-none outline-none resize-none py-3 text-sm font-dm-sans placeholder:text-white/10 min-h-[44px] max-h-40"
-                            rows={1}
-                        />
+            {/* Fixed Input Area */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-[#111318] via-[#111318]/90 tracking-tight">
+                <div className="max-w-[760px] mx-auto bg-[#1e2128] border border-[#2d3139] rounded-xl p-3 focus-within:border-[#3d4351] transition-all">
+                    <textarea
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSend();
+                            }
+                        }}
+                        placeholder="Continue the conversation..."
+                        rows={1}
+                        className="w-full bg-transparent border-none outline-none resize-none px-2 py-1 text-[14px] text-[#e2e8f0] placeholder-[#64748b] min-h-[24px] max-h-40"
+                    />
+                    <div className="flex items-center justify-between mt-2 px-1">
+                        <div className="flex items-center gap-2">
+                            <button type="button" className="p-1.5 text-[#64748b] hover:text-[#e2e8f0] transition-colors rounded-md hover:bg-white/5">
+                                <Paperclip className="w-[18px] h-[18px]" />
+                            </button>
+                            <div className="px-2 py-0.5 bg-[#161b22] text-[#64748b] text-[11px] font-medium rounded">
+                                {mode.charAt(0).toUpperCase() + mode.slice(1)} Mode
+                            </div>
+                        </div>
                         <button
-                            type="submit"
+                            onClick={handleSend}
                             disabled={!input.trim() || isThinking}
-                            className={`p-3 rounded-xl transition-all ${input.trim() && !isThinking
-                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40 hover:scale-110 active:scale-95'
-                                : 'text-white/10'
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${input.trim() && !isThinking ? 'bg-[#3b82f6] text-white shadow-lg' : 'bg-[#2d3139] text-[#64748b]'
                                 }`}
                         >
-                            <Send className="w-5 h-5" />
+                            <Send className="w-4 h-4" />
                         </button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>

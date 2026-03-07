@@ -9,14 +9,13 @@ import {
     Plus,
     Search,
     MessageSquare,
+    Sparkles,
+    BookOpen,
     Calculator,
     CheckSquare,
-    BookOpen,
     FileText,
     PenTool,
     Layers,
-    ShieldCheck,
-    Sparkles
 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
@@ -48,15 +47,6 @@ interface ChatItem {
     updated_at: string
 }
 
-function timeAgo(dateStr: string): string {
-    const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
-    if (seconds < 60) return 'just now'
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`
-    return new Date(dateStr).toLocaleDateString()
-}
-
 function ChatClient() {
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [input, setInput] = useState('')
@@ -78,8 +68,7 @@ function ChatClient() {
         loadSyllabuses()
         loadChatHistory()
 
-        // Check if a syllabus context was passed via URL
-        const contextId = searchParams.get('context')
+        const contextId = searchParams.get('syllabus')
         if (contextId) {
             setActiveMode('syllabus')
             setSelectedSyllabus(contextId)
@@ -136,9 +125,9 @@ function ChatClient() {
     }
 
     const thinkingSteps = [
-        activeMode === 'syllabus' ? "🔍 Searching knowledge vault..." : "💭 Initializing neural path...",
-        activeMode === 'syllabus' ? "📎 Context grounding active..." : "🧠 Processing request...",
-        "✍️ Generating response..."
+        activeMode === 'syllabus' ? "Searching knowledge..." : "Preparing request...",
+        activeMode === 'syllabus' ? "Grounding in syllabus..." : "Processing...",
+        "Generating response..."
     ]
 
     async function handleSend(e?: React.FormEvent) {
@@ -147,6 +136,7 @@ function ChatClient() {
 
         const userMsg: ChatMessage = { role: 'user', content: input }
         setMessages(prev => [...prev, userMsg])
+        const currentInput = input
         setInput('')
         setIsThinking(true)
         setThinkingStep(0)
@@ -160,7 +150,7 @@ function ChatClient() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: input,
+                    message: currentInput,
                     chatId,
                     mode: activeMode,
                     syllabusId: activeMode === 'syllabus' ? selectedSyllabus : null,
@@ -178,13 +168,12 @@ function ChatClient() {
                 setMessages(prev => [...prev, { role: 'assistant', content: data.response }])
             }
 
-            // Track chatId for subsequent messages
             if (data.chatId && !chatId) {
                 setChatId(data.chatId)
-                loadChatHistory() // Refresh sidebar
+                loadChatHistory()
             }
         } catch (error: any) {
-            toast.error(error.message || "Stavlos Neural Link interrupted. Try again.")
+            toast.error(error.message || "Failed to get response. Try again.")
         } finally {
             clearInterval(interval)
             setIsThinking(false)
@@ -195,7 +184,6 @@ function ChatClient() {
         ? chatHistory.filter(c => c.title?.toLowerCase().includes(searchQuery.toLowerCase()))
         : chatHistory
 
-    // Group chats by date
     const today = new Date().toDateString()
     const yesterday = new Date(Date.now() - 86400000).toDateString()
     const todayChats = filteredHistory.filter(c => new Date(c.updated_at).toDateString() === today)
@@ -206,205 +194,178 @@ function ChatClient() {
     })
 
     return (
-        <div className="flex h-[calc(100vh-3rem)] md:h-screen bg-[#0a0a0f] overflow-hidden -m-6 md:-m-8 -mt-4">
-
-            {/* Left Desktop History Sidebar */}
-            <aside className="hidden lg:flex flex-col w-80 border-r border-white/5 bg-black/20 backdrop-blur-xl">
-                <div className="p-6 space-y-4">
+        <div className="flex h-screen bg-[#111318] overflow-hidden -m-6 md:-m-8 -mt-4">
+            {/* Left History Panel */}
+            <aside className="hidden lg:flex flex-col w-[260px] bg-[#0d1117] border-r border-[#2d3139]">
+                <div className="p-4 space-y-4">
                     <button
                         onClick={startNewChat}
-                        className="btn-primary w-full py-2.5 text-xs font-syne uppercase tracking-widest italic group"
+                        className="flex items-center gap-2 w-full h-10 px-4 bg-[#1e2128] border border-[#2d3139] hover:bg-[#262b35] text-[#e2e8f0] rounded-lg text-sm font-medium transition-all"
                     >
-                        <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" /> New Session
+                        <Plus className="w-4 h-4" />
+                        <span>New Chat</span>
                     </button>
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
                         <input
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Find session..."
-                            className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-xs font-dm-sans placeholder:text-white/10 focus:border-blue-500/50 outline-none transition-all"
+                            placeholder="Search chats"
+                            className="w-full bg-[#1a1f27] border border-[#2d3139] rounded-lg h-9 pl-9 pr-4 text-[13px] text-[#e2e8f0] placeholder-[#64748b] outline-none focus:border-[#3b82f6] transition-all"
                         />
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-4 space-y-6 scrollbar-hide">
+                <div className="flex-1 overflow-y-auto px-2 space-y-6 pb-4 scrollbar-hide">
                     {todayChats.length > 0 && (
-                        <ChatGroup label="Today" chats={todayChats} activeChatId={chatId} onSelect={loadChat} />
+                        <ChatHistoryGroup label="Today" chats={todayChats} activeChatId={chatId} onSelect={loadChat} />
                     )}
                     {yesterdayChats.length > 0 && (
-                        <ChatGroup label="Yesterday" chats={yesterdayChats} activeChatId={chatId} onSelect={loadChat} />
+                        <ChatHistoryGroup label="Yesterday" chats={yesterdayChats} activeChatId={chatId} onSelect={loadChat} />
                     )}
                     {olderChats.length > 0 && (
-                        <ChatGroup label="Earlier" chats={olderChats} activeChatId={chatId} onSelect={loadChat} />
-                    )}
-                    {filteredHistory.length === 0 && (
-                        <div className="text-center py-12 space-y-3 opacity-30">
-                            <MessageSquare className="w-8 h-8 mx-auto" />
-                            <p className="text-[10px] font-black uppercase tracking-widest font-syne italic">
-                                {searchQuery ? 'No matches' : 'No sessions yet'}
-                            </p>
-                        </div>
+                        <ChatHistoryGroup label="This Week" chats={olderChats} activeChatId={chatId} onSelect={loadChat} />
                     )}
                 </div>
             </aside>
 
-            {/* Main Chat Area */}
-            <main className="flex-1 flex flex-col relative">
+            {/* Main Chat Content */}
+            <main className="flex-1 flex flex-col relative bg-[#111318]">
+                {/* Top Action Bar */}
+                <header className="h-[52px] border-b border-[#2d3139] px-5 flex items-center justify-between bg-[#111318] sticky top-0 z-10">
+                    <div className="flex items-center gap-5 min-w-0">
+                        <span className="text-sm font-medium text-[#e2e8f0] truncate max-w-[200px]">
+                            {chatId ? chatHistory.find(c => c.id === chatId)?.title || 'Chat' : 'New Chat'}
+                        </span>
 
-                {/* Top Nav / Mode Selector */}
-                <header className="p-4 border-b border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 bg-black/40 backdrop-blur-md z-10">
-                    <div className="flex bg-white/5 p-1 rounded-xl overflow-x-auto no-scrollbar max-w-full">
-                        {MODES.map(mode => (
-                            <button
-                                key={mode.id}
-                                onClick={() => setActiveMode(mode.id)}
-                                className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeMode === mode.id
-                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                                    : 'text-white/30 hover:text-white/60'
-                                    }`}
-                            >
-                                <mode.icon className="w-3 h-3" />
-                                <span className="font-syne italic">{mode.label}</span>
-                            </button>
-                        ))}
+                        <div className="hidden md:flex items-center gap-2">
+                            <div className="h-4 w-[1px] bg-[#2d3139] mx-1" />
+                            <div className="flex items-center gap-1">
+                                {MODES.map(mode => (
+                                    <button
+                                        key={mode.id}
+                                        onClick={() => setActiveMode(mode.id)}
+                                        className={`px-3 h-7 rounded-full text-[12px] font-medium transition-all ${activeMode === mode.id
+                                                ? 'bg-[#1e2128] border border-[#3b82f6] text-[#3b82f6]'
+                                                : 'text-[#64748b] hover:text-[#e2e8f0]'
+                                            }`}
+                                    >
+                                        {mode.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
-                    {activeMode === 'syllabus' && (
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black text-white/20 uppercase font-syne italic">Context:</span>
+                    <div className="flex items-center gap-4">
+                        {activeMode === 'syllabus' && syllabuses.length > 0 && (
                             <select
                                 value={selectedSyllabus}
                                 onChange={(e) => setSelectedSyllabus(e.target.value)}
-                                className="bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-[10px] font-bold text-blue-400 uppercase tracking-widest outline-none focus:border-blue-500/50"
+                                className="bg-transparent text-[12px] font-medium text-[#3b82f6] outline-none"
                             >
                                 {syllabuses.map(s => (
                                     <option key={s.id} value={s.id}>{s.course_name}</option>
                                 ))}
                             </select>
-                        </div>
-                    )}
+                        )}
+                        <span className="text-[12px] text-[#64748b]">Llama 3.3 70B</span>
+                    </div>
                 </header>
 
-                {/* Messages Panel */}
-                <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 md:p-12 space-y-8 scroll-smooth pb-40">
-                    <AnimatePresence mode="popLayout">
-                        {messages.length === 0 && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="h-full flex flex-col items-center justify-center text-center space-y-6 opacity-40 py-20"
-                            >
-                                <div className="w-20 h-20 rounded-[2.5rem] glass-card border-blue-500/30 flex items-center justify-center">
-                                    <Sparkles className="w-10 h-10 text-blue-500" />
-                                </div>
-                                <div>
-                                    <h2 className="text-2xl font-black font-syne uppercase italic tracking-widest">Neural Link Idle</h2>
-                                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.4em] mt-2">Ready to assist your academic journey</p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3 max-w-sm">
-                                    {["Summarize notes", "Explain concepts", "Math help", "Essay outline"].map(chip => (
-                                        <button
-                                            key={chip}
-                                            onClick={() => { setInput(chip); }}
-                                            className="px-4 py-2 glass-card hover:border-blue-500/50 text-[9px] font-bold uppercase tracking-widest transition-all cursor-pointer"
-                                        >
-                                            {chip}
-                                        </button>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {messages.map((msg, i) => (
-                            <motion.div
-                                key={msg.id || i}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                            >
-                                <div className="max-w-[85%] md:max-w-[70%] space-y-2">
-                                    <div className={`p-5 rounded-2xl font-dm-sans leading-relaxed text-sm ${msg.role === 'user'
-                                        ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/10 italic font-bold'
-                                        : 'glass-card border-white/5 text-white/80'
-                                        }`}>
-                                        <div className="prose prose-invert prose-sm max-w-none">
-                                            <ReactMarkdown>
-                                                {msg.content}
-                                            </ReactMarkdown>
-                                        </div>
+                {/* Messages Container */}
+                <div ref={scrollRef} className="flex-1 overflow-y-auto pt-10 pb-40 px-6 scroll-smooth">
+                    <div className="max-w-[760px] mx-auto space-y-8">
+                        <AnimatePresence mode="popLayout">
+                            {messages.length === 0 && (
+                                <div className="py-20 flex flex-col items-center justify-center text-center space-y-8">
+                                    <div className="w-12 h-12 rounded-xl bg-[#1e2128] border border-[#2d3139] flex items-center justify-center">
+                                        <MessageSquare className="w-6 h-6 text-[#2d3139]" />
                                     </div>
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-white/20 text-right px-2">
-                                        {msg.role === 'user' ? 'Student' : 'Stavlos AI'}
-                                    </p>
+                                    <h2 className="text-[22px] font-semibold font-syne text-[#e2e8f0]">What do you want to study?</h2>
+                                    <div className="flex flex-wrap justify-center gap-2 max-w-lg">
+                                        {["When is my exam?", "Summarize my notes", "Solve a math problem", "Fix my grammar"].map(chip => (
+                                            <button
+                                                key={chip}
+                                                onClick={() => { setInput(chip); handleSend(); }}
+                                                className="px-4 h-9 bg-[#1e2128] border border-[#2d3139] hover:border-[#3b82f6] rounded-full text-[13px] text-[#94a3b8] hover:text-[#e2e8f0] transition-all"
+                                            >
+                                                {chip}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </motion.div>
-                        ))}
+                            )}
 
-                        {isThinking && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="flex justify-start"
-                            >
-                                <div className="glass-card p-6 border-blue-500/20 max-w-xs space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="relative">
-                                            <div className="w-8 h-8 rounded-full border-2 border-blue-500/20 animate-spin border-t-blue-500" />
-                                            <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 font-syne">{thinkingSteps[thinkingStep]}</p>
-                                            <div className="flex gap-1">
-                                                {[0, 1, 2].map(dot => (
-                                                    <div key={dot} className={`w-1 h-1 rounded-full ${dot <= thinkingStep ? 'bg-blue-500' : 'bg-white/10'}`} />
-                                                ))}
+                            {messages.map((msg, i) => (
+                                <motion.div
+                                    key={msg.id || i}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                >
+                                    <div className={`${msg.role === 'user' ? 'max-w-[70%]' : 'max-w-[85%]'}`}>
+                                        <div className={`p-4 rounded-2xl text-[14px] leading-[1.7] font-dm-sans ${msg.role === 'user'
+                                                ? 'bg-[#1e2128] border border-[#2d3139] text-[#e2e8f0] rounded-tr-[4px]'
+                                                : 'text-[#e2e8f0] bg-[#161b22] border border-[#2d3139] rounded-tl-[4px]'
+                                            }`}>
+                                            <div className="prose prose-invert prose-sm max-w-none">
+                                                <ReactMarkdown>{msg.content}</ReactMarkdown>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                                </motion.div>
+                            ))}
+
+                            {isThinking && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="flex justify-start"
+                                >
+                                    <div className="bg-[#161b22] border border-[#2d3139] rounded-2xl rounded-tl-[4px] p-4 flex items-center gap-3">
+                                        <div className="w-4 h-4 border-2 border-[#3b82f6]/20 border-t-[#3b82f6] rounded-full animate-spin" />
+                                        <span className="text-[12px] font-medium text-[#3b82f6]">{thinkingSteps[thinkingStep]}</span>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
 
-                {/* Input Hub */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/90 to-transparent">
-                    <div className="max-w-4xl mx-auto relative group">
-                        <form
-                            onSubmit={handleSend}
-                            className="glass-card p-2 pr-4 border-white/10 group-focus-within:border-blue-500/50 transition-all flex items-end gap-2"
-                        >
-                            <button type="button" className="p-3 text-white/20 hover:text-white transition-colors">
-                                <Paperclip className="w-5 h-5" />
-                            </button>
-                            <textarea
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                                placeholder="Ask anything about your courses..."
-                                className="flex-1 bg-transparent border-none outline-none resize-none py-3 text-sm font-dm-sans placeholder:text-white/10 min-h-[44px] max-h-40"
-                                rows={1}
-                            />
-                            <button
-                                type="submit"
-                                disabled={!input.trim() || isThinking}
-                                className={`p-3 rounded-xl transition-all ${input.trim() && !isThinking
-                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40 hover:scale-110 active:scale-95'
-                                    : 'text-white/10'
-                                    }`}
-                            >
-                                <Send className="w-5 h-5" />
-                            </button>
-                        </form>
-                        <div className="mt-4 flex items-center justify-between px-2">
-                            <div className="flex items-center gap-3">
-                                <div className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-blue-500 animate-pulse" />
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-blue-400 font-syne">Mode: {activeMode}</span>
+                {/* Fixed Input Area */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-[#111318] via-[#111318]/90 tracking-tight">
+                    <div className="max-w-[760px] mx-auto bg-[#1e2128] border border-[#2d3139] rounded-xl p-3 focus-within:border-[#3d4351] transition-all">
+                        <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSend();
+                                }
+                            }}
+                            placeholder="Ask anything..."
+                            rows={1}
+                            className="w-full bg-transparent border-none outline-none resize-none px-2 py-1 text-[14px] text-[#e2e8f0] placeholder-[#64748b] min-h-[24px] max-h-40"
+                        />
+                        <div className="flex items-center justify-between mt-2 px-1">
+                            <div className="flex items-center gap-2">
+                                <button type="button" className="p-1.5 text-[#64748b] hover:text-[#e2e8f0] transition-colors rounded-md hover:bg-white/5">
+                                    <Paperclip className="w-[18px] h-[18px]" />
+                                </button>
+                                <div className="px-2 py-0.5 bg-[#161b22] text-[#64748b] text-[11px] font-medium rounded">
+                                    {activeMode.charAt(0).toUpperCase() + activeMode.slice(1)} Mode
                                 </div>
                             </div>
-                            <span className="text-[8px] font-black text-white/10 uppercase tracking-widest font-syne italic">Stavlos AI</span>
+                            <button
+                                onClick={handleSend}
+                                disabled={!input.trim() || isThinking}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${input.trim() && !isThinking ? 'bg-[#3b82f6] text-white shadow-lg' : 'bg-[#2d3139] text-[#64748b]'
+                                    }`}
+                            >
+                                <Send className="w-4 h-4" />
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -413,48 +374,35 @@ function ChatClient() {
     )
 }
 
-export default function ChatPage() {
-    return (
-        <Suspense fallback={
-            <div className="flex items-center justify-center h-[calc(100vh-3rem)]">
-                <div className="w-8 h-8 rounded-full border-2 border-blue-500/20 animate-spin border-t-blue-500" />
-            </div>
-        }>
-            <ChatClient />
-        </Suspense>
-    )
-}
-
-function ChatGroup({ label, chats, activeChatId, onSelect }: {
+function ChatHistoryGroup({ label, chats, activeChatId, onSelect }: {
     label: string
     chats: ChatItem[]
     activeChatId: string | null
     onSelect: (id: string) => void
 }) {
     return (
-        <section className="space-y-2">
-            <h3 className="px-2 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 font-syne italic">{label}</h3>
-            <div className="space-y-1">
-                {chats.map(chat => (
-                    <button
-                        key={chat.id}
-                        onClick={() => onSelect(chat.id)}
-                        className={`w-full text-left px-4 py-3 rounded-xl group transition-all border ${chat.id === activeChatId
-                            ? 'bg-white/5 border-blue-500/20'
-                            : 'border-transparent hover:bg-white/5 hover:border-white/5'
-                            }`}
-                    >
-                        <p className={`text-xs font-bold truncate font-dm-sans italic ${chat.id === activeChatId ? 'text-blue-400' : 'text-white/60 group-hover:text-blue-400'}`}>
-                            {chat.title || 'Untitled Session'}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[9px] text-white/20 font-black uppercase tracking-tighter">{chat.mode} Mode</span>
-                            <span className="text-[9px] text-white/10">·</span>
-                            <span className="text-[9px] text-white/15 font-dm-sans">{timeAgo(chat.updated_at)}</span>
-                        </div>
-                    </button>
-                ))}
-            </div>
+        <section className="space-y-1">
+            <h3 className="px-3 py-2 text-[11px] font-medium text-[#64748b] uppercase tracking-wider">{label}</h3>
+            {chats.map(chat => (
+                <button
+                    key={chat.id}
+                    onClick={() => onSelect(chat.id)}
+                    className={`nav-item w-full h-9 flex items-center px-3 rounded-md text-[13px] truncate transition-all ${chat.id === activeChatId
+                            ? 'bg-[#1e2128] text-[#e2e8f0] border-l-2 border-[#3b82f6] rounded-l-none'
+                            : 'text-[#94a3b8] hover:bg-[#1e2128] hover:text-[#e2e8f0]'
+                        }`}
+                >
+                    <span className="truncate">{chat.title || 'Untitled Chat'}</span>
+                </button>
+            ))}
         </section>
+    )
+}
+
+export default function ChatPage() {
+    return (
+        <Suspense fallback={<div className="h-screen bg-[#111318]" />}>
+            <ChatClient />
+        </Suspense>
     )
 }

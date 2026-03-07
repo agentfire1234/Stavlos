@@ -10,7 +10,6 @@ import {
     Check,
     RotateCcw,
     Loader2,
-    ChevronRight,
     Layout
 } from 'lucide-react'
 import Link from 'next/link'
@@ -51,30 +50,32 @@ export default function EssayOutlinerPage() {
     }
 
     return (
-        <div className="max-w-5xl mx-auto px-6 py-12 space-y-12">
-            <Link href="/tools" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-purple-500 transition-colors font-syne italic">
-                <ArrowLeft className="w-3 h-3" /> Back to Toolbox
+        <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+            <Link href="/tools" className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#64748b] hover:text-[#e2e8f0] transition-colors font-syne">
+                <ArrowLeft className="w-4 h-4" /> Back to Tools
             </Link>
 
-            <header className="space-y-2">
-                <div className="w-12 h-12 rounded-2xl glass-card border-purple-500/20 flex items-center justify-center mb-6">
+            <header className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
                     <PenTool className="w-6 h-6 text-purple-500" />
                 </div>
-                <h1 className="text-4xl font-black font-syne uppercase italic tracking-tight">Essay <span className="text-purple-500 text-glow-purple">Outliner</span></h1>
-                <p className="text-xs font-bold font-dm-sans text-white/30 italic">Generate structured academic plans with PEEL and 5-paragraph frameworks.</p>
+                <div className="space-y-1">
+                    <h1 className="text-2xl font-bold font-syne text-[#e2e8f0]">Essay Outliner</h1>
+                    <p className="text-[15px] font-medium text-[#94a3b8]">Generate structured academic plans with PEEL and 5-paragraph frameworks.</p>
+                </div>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-[240px,1fr] gap-8">
                 {/* Inputs */}
-                <div className="lg:col-span-1 space-y-6">
-                    <div className="space-y-4">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-white/20 font-syne italic">Framework</label>
-                        <div className="flex flex-col gap-2">
+                <aside className="space-y-6">
+                    <div className="space-y-3">
+                        <label className="text-[11px] font-semibold uppercase tracking-wider text-[#64748b] font-syne px-1">Framework</label>
+                        <div className="space-y-1.5">
                             {['PEEL', '5-Paragraph', 'Argumentative', 'Compare'].map(s => (
                                 <button
                                     key={s}
                                     onClick={() => setStructure(s)}
-                                    className={`w-full py-3 px-4 text-[9px] font-black uppercase tracking-widest font-syne italic rounded-xl border text-left transition-all flex items-center justify-between ${structure === s ? 'bg-purple-600/10 border-purple-500/50 text-purple-400' : 'bg-white/5 border-white/5 text-white/20 hover:text-white/40'
+                                    className={`w-full py-2.5 px-3.5 text-[13px] font-semibold rounded-lg border text-left transition-all flex items-center justify-between ${structure === s ? 'bg-purple-500/10 border-purple-500/30 text-purple-400' : 'bg-white/5 border-white/5 text-[#64748b] hover:text-[#e2e8f0] hover:bg-white/10'
                                         }`}
                                 >
                                     {s}
@@ -83,25 +84,25 @@ export default function EssayOutlinerPage() {
                             ))}
                         </div>
                     </div>
-                </div>
+                </aside>
 
                 {/* Textarea Area */}
-                <div className="lg:col-span-3 space-y-6">
-                    <div className="glass-card p-2 border-white/10 focus-within:border-purple-500/50 transition-all">
+                <div className="space-y-6">
+                    <div className="bg-[#1e2128] border border-[#2d3139] rounded-xl p-2 focus-within:border-purple-500/50 transition-all">
                         <textarea
                             value={topic}
                             onChange={(e) => setTopic(e.target.value)}
                             placeholder="Describe your essay topic in detail..."
-                            className="w-full bg-transparent border-none outline-none resize-none p-4 text-sm font-dm-sans italic min-h-[160px] placeholder:text-white/10"
+                            className="w-full bg-transparent border-none outline-none resize-none p-4 text-[15px] text-[#e2e8f0] min-h-[180px] placeholder:text-[#475569]"
                         />
                     </div>
 
                     <button
                         onClick={handleGenerate}
                         disabled={loading || !topic.trim()}
-                        className="btn-primary w-full py-4 bg-purple-600 hover:bg-purple-500 border-none shadow-purple-500/20 text-sm font-black uppercase tracking-[0.3em] font-syne italic"
+                        className="w-full h-12 bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:hover:bg-purple-500 rounded-xl text-[14px] font-semibold text-[#111318] flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-500/10"
                     >
-                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Construct Infrastructure <Layout className="w-4 h-4 ml-2" /></>}
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Generate Outline <Layout className="w-4 h-4" /></>}
                     </button>
                 </div>
             </div>
@@ -113,22 +114,25 @@ export default function EssayOutlinerPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="space-y-6"
                     >
-                        <div className="flex items-center justify-between px-2">
-                            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 font-syne italic">Neural Infrastructure</h2>
-                            <button onClick={copy} className="text-[10px] font-bold text-purple-500 hover:underline uppercase tracking-widest font-dm-sans flex items-center gap-2">
-                                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {copied ? 'Copied' : 'Copy Outline'}
+                        <div className="flex items-center justify-between px-1">
+                            <h2 className="text-[12px] font-semibold uppercase tracking-wider text-[#64748b]">Essay Outline</h2>
+                            <button onClick={copy} className="text-[12px] font-semibold text-purple-500 hover:text-purple-400 flex items-center gap-2 transition-colors">
+                                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} {copied ? 'Copied' : 'Copy outline'}
                             </button>
                         </div>
-                        <div className="glass-card p-12 relative group bg-purple-500/[0.01]">
-                            <div className="prose prose-invert prose-sm max-w-none font-dm-sans leading-relaxed italic">
+                        <div className="bg-[#1e2128] border border-[#2d3139] rounded-xl p-10 relative group bg-purple-500/[0.01]">
+                            <div className="absolute top-0 right-0 p-8 opacity-5 -rotate-12 group-hover:rotate-0 transition-transform duration-500">
+                                <PenTool className="w-32 h-32 text-purple-500" />
+                            </div>
+                            <div className="prose prose-invert prose-sm max-w-none text-[#e2e8f0] leading-relaxed relative z-10">
                                 <ReactMarkdown>{outline}</ReactMarkdown>
                             </div>
                         </div>
                         <button
                             onClick={() => { setOutline(''); setTopic(''); }}
-                            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-white mx-auto font-syne italic mt-2"
+                            className="flex items-center gap-2 text-[13px] font-semibold text-[#64748b] hover:text-[#e2e8f0] mx-auto transition-colors"
                         >
-                            <RotateCcw className="w-3 h-3" /> Purge Outline
+                            <RotateCcw className="w-4 h-4" /> Reset and clear
                         </button>
                     </motion.div>
                 )}

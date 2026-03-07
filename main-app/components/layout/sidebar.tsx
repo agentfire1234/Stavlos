@@ -10,8 +10,8 @@ import {
     BookOpen,
     Wrench,
     Settings,
-    Zap,
-    User
+    Plus,
+    Zap
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -44,69 +44,86 @@ export function Sidebar() {
         getProfile()
     }, [])
 
-    if (pathname === '/' || pathname.startsWith('/auth') || pathname === '/login' || pathname === '/signup' || pathname === '/offline' || pathname === '/pricing' || pathname.startsWith('/legal') || pathname === '/terms' || pathname === '/privacy' || pathname.startsWith('/waitlist')) return null
+    if (pathname === '/' ||
+        pathname.startsWith('/auth') ||
+        pathname === '/login' ||
+        pathname === '/signup' ||
+        pathname === '/offline' ||
+        pathname === '/pricing' ||
+        pathname.startsWith('/legal') ||
+        pathname === '/terms' ||
+        pathname === '/privacy' ||
+        pathname.startsWith('/waitlist')) return null
 
     return (
-        <aside className="hidden md:flex flex-col w-60 bg-[#0a0a0f] border-r border-white/8 fixed h-screen z-50">
+        <aside className="hidden md:flex flex-col w-[240px] bg-[#0d1117] border-r border-[#2d3139] fixed h-screen z-50">
             {/* Logo */}
-            <div className="p-8">
-                <Link href="/dashboard" className="flex items-center gap-2 group">
-                    <Logo size={32} className="text-white group-hover:text-blue-500 transition-colors" />
+            <div className="p-5 pb-6">
+                <Link href="/dashboard" className="block w-fit">
+                    <Logo size={32} className="text-white" />
+                </Link>
+            </div>
+
+            {/* New Chat Button */}
+            <div className="px-4 mb-6">
+                <Link
+                    href="/chat"
+                    className="flex items-center gap-2 w-full h-10 px-4 bg-[#1e2128] border border-[#2d3139] hover:bg-[#262b35] text-[#e2e8f0] rounded-lg text-sm font-medium transition-all"
+                >
+                    <Plus className="w-4 h-4" />
+                    <span>New Chat</span>
                 </Link>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-4 space-y-1">
+            <nav className="flex-1 px-3 space-y-1">
                 {navItems.map((item) => {
                     const isActive = pathname.startsWith(item.href)
                     return (
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group ${isActive
-                                ? 'bg-white/5 text-white border border-white/8 shadow-[0_0_20px_rgba(59,130,246,0.1)]'
-                                : 'text-slate-400 hover:text-white hover:bg-white/5'
-                                }`}
+                            className={`sidebar-link ${isActive ? 'sidebar-link-active' : ''}`}
                         >
-                            <item.icon className={`w-5 h-5 transition-colors ${isActive ? 'text-blue-500' : 'group-hover:text-blue-400'}`} />
-                            <span className="font-body">{item.label}</span>
+                            <item.icon className={`w-[18px] h-[18px] mr-[10px] ${isActive ? 'text-[#3b82f6]' : ''}`} />
+                            <span>{item.label}</span>
                         </Link>
                     )
                 })}
             </nav>
 
-            <div className="p-4 border-t border-white/8 space-y-4">
+            {/* Bottom Section */}
+            <div className="p-5 space-y-4">
                 {/* Upgrade Button */}
                 {profile && !profile.is_pro && (
                     <Link
                         href="/settings/billing"
-                        className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(59,130,246,0.4)]"
+                        className="flex items-center justify-center gap-2 w-full h-10 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-[13px] font-medium rounded-lg transition-all"
                     >
-                        <Zap className="w-4 h-4 fill-white" />
-                        <span className="text-sm">Upgrade to Pro</span>
+                        <span>Upgrade to Pro</span>
                     </Link>
                 )}
 
-                {/* User Info */}
-                <div className="flex items-center justify-between px-2">
-                    <Link href="/settings/profile" className="flex items-center gap-3 group overflow-hidden">
-                        <div className="w-10 h-10 rounded-full glass-card border-white/10 flex items-center justify-center font-bold text-xs uppercase flex-shrink-0 group-hover:border-blue-500/50 transition-all">
+                {/* User Row */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="w-8 h-8 rounded-full bg-[#1e2128] flex items-center justify-center font-bold text-[10px] text-[#e2e8f0] flex-shrink-0">
                             {profile?.avatar_url ? (
-                                <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                                <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
                             ) : (
-                                profile?.display_name?.slice(0, 2) || <User className="w-5 h-5 text-slate-500" />
+                                profile?.display_name?.slice(0, 2).toUpperCase() || 'ST'
                             )}
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className="text-sm font-semibold text-white truncate font-body">
+                            <span className="text-sm font-medium text-[#e2e8f0] truncate">
                                 {profile?.display_name || 'Loading...'}
                             </span>
-                            <span className={`text-[10px] font-bold uppercase tracking-widest ${profile?.is_pro ? 'text-blue-400' : 'text-slate-500'}`}>
-                                {profile?.is_pro ? 'Pro Plan' : 'Free Plan'}
+                            <span className="text-[11px] text-[#64748b] font-medium">
+                                {profile?.is_pro ? 'PRO' : 'FREE PLAN'}
                             </span>
                         </div>
-                    </Link>
-                    <Link href="/settings" className="text-slate-500 hover:text-white transition-colors">
+                    </div>
+                    <Link href="/settings" className="text-[#64748b] hover:text-[#e2e8f0] transition-colors">
                         <Settings className="w-5 h-5" />
                     </Link>
                 </div>

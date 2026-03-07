@@ -5,16 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import {
     Upload,
-    FileText,
-    Zap,
     Trash2,
     Loader2,
-    CheckCircle2,
     BookOpen,
     ArrowRight,
     Search,
-    BrainCircuit,
-    Cpu
+    FileText,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useDropzone } from 'react-dropzone'
@@ -54,7 +50,7 @@ export default function SyllabusPage() {
 
     async function handleUpload(files: File[]) {
         if (!courseName.trim()) {
-            toast.error("Enter course name first, student.")
+            toast.error("Please enter a course name first.")
             return
         }
 
@@ -63,13 +59,12 @@ export default function SyllabusPage() {
         setUploadStep(0)
 
         const steps = [
-            "📄 Extracting text layers...",
-            "✂️ Neural chunking active...",
-            "🧠 Vectorizing synapses...",
-            "✅ Knowledge Vault synced!"
+            "Extracted text",
+            "Chunking content",
+            "Creating embeddings",
+            "Complete"
         ]
 
-        // Simulate steps for UI feedback
         const interval = setInterval(() => {
             setUploadStep(prev => (prev < 3 ? prev + 1 : prev))
         }, 1500)
@@ -86,11 +81,11 @@ export default function SyllabusPage() {
 
             if (!res.ok) throw new Error()
 
-            toast.success("Syllabus integrated into the Student OS.")
+            toast.success("Syllabus uploaded successfully.")
             setCourseName('')
             loadSyllabuses()
         } catch (error) {
-            toast.error("Neural upload failed. File too large?")
+            toast.error("Upload failed. Please try again.")
         } finally {
             clearInterval(interval)
             setIsUploading(false)
@@ -100,149 +95,145 @@ export default function SyllabusPage() {
     async function deleteSyllabus(id: string) {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
+
+        const confirmDelete = confirm("Are you sure you want to delete this syllabus?")
+        if (!confirmDelete) return
+
         const { error } = await supabase.from('syllabuses').delete().eq('id', id).eq('user_id', user.id)
-        if (error) toast.error("Could not purge data.")
+        if (error) toast.error("Could not delete syllabus.")
         else {
-            toast.success("Unit purged from vault.")
+            toast.success("Syllabus removed.")
             loadSyllabuses()
         }
     }
 
     return (
-        <div className="max-w-6xl mx-auto px-6 py-12 space-y-12">
-
-            <header className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 font-syne italic leading-none">RAG Infrastructure</p>
-                <h1 className="text-5xl font-black font-syne uppercase italic tracking-tight">The Knowledge <span className="text-purple-500">Vault</span></h1>
+        <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+            <header>
+                <h1 className="text-2xl font-bold font-syne text-[#e2e8f0]">My Syllabi</h1>
+                <p className="text-[15px] text-[#94a3b8] font-medium mt-1">
+                    Manage your course materials and AI knowledge base.
+                </p>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-
-                {/* Left: Upload Zone */}
-                <div className="lg:col-span-4 space-y-8 sticky top-12">
-                    <section className="space-y-6">
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-white/30 font-syne italic ml-1">Unit Identity</label>
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr,2fr] gap-8">
+                {/* Left: Upload Section */}
+                <div className="space-y-6">
+                    <div className="bg-[#1e2128] border border-[#2d3139] rounded-xl p-6 space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-[12px] font-medium text-[#64748b] uppercase tracking-wider px-1">Course Name</label>
                             <input
                                 value={courseName}
                                 onChange={(e) => setCourseName(e.target.value)}
                                 placeholder="e.g. Advanced Biology 201"
-                                className="w-full glass-card bg-white/5 border-white/10 p-4 font-dm-sans italic font-bold focus:border-purple-500/50 outline-none transition-all placeholder:text-white/10"
+                                className="w-full h-11 bg-[#111318] border border-[#2d3139] rounded-lg px-4 text-sm text-[#e2e8f0] placeholder-[#64748b] outline-none focus:border-[#3b82f6] transition-all"
                             />
                         </div>
 
                         <div
                             {...getRootProps()}
-                            className={`glass-card p-12 flex flex-col items-center gap-6 text-center cursor-pointer transition-all border-dashed ${isDragActive ? 'border-purple-500 bg-purple-500/5' : 'border-white/10'
-                                } ${isUploading ? 'pointer-events-none opacity-50' : 'hover:border-purple-500/50'}`}
+                            className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center text-center gap-4 transition-all cursor-pointer ${isDragActive ? 'border-[#3b82f6] bg-[#3b82f6]/5' : 'border-[#2d3139] hover:border-[#3b82f6]/50'
+                                } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             <input {...getInputProps()} />
-                            <div className="relative">
-                                <div className="absolute -inset-4 bg-purple-500/10 blur-xl rounded-full animate-pulse" />
-                                <Upload className={`w-12 h-12 relative z-10 transition-colors ${isDragActive ? 'text-purple-500' : 'text-white/20'}`} />
-                            </div>
-                            <div className="space-y-2">
-                                <p className="text-xs font-black uppercase tracking-widest font-syne italic">Drop PDF to Index</p>
-                                <p className="text-[10px] text-white/20 font-dm-sans">Maximum 50MB per document</p>
+                            <Upload className={`w-8 h-8 ${isDragActive ? 'text-[#3b82f6]' : 'text-[#64748b]'}`} />
+                            <div className="space-y-1">
+                                <p className="text-sm font-medium text-[#e2e8f0]">{isDragActive ? 'Drop PDF here' : 'Drop PDF or click to browse'}</p>
+                                <p className="text-[12px] text-[#64748b]">Supports PDF up to 50MB</p>
                             </div>
                         </div>
-                    </section>
 
-                    <AnimatePresence>
-                        {isUploading && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                className="glass-card p-6 border-purple-500/20 bg-purple-500/5 space-y-4"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <Loader2 className="w-5 h-5 text-purple-500 animate-spin" />
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-purple-400 font-syne italic">Vectorizing Neurons...</p>
-                                </div>
-                                <div className="space-y-2">
-                                    {[0, 1, 2, 3].map((step) => {
-                                        const labels = ["Extracting", "Chunking", "Embedding", "Ready"]
-                                        const isActive = uploadStep === step
-                                        const isDone = uploadStep > step
-                                        return (
-                                            <div key={step} className="flex items-center gap-3">
-                                                <div className={`w-1 h-1 rounded-full ${isDone ? 'bg-purple-500' : isActive ? 'bg-white animate-pulse' : 'bg-white/5'}`} />
-                                                <span className={`text-[9px] font-black uppercase tracking-widest font-syne italic ${isDone ? 'text-purple-500' : isActive ? 'text-white' : 'text-white/10'}`}>
-                                                    {labels[step]}
-                                                </span>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                        <AnimatePresence>
+                            {isUploading && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="pt-2"
+                                >
+                                    <div className="bg-[#111318] rounded-lg p-4 space-y-3">
+                                        <div className="flex items-center gap-3">
+                                            <Loader2 className="w-4 h-4 text-[#3b82f6] animate-spin" />
+                                            <span className="text-[13px] font-medium text-[#e2e8f0]">Processing document...</span>
+                                        </div>
+                                        <div className="h-1.5 w-full bg-[#2d3139] rounded-full overflow-hidden">
+                                            <motion.div
+                                                className="h-full bg-[#3b82f6]"
+                                                initial={{ width: '0%' }}
+                                                animate={{ width: `${(uploadStep + 1) * 25}%` }}
+                                            />
+                                        </div>
+                                        <p className="text-[11px] text-[#64748b] text-center font-medium">
+                                            {["Extracting text...", "Chunking content...", "Creating embeddings...", "Finalizing..."][uploadStep]}
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
 
-                {/* Right: Gallery */}
-                <div className="lg:col-span-8 space-y-8">
-                    <div className="flex items-center justify-between px-2">
-                        <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 font-syne italic leading-none">Active Repositories</h2>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-white/20 font-dm-sans">{syllabuses.length} Units</span>
-                        </div>
+                {/* Right: Gallery Section */}
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between px-1">
+                        <h2 className="text-base font-semibold font-syne text-[#e2e8f0]">Active Courses</h2>
+                        <span className="text-[13px] font-medium text-[#64748b]">{syllabuses.length} syllabi</span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {loading ? (
                             [1, 2, 3, 4].map(i => (
-                                <div key={i} className="glass-card h-40 animate-pulse bg-white/[0.02]" />
+                                <div key={i} className="bg-[#1e2128] border border-[#2d3139] rounded-xl h-40 animate-pulse" />
                             ))
                         ) : syllabuses.map((s) => (
                             <motion.div
                                 key={s.id}
                                 layout
-                                whileHover={{ scale: 1.01, boxShadow: '0 0 30px rgba(139,92,246,0.1)' }}
-                                className="glass-card p-6 space-y-6 group"
+                                className="bg-[#1e2128] border border-[#2d3139] rounded-xl p-5 flex flex-col justify-between hover:border-[#3d4351] transition-all group"
                             >
-                                <div className="flex justify-between items-start">
-                                    <div className="space-y-1 max-w-[80%]">
-                                        <h3 className="text-sm font-black italic uppercase font-syne truncate group-hover:text-purple-400 transition-colors">{s.course_name}</h3>
-                                        <p className="text-[10px] font-bold text-white/30 font-dm-sans">{new Date(s.created_at).toLocaleDateString()}</p>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-start">
+                                        <div className="min-w-0 pr-4">
+                                            <h3 className="text-sm font-semibold text-[#e2e8f0] truncate">{s.course_name}</h3>
+                                            <p className="text-[12px] text-[#64748b] truncate mt-1 flex items-center gap-1.5">
+                                                <FileText className="w-3 h-3" />
+                                                {s.file_name}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => deleteSyllabus(s.id)}
+                                            className="p-1.5 text-[#64748b] hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={() => deleteSyllabus(s.id)}
-                                        className="p-2 text-white/10 hover:text-red-500 transition-colors"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
 
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center gap-2 bg-white/5 px-2 py-1 rounded-md">
-                                        <BrainCircuit className="w-3 h-3 text-purple-500" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest font-syne">{s.total_chunks || '—'} Chunks</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-white/5 px-2 py-1 rounded-md">
-                                        <Cpu className="w-3 h-3 text-blue-500" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest font-syne">Vector Active</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="bg-[#1a2540] text-[#3b82f6] text-[11px] font-medium px-2 py-0.5 rounded">
+                                            {s.total_chunks} chunks
+                                        </span>
+                                        <span className="text-[11px] text-[#64748b]">
+                                            Indexed {new Date(s.created_at).toLocaleDateString()}
+                                        </span>
                                     </div>
                                 </div>
 
                                 <Link
-                                    href={`/chat?context=${s.id}`}
-                                    className="btn-primary w-full py-2 bg-purple-600/20 border border-purple-500/20 hover:bg-purple-600 hover:border-purple-600 text-[10px] font-black uppercase tracking-[0.2em] font-syne italic shadow-none"
+                                    href={`/chat?syllabus=${s.id}`}
+                                    className="mt-6 flex items-center justify-center gap-2 w-full h-9 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-[13px] font-medium rounded-lg transition-all"
                                 >
-                                    Access Intelligence <ArrowRight className="w-3 h-3" />
+                                    Ask AI <ArrowRight className="w-4 h-4" />
                                 </Link>
                             </motion.div>
                         ))}
                     </div>
 
                     {syllabuses.length === 0 && !loading && (
-                        <div className="glass-card p-20 text-center border-dashed border-white/10 flex flex-col items-center gap-6">
-                            <div className="w-16 h-16 rounded-3xl glass-card flex items-center justify-center opacity-20">
-                                <BookOpen className="w-8 h-8" />
-                            </div>
-                            <div className="space-y-2">
-                                <p className="text-xl font-black italic font-syne uppercase tracking-wider text-white/40">Vault Offline</p>
-                                <p className="text-xs font-bold font-dm-sans text-white/20 max-w-xs mx-auto">Upload your first syllabus to initialize the RAG neural network for this course.</p>
+                        <div className="bg-[#1e2128] border border-[#2d3139] border-dashed rounded-xl p-16 flex flex-col items-center text-center gap-4">
+                            <BookOpen className="w-10 h-10 text-[#2d3139]" />
+                            <div className="space-y-1">
+                                <p className="text-base font-semibold text-[#e2e8f0]">No syllabi yet</p>
+                                <p className="text-sm text-[#64748b] max-w-[280px]">Upload your first PDF to enable syllabus-specific AI chat for that course.</p>
                             </div>
                         </div>
                     )}

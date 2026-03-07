@@ -63,9 +63,9 @@ export default function PricingPage() {
             <header className="text-center space-y-4">
                 <div className="inline-flex gap-2 items-center bg-blue-500/10 border border-blue-500/20 px-4 py-1.5 rounded-full">
                     <Sparkles className="w-3 h-3 text-blue-500" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 font-syne italic">Exclusive Founder Access</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 font-syne italic">Limited Founder Access</span>
                 </div>
-                <h1 className="text-6xl font-black font-syne uppercase italic tracking-tighter">Secure Your <span className="text-blue-500 text-glow-blue">Spot</span></h1>
+                <h1 className="text-6xl font-black font-syne uppercase italic tracking-tighter">Secure Your <span className="text-blue-500">Spot</span></h1>
                 <p className="text-xs font-bold font-dm-sans text-white/30 italic">Personalized pricing based on your waitlist rank and impact.</p>
             </header>
 
@@ -75,7 +75,7 @@ export default function PricingPage() {
                     <motion.div variants={item} className="flex items-center gap-3 px-6 py-3 rounded-2xl glass-card border-emerald-500/40 bg-emerald-500/5">
                         <Shield className="w-5 h-5 text-emerald-500 shadow-emerald-500/20" />
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black uppercase text-emerald-500/60 font-syne leading-none">Price Protocol</span>
+                            <span className="text-[10px] font-black uppercase text-emerald-500/60 font-syne leading-none">Status Locked</span>
                             <span className="text-xs font-black uppercase text-white font-syne italic">Locked at €5 Forever</span>
                         </div>
                     </motion.div>
@@ -112,15 +112,15 @@ export default function PricingPage() {
                 </div>
 
                 <div className="space-y-6 relative z-10">
-                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 font-syne italic border-b border-white/5 pb-4">Inclusive Systems</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 font-syne italic border-b border-white/5 pb-4">Standard Features</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
                         {[
-                            'Unlimited RAG Memory',
+                            'Unlimited Syllabus Memory',
                             'Llama 3.3 70B Access',
-                            'Six specialized modules',
-                            'Smart exam triggers',
-                            'Priority neural link',
-                            'Early feature entry'
+                            'Six specialized tools',
+                            'Smart exam help',
+                            'Priority AI Access',
+                            'Early feature access'
                         ].map(feat => (
                             <div key={feat} className="flex items-center gap-3">
                                 <Check className="w-4 h-4 text-emerald-500" strokeWidth={3} />
@@ -132,7 +132,7 @@ export default function PricingPage() {
 
                 <div className="space-y-6 relative z-10 pt-4">
                     <button className="btn-primary w-full py-5 text-sm font-black uppercase tracking-[0.3em] font-syne italic group">
-                        Enter Neural Link <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        Get Founding Access <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </button>
                     <p className="text-center text-[10px] font-bold text-white/20 font-dm-sans italic">Payments launch at general release — June 2026</p>
                 </div>

@@ -5,14 +5,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
-    const allCookies = request.cookies.getAll()
-    console.log('CALLBACK COOKIES:', JSON.stringify(allCookies.map(c => c.name)))
-
     const requestUrl = new URL(request.url)
     const code = requestUrl.searchParams.get('code')
-    console.log('CODE:', code)
-    console.log('VERIFIER VALUE:', request.cookies.get('sb-xhxujnbnixgnwdtjemrg-auth-token-code-verifier')?.value?.substring(0, 20))
-
     const next = requestUrl.searchParams.get('next') ?? '/dashboard'
 
     if (code) {

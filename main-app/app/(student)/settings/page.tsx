@@ -7,21 +7,21 @@ import {
     CreditCard,
     Share2,
     Shield,
-    Bell,
     LogOut,
     Check,
     Copy,
     ChevronRight,
-    Zap,
     Crown
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
 
 export default function SettingsPage() {
     const [user, setUser] = useState<any>(null)
     const [data, setData] = useState<any>(null)
     const [copied, setCopied] = useState(false)
+    const router = useRouter()
 
     const supabase = createClient()
 
@@ -46,142 +46,154 @@ export default function SettingsPage() {
         const link = `https://stavlos.com/waitlist?ref=${data.referral_code}`
         navigator.clipboard.writeText(link)
         setCopied(true)
-        toast.success("Referral protocol copied.")
+        toast.success("Referral link copied.")
         setTimeout(() => setCopied(false), 2000)
     }
 
+    const handleSignOut = async () => {
+        await supabase.auth.signOut()
+        router.push('/login')
+    }
+
     return (
-        <div className="max-w-4xl mx-auto px-6 py-12 space-y-12">
-            <header className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 font-syne italic leading-none">Control Center</p>
-                <h1 className="text-5xl font-black font-syne uppercase italic tracking-tight">System <span className="text-blue-500">Settings</span></h1>
+        <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+            <header>
+                <h1 className="text-2xl font-bold font-syne text-[#e2e8f0]">Settings</h1>
+                <p className="text-[15px] text-[#94a3b8] font-medium mt-1">
+                    Manage your account and preferences.
+                </p>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-
-                {/* Navigation */}
-                <aside className="lg:col-span-4 space-y-2">
-                    <button className="w-full flex items-center justify-between p-4 rounded-xl glass-card border-blue-500/20 bg-blue-500/5 text-blue-400">
+            <div className="grid grid-cols-1 lg:grid-cols-[240px,1fr] gap-12 items-start">
+                {/* Navigation Sidebar */}
+                <aside className="space-y-1">
+                    <button className="w-full flex items-center justify-between p-3 rounded-lg bg-[#3b82f6]/10 text-[#3b82f6] group transition-all">
                         <div className="flex items-center gap-3">
                             <User className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-widest font-syne italic">Profile</span>
+                            <span className="text-[13px] font-semibold">Profile</span>
                         </div>
                         <ChevronRight className="w-4 h-4" />
                     </button>
-                    <button className="w-full flex items-center justify-between p-4 rounded-xl glass-card border-transparent hover:border-white/5 text-white/40 hover:text-white transition-all">
+                    <button className="w-full flex items-center justify-between p-3 rounded-lg text-[#64748b] hover:text-[#e2e8f0] hover:bg-white/5 group transition-all">
                         <div className="flex items-center gap-3">
                             <CreditCard className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-widest font-syne italic">Billing</span>
+                            <span className="text-[13px] font-semibold font-medium">Billing</span>
                         </div>
                         <ChevronRight className="w-4 h-4" />
                     </button>
-                    <button className="w-full flex items-center justify-between p-4 rounded-xl glass-card border-transparent hover:border-white/5 text-white/40 hover:text-white transition-all">
+                    <button className="w-full flex items-center justify-between p-3 rounded-lg text-[#64748b] hover:text-[#e2e8f0] hover:bg-white/5 group transition-all">
                         <div className="flex items-center gap-3">
                             <Share2 className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-widest font-syne italic">Referrals</span>
+                            <span className="text-[13px] font-semibold font-medium">Referrals</span>
                         </div>
                         <ChevronRight className="w-4 h-4" />
                     </button>
-                    <button className="w-full flex items-center justify-between p-4 rounded-xl glass-card border-transparent hover:border-white/5 text-white/40 hover:text-white transition-all">
+                    <button className="w-full flex items-center justify-between p-3 rounded-lg text-[#64748b] hover:text-[#e2e8f0] hover:bg-white/5 group transition-all">
                         <div className="flex items-center gap-3">
                             <Shield className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-widest font-syne italic">Security</span>
+                            <span className="text-[13px] font-semibold font-medium">Security</span>
                         </div>
                         <ChevronRight className="w-4 h-4" />
                     </button>
-                    <button className="w-full flex items-center justify-between p-4 rounded-xl glass-card border-transparent hover:border-white/5 text-red-500/40 hover:text-red-500 transition-all mt-8">
-                        <div className="flex items-center gap-3">
+
+                    <div className="pt-8">
+                        <button
+                            onClick={handleSignOut}
+                            className="w-full flex items-center gap-3 p-3 rounded-lg text-red-500/60 hover:text-red-500 hover:bg-red-500/5 transition-all"
+                        >
                             <LogOut className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-widest font-syne italic">Terminate Session</span>
-                        </div>
-                    </button>
+                            <span className="text-[13px] font-semibold">Sign Out</span>
+                        </button>
+                    </div>
                 </aside>
 
-                {/* Content */}
-                <main className="lg:col-span-8 space-y-12">
-
-                    {/* Identity Section */}
-                    <section className="space-y-6">
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 font-syne italic px-1">Identity</h3>
-                        <div className="glass-card p-8 space-y-8">
+                {/* Content Area */}
+                <main className="space-y-12">
+                    {/* Profile Section */}
+                    <section className="space-y-4">
+                        <h2 className="text-sm font-semibold uppercase tracking-wider text-[#64748b] font-syne px-1">Profile Info</h2>
+                        <div className="bg-[#1e2128] border border-[#2d3139] rounded-xl p-6 md:p-8 space-y-8">
                             <div className="flex items-center gap-6">
-                                <div className="w-20 h-20 rounded-3xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-3xl font-black font-syne italic text-blue-500">
-                                    {user?.email?.[0].toUpperCase() || 'A'}
+                                <div className="w-20 h-20 rounded-2xl bg-[#111318] border border-[#2d3139] flex items-center justify-center text-3xl font-bold text-[#3b82f6]">
+                                    {user?.email?.[0].toUpperCase() || 'S'}
                                 </div>
-                                <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                        <p className="text-lg font-black font-syne italic uppercase">{user?.email?.split('@')[0] || 'Student'}</p>
-                                        <div className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[8px] font-black text-amber-500 uppercase font-syne">Founding Member</div>
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center gap-3">
+                                        <p className="text-lg font-bold text-[#e2e8f0] font-syne">
+                                            {user?.email?.split('@')[0] || 'Student'}
+                                        </p>
+                                        <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-500 uppercase tracking-tight">Founding Member</span>
                                     </div>
-                                    <p className="text-xs font-bold text-white/20 font-dm-sans italic">{user?.email || 'email@example.com'}</p>
+                                    <p className="text-[13px] text-[#64748b] font-medium">{user?.email || 'email@example.com'}</p>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[9px] font-black uppercase tracking-widest text-white/10 font-syne italic">Full Name</label>
+                                    <label className="text-[12px] font-medium text-[#64748b] uppercase tracking-wider px-1">Full Name</label>
                                     <input
                                         defaultValue={user?.email?.split('@')[0]}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold font-dm-sans italic focus:border-blue-500/50 outline-none"
+                                        className="w-full bg-[#111318] border border-[#2d3139] rounded-lg px-4 py-3 text-sm text-[#e2e8f0] placeholder-[#64748b] outline-none focus:border-[#3b82f6] transition-all"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[9px] font-black uppercase tracking-widest text-white/10 font-syne italic">Academic ID</label>
+                                    <label className="text-[12px] font-medium text-[#64748b] uppercase tracking-wider px-1">Email Address</label>
                                     <input
-                                        defaultValue={user?.email}
+                                        value={user?.email || ''}
                                         disabled
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold font-dm-sans italic opacity-50"
+                                        className="w-full bg-[#111318] border border-[#2d3139] rounded-lg px-4 py-3 text-sm text-[#e2e8f0] opacity-50 cursor-not-allowed"
                                     />
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    {/* Referrals & Rank */}
-                    <section className="space-y-6">
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 font-syne italic px-1">Social Protocol</h3>
-                        <div className="glass-card p-8 space-y-8 bg-blue-600/[0.02] border-blue-500/20">
-                            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                                <div className="flex items-center gap-6 text-center md:text-left">
-                                    <div className="w-16 h-16 rounded-3xl bg-blue-600/20 border border-blue-500/30 flex flex-col items-center justify-center">
-                                        <span className="text-[9px] font-black uppercase text-blue-400 font-syne leading-none">Rank</span>
-                                        <span className="text-2xl font-black italic text-white font-syne tracking-tighter mt-1">#{data?.current_rank || 'N/A'}</span>
+                    {/* Referrals Section */}
+                    <section className="space-y-4">
+                        <h2 className="text-sm font-semibold uppercase tracking-wider text-[#64748b] font-syne px-1">Referrals & Rank</h2>
+                        <div className="bg-[#1e2128] border border-[#2d3139] rounded-xl p-6 md:p-8">
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                                <div className="flex items-center gap-6">
+                                    <div className="text-center bg-[#111318] border border-[#2d3139] rounded-2xl p-4 min-w-[100px]">
+                                        <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider">Your Rank</p>
+                                        <p className="text-2xl font-bold text-[#e2e8f0] mt-1">#{data?.current_rank || '—'}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-sm font-black font-syne uppercase italic">Influence Node</p>
-                                        <p className="text-[10px] font-bold text-blue-500/60 font-dm-sans italic uppercase">{data?.referral_count || 0} Successful Links</p>
+                                        <p className="text-base font-semibold text-[#e2e8f0]">Total Referrals</p>
+                                        <p className="text-[13px] text-[#3b82f6] font-medium">
+                                            {data?.referral_count || 0} students invited
+                                        </p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={copyLink}
-                                    className="flex items-center gap-3 px-6 py-3 rounded-xl bg-blue-600 text-[10px] font-black uppercase tracking-widest font-syne italic group transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
+                                    className="flex items-center gap-2 px-6 py-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-[13px] font-semibold text-[#e2e8f0] whitespace-nowrap"
                                 >
                                     {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                                    {copied ? 'Integrated' : 'Copy Referral Link'}
+                                    {copied ? 'Copied' : 'Copy Referral Link'}
                                 </button>
                             </div>
                         </div>
                     </section>
 
-                    {/* Subscription Preview */}
-                    <section className="space-y-6">
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 font-syne italic px-1">Neural License</h3>
-                        <div className="glass-card p-8 border-amber-500/20 bg-amber-500/[0.02] relative overflow-hidden group">
+                    {/* Subscription Section */}
+                    <section className="space-y-4">
+                        <h2 className="text-sm font-semibold uppercase tracking-wider text-[#64748b] font-syne px-1">My Plan</h2>
+                        <div className="bg-[#1e2128] border border-[#2d3139] rounded-xl p-6 md:p-8 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-8 opacity-5 -rotate-12 translate-x-4 -translate-y-4">
                                 <Crown className="w-40 h-40 text-amber-500" />
                             </div>
                             <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-                                <div className="space-y-1 text-center md:text-left">
-                                    <p className="text-sm font-black font-syne uppercase italic text-amber-500 group-hover:text-amber-400 transition-colors">Founding Scholar Plan</p>
-                                    <p className="text-[10px] font-bold text-white/20 font-dm-sans italic">Locked at €5/mo Forever</p>
+                                <div className="space-y-1.5 text-center md:text-left">
+                                    <p className="text-base font-bold text-amber-500 group-hover:text-amber-400 transition-colors">Founding Member Plan</p>
+                                    <p className="text-[13px] text-[#64748b] font-medium">€5 / month · Price locked forever</p>
                                 </div>
-                                <button className="btn-secondary px-8 py-3 text-[9px] font-black uppercase tracking-widest font-syne italic border-amber-500/20 text-amber-500 hover:bg-amber-500/10">
-                                    Manage Subscription
+                                <button className="px-6 py-2.5 bg-[#111318] border border-[#2d3139] hover:border-[#3b82f6]/50 rounded-lg text-[13px] font-semibold text-[#e2e8f0] transition-colors">
+                                    Manage Billing
                                 </button>
                             </div>
                         </div>
                     </section>
-
                 </main>
             </div>
         </div>
