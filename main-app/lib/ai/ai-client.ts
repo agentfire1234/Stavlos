@@ -1,4 +1,10 @@
 import { OpenAI } from 'openai'
+import Groq from 'groq-sdk'
+
+// Initialize Groq Client
+const groq = new Groq({
+    apiKey: process.env.GROQ_API_KEY,
+})
 
 // Initialize OpenRouter Client (Consolidated AI Provider)
 const openrouter = new OpenAI({
@@ -25,8 +31,13 @@ export class AIClient {
             { role: "user", content: context ? `CONTEXT FROM SYLLABUS:\n${context}\n\nUSER QUESTION: ${query}` : query }
         ]
 
-        // Create a list of models to try: starting with the requested one, then fallbacks
-        const requestedModel = model.includes('/') ? model : `meta-llama/${model}`
+        // Determine if this is a Groq model or OpenRouter model
+        // Groq models usually look like: llama-3.3-70b-versatile, llama-3.1-8b-instant, mixtral-8x7b-32768
+        const isGroqModel = model.includes('versatile') || model.includes('instant') || model.includes('8x7b') || model.includes('70b') && !model.includes('/');
+
+        // Create a list of models/providers to try
+        const requestedModel = model.includes('/') ? model : (isGroqModel ? model : `meta-llama/${model}`)
+
         const modelsToTry = [
             requestedModel,
             ...FALLBACK_MODELS.filter(m => m !== requestedModel)
@@ -36,35 +47,60 @@ export class AIClient {
 
         for (const targetModel of modelsToTry) {
             try {
-                console.log(`[AI] Attempting ${taskType} with ${targetModel} via OpenRouter (Stream: ${stream})...`)
+                // Determine provider based on model ID
+                // If it contains a slash, it's OpenRouter. If not, it's likely Groq.
+                const provider = targetModel.includes('/') ? 'OpenRouter' : 'Groq'
 
-                if (stream) {
-                    return await openrouter.chat.completions.create({
+                console.log(`[AI] Attempting ${taskType} with ${targetModel} via ${provider} (Stream: ${stream})...`)
+
+                if (provider === 'Groq') {
+                    if (stream) {
+                        return await groq.chat.completions.create({
+                            model: targetModel,
+                            messages: messages,
+                            temperature: 0.7,
+                            max_tokens: 2000,
+                            stream: true,
+                        })
+                    }
+
+                    const response = await groq.chat.completions.create({
                         model: targetModel,
                         messages: messages,
                         temperature: 0.7,
                         max_tokens: 2000,
-                        stream: true,
                     })
+                    return response
+                } else {
+                    // OpenRouter
+                    if (stream) {
+                        return await openrouter.chat.completions.create({
+                            model: targetModel,
+                            messages: messages,
+                            temperature: 0.7,
+                            max_tokens: 2000,
+                            stream: true,
+                        })
+                    }
+
+                    const response = await openrouter.chat.completions.create({
+                        model: targetModel,
+                        messages: messages,
+                        temperature: 0.7,
+                        max_tokens: 2000,
+                    })
+
+                    if (targetModel !== modelsToTry[0]) {
+                        console.log(`[AI] Resilience Success: Recovered using ${targetModel} after primary failure.`)
+                    }
+
+                    return response
                 }
-
-                const response = await openrouter.chat.completions.create({
-                    model: targetModel,
-                    messages: messages,
-                    temperature: 0.7,
-                    max_tokens: 2000,
-                })
-
-                // If we succeeded but weren't on the first model, log it
-                if (targetModel !== modelsToTry[0]) {
-                    console.log(`[AI] Resilience Success: Recovered using ${targetModel} after primary failure.`)
-                }
-
-                return response
 
             } catch (error: any) {
                 lastError = error
                 const statusCode = error.status || 500
+                // 401: Unauthorized, 404: Not Found, 429: Rate Limit, 5xx: Server Errors
                 const isRetryable = [401, 404, 408, 429, 500, 502, 503, 504].includes(statusCode)
 
                 console.error(`[AI] Model Failure (${targetModel}): ${error.message} (Status: ${statusCode})`)

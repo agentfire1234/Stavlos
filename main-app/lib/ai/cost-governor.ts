@@ -86,7 +86,7 @@ export class CostGovernor {
                 return {
                     allowed: true,
                     queue: false,
-                    model: 'mistralai/mistral-7b-instruct:free',
+                    model: 'llama-3.1-8b-instant',
                     message: null
                 }
 
@@ -96,14 +96,14 @@ export class CostGovernor {
                     return {
                         allowed: false,
                         queue: true,
-                        model: 'mistralai/mistral-7b-instruct:free',
+                        model: 'llama-3.1-8b-instant',
                         message: "⚡ High demand! Queued for 1 hour.\n\n💡 Upgrade to Pro for instant responses"
                     }
                 }
                 return {
                     allowed: true,
                     queue: false,
-                    model: 'mistralai/mistral-7b-instruct:free',
+                    model: 'llama-3.1-8b-instant',
                     message: null
                 }
 
@@ -113,14 +113,14 @@ export class CostGovernor {
                     return {
                         allowed: false,
                         queue: false,
-                        model: 'mistralai/mistral-7b-instruct:free',
+                        model: 'llama-3.1-8b-instant',
                         message: "📊 Daily limit reached. Resets at midnight.\n\n⚡ Upgrade to Pro for 24/7 access"
                     }
                 }
                 return {
                     allowed: true, // Pro still allowed but maybe queued
                     queue: true,
-                    model: 'mistralai/mistral-7b-instruct:free',
+                    model: 'llama-3.1-8b-instant',
                     message: "Queued for priority processing"
                 }
         }
@@ -135,17 +135,17 @@ export class CostGovernor {
         }
 
         const routing: Record<string, string> = {
-            'grammar_fix': 'mistralai/mistral-7b-instruct:free',
-            'flashcard': 'mistralai/mistral-7b-instruct:free',
-            'summary': 'mistralai/mistral-7b-instruct:free',
-            'essay_outline': 'mistralai/mistral-7b-instruct:free',
-            'code_debug': 'mistralai/mistral-7b-instruct:free',
-            'general_chat': 'mistralai/mistral-7b-instruct:free',
-            'math_solver': 'mistralai/mistral-7b-instruct:free',
-            'syllabus_qa': 'mistralai/mistral-7b-instruct:free'
+            'grammar_fix': 'llama-3.1-8b-instant',
+            'flashcard': 'llama-3.1-8b-instant',
+            'summary': 'llama-3.1-8b-instant',
+            'essay_outline': 'llama-3.3-70b-versatile',
+            'code_debug': 'llama-3.1-8b-instant',
+            'general_chat': 'llama-3.1-8b-instant',
+            'math_solver': 'llama-3.3-70b-versatile',
+            'syllabus_qa': 'llama-3.1-8b-instant'
         }
 
-        return routing[taskType] || 'mistralai/mistral-7b-instruct:free'
+        return routing[taskType] || 'llama-3.1-8b-instant'
     }
 
     static async recordCost(inputTokens: number, outputTokens: number, model: string, taskType: string = 'chat'): Promise<number> {
