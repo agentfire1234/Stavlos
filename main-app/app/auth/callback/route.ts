@@ -10,10 +10,12 @@ export async function GET(request: NextRequest) {
 
     const requestUrl = new URL(request.url)
     const code = requestUrl.searchParams.get('code')
+    console.log('CODE:', code)
+    console.log('VERIFIER VALUE:', request.cookies.get('sb-xhxujnbnixgnwdtjemrg-auth-token-code-verifier')?.value?.substring(0, 20))
+
     const next = requestUrl.searchParams.get('next') ?? '/dashboard'
 
     if (code) {
-        const cookieStore = await cookies()
         const response = NextResponse.redirect(
             new URL(next, requestUrl.origin)
         )
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest) {
             {
                 cookies: {
                     getAll() {
-                        return cookieStore.getAll()
+                        return request.cookies.getAll()
                     },
                     setAll(cookiesToSet: Array<{ name: string; value: string; options: CookieOptions }>) {
                         cookiesToSet.forEach(({ name, value, options }) => {
