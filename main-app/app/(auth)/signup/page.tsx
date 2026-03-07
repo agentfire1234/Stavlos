@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { Logo } from '@/components/logo'
 import toast from 'react-hot-toast'
+import { signInWithGoogleAction } from '@/app/actions/auth'
 
 export default function SignupPage() {
     const [name, setName] = useState('')
@@ -33,15 +34,7 @@ export default function SignupPage() {
     }
 
     async function handleGoogleLogin() {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback`
-            }
-        })
-        if (error) {
-            toast.error(error.message)
-        }
+        await signInWithGoogleAction()
     }
 
     async function handleSignup(e: React.FormEvent) {

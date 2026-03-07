@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { Logo } from '@/components/logo'
+import { signInWithGoogleAction } from '@/app/actions/auth'
 import toast from 'react-hot-toast'
 
 export default function LoginPage() {
@@ -23,6 +24,7 @@ export default function LoginPage() {
             </svg>
         )
     }
+
     const [loading, setLoading] = useState(false)
     const router = useRouter()
 
@@ -30,18 +32,6 @@ export default function LoginPage() {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
-
-    async function handleGoogleLogin() {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback`
-            }
-        })
-        if (error) {
-            toast.error(error.message)
-        }
-    }
 
     async function handleLogin(e: React.FormEvent) {
         e.preventDefault()
