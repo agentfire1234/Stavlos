@@ -131,12 +131,20 @@ export class RAGSystem {
         console.log('User ID:', userId)
         console.log('Question embedding length:', data?.embedding?.length)
 
+        // Verify chunks exist in DB
+        const { count } = await supabaseAdmin
+            .from('syllabus_chunks')
+            .select('*', { count: 'exact', head: true })
+            .eq('syllabus_id', syllabusId)
+
+        console.log('Total chunks in DB for this syllabus:', count)
+
         // Vector similarity search
         const { data: chunks, error: rpcError } = await supabaseAdmin.rpc(
             'match_syllabus_chunks',
             {
                 query_embedding: data.embedding,
-                match_threshold: 0.5,
+                match_threshold: 0.1, // Lowered from 0.5
                 match_count: 5,
                 filter_user_id: userId,
                 filter_syllabus_id: syllabusId || null
