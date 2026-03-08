@@ -59,11 +59,13 @@ export async function POST(req: Request) {
             .insert({ chat_id: currentChatId, role: 'user', content: message })
 
         // 1. Fetch ALL messages for conversation memory
-        const { data: allMessages = [] } = await supabaseAdmin
+        const { data: messagesData } = await supabaseAdmin
             .from('messages')
             .select('*')
             .eq('chat_id', currentChatId)
             .order('created_at', { ascending: true })
+
+        const allMessages = messagesData || []
 
         let history: any[] = []
         let currentSummary = currentChat?.summary || null
