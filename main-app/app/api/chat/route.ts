@@ -144,8 +144,11 @@ export async function POST(req: Request) {
                     {
                         role: 'system',
                         content: `You are an intent classifier. Reply with ONLY one word:
-"FLASHCARD" if the user is requesting to create/make/generate flashcards.
-"NORMAL" for everything else.
+FLASHCARD if the user is explicitly asking YOU to create 
+or generate a new set of flashcards for them right now.
+NORMAL for everything else including questions about 
+flashcards, questions about how flashcards work, or 
+any message that does not directly request creation.
 No explanation. No punctuation. Just one word.`
                     },
                     {

@@ -172,16 +172,18 @@ export default function ChatConversationPage() {
                             >
                                 <div className={msg.role === 'user' ? 'max-w-[70%]' : 'max-w-[85%]'}>
                                     <div className={`p-4 rounded-2xl text-[14px] leading-[1.7] font-dm-sans ${msg.role === 'user'
-                                            ? 'bg-[#1e2128] border border-[#2d3139] text-[#e2e8f0] rounded-tr-[4px]'
-                                            : 'text-[#e2e8f0] bg-[#161b22] border border-[#2d3139] rounded-tl-[4px]'
+                                        ? 'bg-[#1e2128] border border-[#2d3139] text-[#e2e8f0] rounded-tr-[4px]'
+                                        : 'text-[#e2e8f0] bg-[#161b22] border border-[#2d3139] rounded-tl-[4px]'
                                         }`}>
                                         <div className="prose prose-invert prose-sm max-w-none">
-                                            <ReactMarkdown>{msg.content.split('[FLASHCARD_SET:')[0]}</ReactMarkdown>
+                                            <ReactMarkdown>
+                                                {msg.content.replace(/\[FLASHCARD_SET:[^\]]+\]/g, '')}
+                                            </ReactMarkdown>
                                         </div>
 
-                                        {msg.content.includes('[FLASHCARD_SET:') && (
+                                        {msg.content.match(/\[FLASHCARD_SET:([^\]]+)\]/) && (
                                             <FlashcardPreview
-                                                id={msg.content.split('[FLASHCARD_SET:')[1].split(']')[0]}
+                                                id={msg.content.match(/\[FLASHCARD_SET:([^\]]+)\]/)![1]}
                                             />
                                         )}
                                     </div>
