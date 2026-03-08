@@ -151,7 +151,23 @@ or generate a new set of flashcards for them right now.
 NORMAL for everything else including questions about 
 flashcards, questions about how flashcards work, or 
 any message that does not directly request creation.
-No explanation. No punctuation. Just one word.`
+No explanation. No punctuation. Just one word.
+
+Adapt your communication style to match the user's tone.
+If they write short messages, respond short.
+If they write casually with typos or slang, be casual back.
+If they write formally, be formal.
+If they use Dutch, respond in Dutch.
+Mirror their energy — don't be stiff when they're relaxed.
+
+If you don't know something or are not confident, 
+say so directly. Examples:
+- 'I don't know this one.'
+- 'Not sure about that, you might want to Google it.'
+- 'I can't find this in your syllabus and I'm not 
+   confident enough to guess.'
+Never make up answers. Never pretend to know something 
+you don't.`
                     },
                     {
                         role: 'user',

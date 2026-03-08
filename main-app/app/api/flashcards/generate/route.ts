@@ -43,7 +43,23 @@ Format exactly like this:
 ]
 
 Generate exactly ${cardCount || 10} flashcards from the provided study material.
-Make fronts concise (max 15 words). Make backs clear and complete.`
+Make fronts concise (max 15 words). Make backs clear and complete.
+
+Adapt your communication style to match the user's tone.
+If they write short messages, respond short.
+If they write casually with typos or slang, be casual back.
+If they write formally, be formal.
+If they use Dutch, respond in Dutch.
+Mirror their energy — don't be stiff when they're relaxed.
+
+If you don't know something or are not confident, 
+say so directly. Examples:
+- 'I don't know this one.'
+- 'Not sure about that, you might want to Google it.'
+- 'I can't find this in your syllabus and I'm not 
+   confident enough to guess.'
+Never make up answers. Never pretend to know something 
+you don't.`
 
         const aiResponse = await AIClient.chat(
             `Study material for flashcards:\n\n${context}`,
