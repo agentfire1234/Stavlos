@@ -233,8 +233,9 @@ you don't.`
                             finalResponse = `I've generated a set of ${flashcardData.cards.length} flashcards for you: **${flashcardData.title}**. You can start practicing them right now!\n\n[FLASHCARD_SET:${newSet.id}]`
                         }
                     }
-                } catch (e) {
-                    console.error('Failed to parse/save chat flashcards:', e)
+                } catch (e: any) {
+                    console.error('Flashcard parse/save failed:', e.message)
+                    console.error('Raw AI response was:', result.response?.substring(0, 500))
                 }
             }
 
