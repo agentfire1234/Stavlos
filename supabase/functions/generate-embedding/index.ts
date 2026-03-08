@@ -12,15 +12,19 @@ serve(async (req) => {
         }
 
         // Use OpenAI compatible endpoint built into Supabase
+        const hfToken = Deno.env.get('HF_TOKEN')
+
         const response = await fetch(
             'https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2',
             {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${hfToken}`
+                },
                 body: JSON.stringify({ inputs: text, options: { wait_for_model: true } })
             }
         )
-
         const embedding = await response.json()
 
         return new Response(
