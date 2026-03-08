@@ -3,6 +3,12 @@ import { createClient } from '@/lib/supabase/server'
 import { AIOrchestrator } from '@/lib/ai/orchestrator'
 import { supabaseAdmin } from '@/lib/supabase'
 import { RAGSystem } from '@/lib/ai/rag-system'
+import { OpenAI } from 'openai'
+
+const groq = new OpenAI({
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1"
+})
 
 export async function POST(req: Request) {
     try {
@@ -127,7 +133,36 @@ export async function POST(req: Request) {
             essay: 'essay_outline',
             flashcards: 'flashcard',
         }
-        const taskType = taskTypeMap[mode] || 'general_chat'
+        let taskType = taskTypeMap[mode] || 'general_chat'
+
+        // AI Intent Classification for Flashcards
+        try {
+            const classificationResponse = await groq.chat.completions.create({
+                model: 'llama-3.1-8b-instant',
+                max_tokens: 10,
+                messages: [
+                    {
+                        role: 'system',
+                        content: `You are an intent classifier. Reply with ONLY one word:
+"FLASHCARD" if the user is requesting to create/make/generate flashcards.
+"NORMAL" for everything else.
+No explanation. No punctuation. Just one word.`
+                    },
+                    {
+                        role: 'user',
+                        content: message
+                    }
+                ]
+            })
+
+            const intent = classificationResponse.choices[0].message.content?.trim().toUpperCase()
+            if (intent === 'FLASHCARD') {
+                console.log(`[intent] AI detected FLASHCARD request for message: "${message.substring(0, 50)}..."`)
+                taskType = 'flashcard'
+            }
+        } catch (e) {
+            console.error('Intent classification failed, falling back to mode-based detection:', e)
+        }
 
         const result = await AIOrchestrator.handleQuery(
             message,
