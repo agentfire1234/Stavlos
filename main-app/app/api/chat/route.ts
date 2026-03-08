@@ -182,9 +182,9 @@ No explanation. No punctuation. Just one word.`
         if (!result.blocked) {
             let finalResponse = result.response
 
-            // Special handling for flashcards to save them to the DB
+            // Special handling for flashcards to save them to the DB (handles remakes/casual requests)
             let flashcardSetId = null
-            if (taskType === 'flashcard' && result.response) {
+            if (result.response && (taskType === 'flashcard' || result.response.includes('"cards":'))) {
                 try {
                     const { parseFlashcardJSON } = await import('@/lib/ai/flashcard-engine')
                     const flashcardData = parseFlashcardJSON(result.response)
