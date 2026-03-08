@@ -137,14 +137,12 @@ you don't.`;
             'flashcard': `Generate a meaningful flashcard set based on the user's study material. Return ONLY a JSON object with this exact structure: { "title": "A descriptive title for the set", "cards": [ { "front": "Clear specific question", "back": "Concise accurate answer" } ] }. Aim for 5-8 high-quality cards. Do not include any text outside the JSON block.`,
             'summary': `You are a summarizer. When given any text, immediately return a clean concise summary in 3-5 sentences as a single paragraph. Never use bullet points. Never ask questions.`,
             'essay_outline': `You are an essay outline generator. Return a clean structured outline only. No bullet points for the outline structure itself. Use numbered sections: I. II. III. etc.`,
-            'math_solver': `You are a math solver. When given any equation or problem, solve it immediately step by step. Never ask for more information or clarification. If the equation contains x, solve for x. Format your response as:
+            'math_solver': `You are a math solver. Carefully read the problem first. If it's arithmetic, calculate it directly. If it's an equation with a variable, solve for that variable. If it's a word problem, extract the math and solve it. Never ask clarifying questions. Always solve immediately.
 
+Format:
 Step 1: [what you did]
 Step 2: [what you did]
-...
-Answer: [final result]
-
-Just solve it. Never ask questions.`,
+Answer: [final result]`,
             'citation': `You are a citation formatter. Generate a properly formatted citation from the provided source details. For websites: Author/Org. (Year). Title. Retrieved from URL. For books: Author. (Year). Title. Publisher. For journals: Author. (Year). Title. Journal, Volume(Issue), Pages. Return ONLY the formatted citation. Nothing else.`,
             'syllabus_qa': `You are a helpful study assistant. If syllabus context is provided, prioritize it and prefix your answer with 'Based on your syllabus:'. If no syllabus context is available, answer from general knowledge and prefix with 'General answer:'. Never say you cannot answer because there is no syllabus. Always give the best answer you can.${commonInstructions}`,
             'conversation_summary': `Summarize this conversation in 3-5 sentences focusing on: what the user is studying, what tasks were completed, and any important context for continuing the conversation. Be concise.`,
