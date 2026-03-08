@@ -13,6 +13,13 @@ export async function getDashboardData(userId: string) {
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
 
+    const { data: flashcards } = await supabaseAdmin
+        .from('flashcard_sets')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(4)
+
     const { data: chats } = await supabaseAdmin
         .from('chats')
         .select('*')
@@ -45,6 +52,12 @@ export async function getDashboardData(userId: string) {
         .eq('role', 'user')
         .gte('created_at', sevenDaysAgo.toISOString())
 
+    const { count: dueCount } = await supabaseAdmin
+        .from('flashcard_progress')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .lte('next_review_at', new Date().toISOString())
+
     return {
         profile,
         usage: {
@@ -54,6 +67,8 @@ export async function getDashboardData(userId: string) {
         },
         syllabuses: syllabuses || [],
         chats: chats || [],
+        flashcards: flashcards || [],
+        dueCount: dueCount || 0,
         streak: profile?.study_streak || 0,
         totalQuestions: profile?.total_questions || 0,
         weeklyActivity: recentMessages?.map(m => new Date(m.created_at).toISOString().split('T')[0]) || []

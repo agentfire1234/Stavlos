@@ -15,6 +15,7 @@ import {
     PenTool,
     Layers,
     MessageSquare,
+    ArrowRight,
 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -141,19 +142,19 @@ export default function ChatConversationPage() {
     }
 
     return (
-        <div className="flex flex-col h-screen bg-[#111318] overflow-hidden -m-6 md:-m-8 -mt-4">
+        <div className="flex flex-col h-screen bg-[#111318] overflow-hidden -m-6 md:-m-8 -mt-4 relative">
             {/* Top Bar */}
-            <header className="h-[52px] border-b border-[#2d3139] px-4 flex items-center bg-[#111318] sticky top-0 z-10">
+            <header className="h-[52px] border-b border-[#2d3139] px-4 flex items-center bg-[#111318] sticky top-0 z-10 font-syne">
                 <Link href="/chat" className="p-2 text-[#64748b] hover:text-[#e2e8f0] transition-colors mr-2">
                     <ArrowLeft className="w-5 h-5" />
                 </Link>
                 <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-sm font-medium text-[#e2e8f0] truncate max-w-[300px]">
+                    <span className="text-sm font-bold text-[#e2e8f0] truncate max-w-[300px]">
                         {chat?.title || 'Untitled Session'}
                     </span>
                     <div className="h-4 w-[1px] bg-[#2d3139] mx-1" />
-                    <span className="text-[12px] text-[#64748b]">
-                        {mode.charAt(0).toUpperCase() + mode.slice(1)} Mode
+                    <span className="text-[12px] text-[#64748b] font-bold uppercase tracking-wider">
+                        {mode} Mode
                     </span>
                 </div>
             </header>
@@ -169,14 +170,20 @@ export default function ChatConversationPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
-                                <div className={`${msg.role === 'user' ? 'max-w-[70%]' : 'max-w-[85%]'}`}>
+                                <div className={msg.role === 'user' ? 'max-w-[70%]' : 'max-w-[85%]'}>
                                     <div className={`p-4 rounded-2xl text-[14px] leading-[1.7] font-dm-sans ${msg.role === 'user'
                                             ? 'bg-[#1e2128] border border-[#2d3139] text-[#e2e8f0] rounded-tr-[4px]'
                                             : 'text-[#e2e8f0] bg-[#161b22] border border-[#2d3139] rounded-tl-[4px]'
                                         }`}>
                                         <div className="prose prose-invert prose-sm max-w-none">
-                                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                            <ReactMarkdown>{msg.content.split('[FLASHCARD_SET:')[0]}</ReactMarkdown>
                                         </div>
+
+                                        {msg.content.includes('[FLASHCARD_SET:') && (
+                                            <FlashcardPreview
+                                                id={msg.content.split('[FLASHCARD_SET:')[1].split(']')[0]}
+                                            />
+                                        )}
                                     </div>
                                 </div>
                             </motion.div>
@@ -219,8 +226,8 @@ export default function ChatConversationPage() {
                             <button type="button" className="p-1.5 text-[#64748b] hover:text-[#e2e8f0] transition-colors rounded-md hover:bg-white/5">
                                 <Paperclip className="w-[18px] h-[18px]" />
                             </button>
-                            <div className="px-2 py-0.5 bg-[#161b22] text-[#64748b] text-[11px] font-medium rounded">
-                                {mode.charAt(0).toUpperCase() + mode.slice(1)} Mode
+                            <div className="px-2 py-0.5 bg-[#161b22] text-[#64748b] text-[11px] font-medium rounded uppercase tracking-wider font-syne">
+                                {mode} Mode
                             </div>
                         </div>
                         <button
@@ -234,6 +241,28 @@ export default function ChatConversationPage() {
                     </div>
                 </div>
             </div>
+        </div>
+    )
+}
+
+function FlashcardPreview({ id }: { id: string }) {
+    return (
+        <div className="mt-4 p-4 bg-[#1e2128] border border-[#f97316]/20 rounded-xl flex items-center justify-between group">
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-[#f97316]/10 flex items-center justify-center text-[#f97316]">
+                    <Layers size={20} />
+                </div>
+                <div>
+                    <p className="text-sm font-bold text-white">Flashcard Set Suggested</p>
+                    <p className="text-[11px] text-slate-500 font-medium">Ready to master this material?</p>
+                </div>
+            </div>
+            <Link
+                href={`/flashcards/${id}`}
+                className="h-9 px-4 bg-[#f97316] hover:bg-[#ea580c] text-white text-[12px] font-bold rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/10 active:scale-95"
+            >
+                Practice Now <ArrowRight size={14} />
+            </Link>
         </div>
     )
 }

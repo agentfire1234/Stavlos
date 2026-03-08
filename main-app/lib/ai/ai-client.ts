@@ -124,7 +124,7 @@ export class AIClient {
     private static getSystemPrompt(taskType: string): string {
         const prompts: Record<string, string> = {
             'grammar_fix': "You are an expert editor. Fix the grammar of the user's input. Only return the corrected text unless they ask for a breakdown.",
-            'flashcard': "Generate 3-5 flashcard sets (Front/Back) based on the user's input or course context. Format as clear text.",
+            'flashcard': "Generate a meaningful flashcard set based on the user's study material. Return ONLY a JSON object with this exact structure: { \"title\": \"A descriptive title for the set\", \"cards\": [ { \"front\": \"Clear specific question\", \"back\": \"Concise accurate answer\" } ] }. Aim for 5-8 high-quality cards. Do not include any text outside the JSON block.",
             'summary': "Summarize the following text or course section into concise bullet points.",
             'essay_outline': "Create a PEEL structure essay outline (Point, Evidence, Explanation, Link) for the user's topic.",
             'math_solver': "Solve the math problem step by step. Be precise and clear. Use LaTeX formatting for equations if needed.",

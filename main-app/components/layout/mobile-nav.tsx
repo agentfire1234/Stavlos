@@ -6,12 +6,14 @@ import {
     LayoutDashboard,
     MessageSquare,
     BookOpen,
-    Wrench
+    Wrench,
+    Layers
 } from 'lucide-react'
 
 const mobileItems = [
     { label: 'Home', icon: LayoutDashboard, href: '/dashboard' },
     { label: 'Chat', icon: MessageSquare, href: '/chat' },
+    { label: 'Flashcards', icon: Layers, href: '/flashcards' },
     { label: 'Syllabi', icon: BookOpen, href: '/syllabus' },
     { label: 'Tools', icon: Wrench, href: '/tools' },
 ]

@@ -67,12 +67,54 @@ export async function POST(req: Request) {
         )
 
         if (!result.blocked) {
+            let finalResponse = result.response
+
+            // Special handling for flashcards to save them to the DB
+            let flashcardSetId = null
+            if (taskType === 'flashcard' && result.response) {
+                try {
+                    const { parseFlashcardJSON } = await import('@/lib/ai/flashcard-engine')
+                    const flashcardData = parseFlashcardJSON(result.response)
+
+                    if (flashcardData && flashcardData.cards.length > 0) {
+                        // Save to DB
+                        const { data: newSet } = await supabaseAdmin
+                            .from('flashcard_sets')
+                            .insert({
+                                user_id: userId,
+                                title: flashcardData.title || 'Chat Flashcards',
+                                source: 'chat',
+                                card_count: flashcardData.cards.length
+                            })
+                            .select()
+                            .single()
+
+                        if (newSet) {
+                            flashcardSetId = newSet.id
+                            const cardsToInsert = flashcardData.cards.map((c: any, index: number) => ({
+                                set_id: newSet.id,
+                                front: c.front,
+                                back: c.back,
+                                card_index: index
+                            }))
+
+                            await supabaseAdmin.from('flashcards').insert(cardsToInsert)
+
+                            // Replace JSON in response with a friendly message + UI trigger
+                            finalResponse = `I've generated a set of ${flashcardData.cards.length} flashcards for you: **${flashcardData.title}**. You can start practicing them right now!\n\n[FLASHCARD_SET:${newSet.id}]`
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to parse/save chat flashcards:', e)
+                }
+            }
+
             await supabaseAdmin
                 .from('messages')
                 .insert({
                     chat_id: currentChatId,
                     role: 'assistant',
-                    content: result.response,
+                    content: finalResponse,
                     model_used: result.model,
                 })
 
@@ -81,15 +123,15 @@ export async function POST(req: Request) {
                 .from('profiles')
                 .update({ daily_usage: (profile?.daily_usage || 0) + 1 })
                 .eq('id', userId)
-        }
 
-        return NextResponse.json({
-            response: result.response,
-            chatId: currentChatId,
-            model: result.model,
-            blocked: result.blocked || false,
-            message: result.message || null,
-        })
+            return NextResponse.json({
+                response: finalResponse,
+                chatId: currentChatId,
+                model: result.model,
+                blocked: false,
+                flashcardSetId
+            })
+        }
 
     } catch (error: any) {
         console.error('Chat error:', error)

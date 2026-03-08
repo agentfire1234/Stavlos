@@ -10,7 +10,9 @@ import {
     CheckSquare,
     ChevronRight,
     BookOpen,
-    ArrowUpRight
+    ArrowUpRight,
+    Layers,
+    Brain
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -100,48 +102,111 @@ export default function DashboardPage() {
                 <QuickAction icon={MessageSquare} label="New Chat" href="/chat" color="#3b82f6" />
                 <QuickAction icon={Upload} label="Upload Syllabus" href="/syllabus" color="#8b5cf6" />
                 <QuickAction icon={Calculator} label="Math Solver" href="/tools/math-solver" color="#f59e0b" />
-                <QuickAction icon={CheckSquare} label="Grammar Fix" href="/tools/grammar" color="#10b981" />
+                <QuickAction icon={Layers} label="Flashcard Gen" href="/tools/flashcards" color="#f97316" />
             </section>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.6fr,1fr] gap-8">
-                {/* Recent Conversations */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-base font-semibold font-syne text-[#e2e8f0]">Recent Conversations</h2>
-                        <Link href="/chat" className="text-[13px] font-medium text-[#3b82f6] hover:underline">View all</Link>
+                <div className="space-y-8">
+                    {/* Recent Conversations */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-base font-semibold font-syne text-[#e2e8f0]">Recent Conversations</h2>
+                            <Link href="/chat" className="text-[13px] font-medium text-[#3b82f6] hover:underline">View all</Link>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            {data.chats.length > 0 ? (
+                                data.chats.slice(0, 4).map((chat: any) => (
+                                    <Link
+                                        key={chat.id}
+                                        href={`/chat/${chat.id}`}
+                                        className="flex items-center justify-between h-14 px-4 bg-[#1e2128] border border-[#2d3139] rounded-lg hover:bg-[#262b35] transition-all group"
+                                    >
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="p-1.5 rounded bg-[#111318]">
+                                                <MessageSquare className="w-4 h-4 text-[#3b82f6]" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium text-[#e2e8f0] truncate">
+                                                    {chat.title || 'Untitled Chat'}
+                                                </p>
+                                                <p className="text-[12px] text-[#64748b]">
+                                                    {chat.mode.charAt(0).toUpperCase() + chat.mode.slice(1)} • {formatDistanceToNow(new Date(chat.updated_at))} ago
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-[#64748b] group-hover:text-[#e2e8f0] transition-colors" />
+                                    </Link>
+                                ))
+                            ) : (
+                                <div className="bg-[#1e2128] border border-[#2d3139] border-dashed rounded-lg p-10 flex flex-col items-center text-center">
+                                    <MessageSquare className="w-8 h-8 text-[#2d3139] mb-3" />
+                                    <p className="text-sm text-[#64748b] mb-4">No conversations yet</p>
+                                    <Link href="/chat" className="text-sm font-medium text-[#3b82f6] hover:underline">Start chatting</Link>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                        {data.chats.length > 0 ? (
-                            data.chats.slice(0, 5).map((chat: any) => (
-                                <Link
-                                    key={chat.id}
-                                    href={`/chat/${chat.id}`}
-                                    className="flex items-center justify-between h-14 px-4 bg-[#1e2128] border border-[#2d3139] rounded-lg hover:bg-[#262b35] transition-all group"
-                                >
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <div className="p-1.5 rounded bg-[#111318]">
-                                            <MessageSquare className="w-4 h-4 text-[#3b82f6]" />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-medium text-[#e2e8f0] truncate">
-                                                {chat.title || 'Untitled Chat'}
-                                            </p>
-                                            <p className="text-[12px] text-[#64748b]">
-                                                {chat.mode.charAt(0).toUpperCase() + chat.mode.slice(1)} • {formatDistanceToNow(new Date(chat.updated_at))} ago
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <ChevronRight className="w-4 h-4 text-[#64748b] group-hover:text-[#e2e8f0] transition-colors" />
-                                </Link>
-                            ))
-                        ) : (
-                            <div className="bg-[#1e2128] border border-[#2d3139] border-dashed rounded-lg p-10 flex flex-col items-center text-center">
-                                <MessageSquare className="w-8 h-8 text-[#2d3139] mb-3" />
-                                <p className="text-sm text-[#64748b] mb-4">No conversations yet</p>
-                                <Link href="/chat" className="text-sm font-medium text-[#3b82f6] hover:underline">Start chatting</Link>
+                    {/* My Flashcards */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-base font-semibold font-syne text-[#e2e8f0]">My Flashcards</h2>
+                                {data.dueCount > 0 && (
+                                    <span className="px-2 py-0.5 bg-[#f97316]/10 text-[#f97316] text-[10px] font-black uppercase rounded border border-[#f97316]/20">
+                                        {data.dueCount} Due
+                                    </span>
+                                )}
                             </div>
-                        )}
+                            <div className="flex items-center gap-4">
+                                {data.dueCount > 0 && (
+                                    <Link
+                                        href="/flashcards/review"
+                                        className="text-[13px] font-bold text-[#f97316] hover:text-[#ea580c] flex items-center gap-1.5 bg-[#f97316]/10 px-3 py-1 rounded-lg border border-[#f97316]/20 transition-all"
+                                    >
+                                        <Brain size={14} /> Start Daily Review
+                                    </Link>
+                                )}
+                                <Link href="/flashcards" className="text-[13px] font-medium text-[#3b82f6] hover:underline">View all</Link>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {data.flashcards.length > 0 ? (
+                                data.flashcards.slice(0, 4).map((set: any) => (
+                                    <Link
+                                        key={set.id}
+                                        href={`/flashcards/${set.id}`}
+                                        className="bg-[#1e2128] border border-[#2d3139] rounded-lg p-4 hover:bg-[#262b35] transition-all group"
+                                    >
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="p-1.5 rounded bg-[#f97316]/10">
+                                                <Layers className="w-4 h-4 text-[#f97316]" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-sm font-bold text-[#e2e8f0] truncate">{set.title}</p>
+                                                <p className="text-[11px] text-[#64748b]">{set.card_count} cards</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between mt-4">
+                                            <span className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider">
+                                                {set.source === 'syllabus' ? 'Syllabus' : 'Notes'}
+                                            </span>
+                                            <div className="flex items-center gap-1 text-[11px] font-bold text-[#f97316] opacity-0 group-hover:opacity-100 transition-opacity">
+                                                Practice <ArrowUpRight size={12} />
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))
+                            ) : (
+                                <div className="col-span-full bg-[#1e2128] border border-[#2d3139] border-dashed rounded-lg p-10 flex flex-col items-center text-center">
+                                    <Layers className="w-8 h-8 text-[#2d3139] mb-3" />
+                                    <p className="text-sm text-[#64748b] mb-4">No flashcards yet</p>
+                                    <Link href="/tools/flashcards" className="text-sm font-medium text-[#3b82f6] hover:underline">Generate a set</Link>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -154,7 +219,7 @@ export default function DashboardPage() {
 
                     <div className="space-y-2">
                         {data.syllabuses.length > 0 ? (
-                            data.syllabuses.slice(0, 4).map((s: any) => (
+                            data.syllabuses.slice(0, 6).map((s: any) => (
                                 <div key={s.id} className="bg-[#1e2128] border border-[#2d3139] rounded-lg p-4 space-y-3">
                                     <div className="min-w-0">
                                         <p className="text-sm font-medium text-[#e2e8f0] truncate">{s.course_name}</p>

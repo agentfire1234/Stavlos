@@ -11,7 +11,8 @@ import {
     Wrench,
     Settings,
     Plus,
-    Zap
+    Zap,
+    Layers
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -20,6 +21,7 @@ const navItems = [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
     { label: 'Chat', icon: MessageSquare, href: '/chat' },
     { label: 'My Syllabi', icon: BookOpen, href: '/syllabus' },
+    { label: 'Flashcards', icon: Layers, href: '/flashcards' },
     { label: 'Tools', icon: Wrench, href: '/tools' },
 ]
 
