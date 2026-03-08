@@ -75,18 +75,26 @@ export class RAGSystem {
             }
         }
 
+        console.log('--- RAG INSERT DEBUG ---')
+        console.log('Chunk count:', chunkRecords.length)
+        console.log('First embedding length:', chunkRecords[0]?.embedding?.length)
+        console.log('First chunk text length:', chunkRecords[0]?.chunk_text?.length)
+        console.log('------------------------')
+
         // Insert all chunks
         const { error: chunksError } = await supabaseAdmin
             .from('syllabus_chunks')
             .insert(chunkRecords)
 
         if (chunksError) {
+            console.error('EXACT INSERT ERROR:', JSON.stringify(chunksError, null, 2))
+
             // Clean up syllabus record if chunks failed
             await supabaseAdmin
                 .from('syllabuses')
                 .delete()
                 .eq('id', syllabus.id)
-            throw new Error('Failed to process syllabus chunks')
+            throw new Error(`Failed to process syllabus chunks: ${chunksError.message}`)
         }
 
         return syllabus.id
