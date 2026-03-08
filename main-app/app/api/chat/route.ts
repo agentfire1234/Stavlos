@@ -55,8 +55,9 @@ export async function POST(req: Request) {
         // 1. Fetch ALL messages for conversation memory
         const { data: allMessages = [] } = await supabaseAdmin
             .from('messages')
-            .order('created_at', { ascending: true })
+            .select('*')
             .eq('chat_id', currentChatId)
+            .order('created_at', { ascending: true })
 
         let history: any[] = []
         let currentSummary = currentChat?.summary || null
