@@ -20,6 +20,7 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import toast from 'react-hot-toast'
+import { FlashcardButton } from '@/components/chat/flashcard-button'
 
 const MODES = [
     { id: 'general', label: 'General', icon: Sparkles },
@@ -246,8 +247,8 @@ function ChatClient() {
                                         key={mode.id}
                                         onClick={() => setActiveMode(mode.id)}
                                         className={`px-3 h-7 rounded-full text-[12px] font-medium transition-all ${activeMode === mode.id
-                                                ? 'bg-[#1e2128] border border-[#3b82f6] text-[#3b82f6]'
-                                                : 'text-[#64748b] hover:text-[#e2e8f0]'
+                                            ? 'bg-[#1e2128] border border-[#3b82f6] text-[#3b82f6]'
+                                            : 'text-[#64748b] hover:text-[#e2e8f0]'
                                             }`}
                                     >
                                         {mode.label}
@@ -306,11 +307,17 @@ function ChatClient() {
                                 >
                                     <div className={`${msg.role === 'user' ? 'max-w-[70%]' : 'max-w-[85%]'}`}>
                                         <div className={`p-4 rounded-2xl text-[14px] leading-[1.7] font-dm-sans ${msg.role === 'user'
-                                                ? 'bg-[#1e2128] border border-[#2d3139] text-[#e2e8f0] rounded-tr-[4px]'
-                                                : 'text-[#e2e8f0] bg-[#161b22] border border-[#2d3139] rounded-tl-[4px]'
+                                            ? 'bg-[#1e2128] border border-[#2d3139] text-[#e2e8f0] rounded-tr-[4px]'
+                                            : 'text-[#e2e8f0] bg-[#161b22] border border-[#2d3139] rounded-tl-[4px]'
                                             }`}>
                                             <div className="prose prose-invert prose-sm max-w-none">
-                                                <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                                {msg.content.split(/(\[FLASHCARD_SET:[a-f0-9-]+\])/g).map((part, i) => {
+                                                    const match = part.match(/\[FLASHCARD_SET:([a-f0-9-]+)\]/)
+                                                    if (match) {
+                                                        return <FlashcardButton key={i} setId={match[1]} />
+                                                    }
+                                                    return <ReactMarkdown key={i}>{part}</ReactMarkdown>
+                                                })}
                                             </div>
                                         </div>
                                     </div>
@@ -388,8 +395,8 @@ function ChatHistoryGroup({ label, chats, activeChatId, onSelect }: {
                     key={chat.id}
                     onClick={() => onSelect(chat.id)}
                     className={`nav-item w-full h-9 flex items-center px-3 rounded-md text-[13px] truncate transition-all ${chat.id === activeChatId
-                            ? 'bg-[#1e2128] text-[#e2e8f0] border-l-2 border-[#3b82f6] rounded-l-none'
-                            : 'text-[#94a3b8] hover:bg-[#1e2128] hover:text-[#e2e8f0]'
+                        ? 'bg-[#1e2128] text-[#e2e8f0] border-l-2 border-[#3b82f6] rounded-l-none'
+                        : 'text-[#94a3b8] hover:bg-[#1e2128] hover:text-[#e2e8f0]'
                         }`}
                 >
                     <span className="truncate">{chat.title || 'Untitled Chat'}</span>
