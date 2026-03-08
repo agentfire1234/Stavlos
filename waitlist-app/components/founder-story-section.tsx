@@ -18,13 +18,13 @@ export function FounderStorySection() {
                     >
                         <h2 className="text-3xl md:text-5xl font-bold mb-8 tracking-tight italic">Built by a Student, For Students</h2>
                         <div className="space-y-6 text-base sm:text-lg text-[var(--text-muted)] leading-relaxed">
-                            <p>Hey, I&apos;m Abraham.</p>
+                            <p>Hey, I'm Abraham.</p>
                             <p>
                                 I made this app because I saw people on Reddit and X complaining about
                                 searching through their syllabus and thought I could help them.
                             </p>
                             <p className="font-semibold text-[var(--headline)]">
-                                And let&apos;s be real—who doesn&apos;t want a sick gaming PC while helping others? :)
+                                And let's be real—who doesn't want a sick gaming PC while helping others? :)
                             </p>
                         </div>
                     </motion.div>
@@ -49,12 +49,12 @@ export function FounderStorySection() {
                             </div>
                             <div className="p-4 rounded-xl bg-[var(--primary-blue)] text-white">
                                 <p><strong>The PC Goal</strong></p>
-                                <p className="mt-1 opacity-90">If 500 students join, I get my gaming PC. If 5,000 join, I&apos;ve built a real business.</p>
+                                <p className="mt-1 opacity-90">If 500 students join, I get my gaming PC. If 5,000 join, I've built a real business. Pretty sick for a 14 year old right?</p>
                             </div>
                         </div>
 
                         <div className="mt-8 pt-8 border-t border-[var(--border)]">
-                            <p className="text-xl font-bold italic">&quot;Let&apos;s do this together.&quot;</p>
+                            <p className="text-xl font-bold italic">Let's do this together. and get your grades up and my pc home.;)</p>
                             <p className="text-[var(--text-muted)] text-sm mt-1">— Abraham, Founder</p>
                         </div>
                     </motion.div>
