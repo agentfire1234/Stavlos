@@ -49,44 +49,46 @@ export function calculateNextReview(card: FlashcardProgress, quality: number): S
 }
 
 export function parseFlashcardJSON(raw: string): { title?: string, cards: Array<{ front: string; back: string }> } {
-    // Strip any markdown code blocks if present
+    // Clean the string first
     const cleaned = raw
         .replace(/```json/g, '')
         .replace(/```/g, '')
         .trim()
 
-    // Find the JSON block (either { or [)
-    const startObj = cleaned.indexOf('{')
-    const startArr = cleaned.indexOf('[')
+    // Try clean JSON parse first
+    try {
+        const start = cleaned.indexOf('{')
+        const end = cleaned.lastIndexOf('}')
+        if (start !== -1 && end !== -1) {
+            const jsonStr = cleaned.substring(start, end + 1)
+            const parsed = JSON.parse(jsonStr)
 
-    let start = -1
-    let end = -1
-
-    if (startObj !== -1 && (startArr === -1 || startObj < startArr)) {
-        start = startObj
-        end = cleaned.lastIndexOf('}')
-    } else {
-        start = startArr
-        end = cleaned.lastIndexOf(']')
-    }
-
-    if (start === -1 || end === -1) {
-        throw new Error('No JSON found in AI response')
-    }
-
-    const jsonStr = cleaned.substring(start, end + 1)
-    const parsed = JSON.parse(jsonStr)
-
-    if (Array.isArray(parsed)) {
-        return {
-            cards: parsed.filter((card: any) => card.front && card.back)
+            if (Array.isArray(parsed)) {
+                return {
+                    cards: parsed.filter((card: any) => card.front && card.back)
+                }
+            } else if (parsed && Array.isArray(parsed.cards)) {
+                return {
+                    title: parsed.title,
+                    cards: parsed.cards.filter((card: any) => card.front && card.back)
+                }
+            }
         }
-    } else if (parsed && Array.isArray(parsed.cards)) {
-        return {
-            title: parsed.title,
-            cards: parsed.cards.filter((card: any) => card.front && card.back)
-        }
+    } catch (e) {
+        // Fall through to regex fallback
     }
 
-    throw new Error('Invalid flashcard format')
+    // Regex fallback - extract cards even from broken JSON
+    const title = cleaned.match(/"title"\s*:\s*"([^"]+)"/)?.[1] || 'Flashcards'
+    const frontMatches = [...cleaned.matchAll(/"front"\s*:\s*"([^"]+)"/g)]
+    const backMatches = [...cleaned.matchAll(/"back"\s*:\s*"([^"]+)"/g)]
+
+    const cards = frontMatches.map((m, i) => ({
+        front: m[1],
+        back: backMatches[i]?.[1] || ''
+    })).filter(c => c.front && c.back)
+
+    if (cards.length === 0) throw new Error('No cards found')
+
+    return { title, cards }
 }
