@@ -134,6 +134,7 @@ export async function POST(req: Request) {
             summary: 'summary',
             essay: 'essay_outline',
             flashcards: 'flashcard',
+            citations: 'citation',
         }
         let taskType = taskTypeMap[mode] || 'general_chat'
 
