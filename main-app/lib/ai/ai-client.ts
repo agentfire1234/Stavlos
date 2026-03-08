@@ -24,10 +24,11 @@ const FALLBACK_MODELS = [
 ]
 
 export class AIClient {
-    static async chat(query: string, context: string, model: string, taskType: string, stream: boolean = false) {
+    static async chat(query: string, context: string, model: string, taskType: string, stream: boolean = false, history: any[] = []) {
         const systemPrompt = this.getSystemPrompt(taskType)
         const messages: any[] = [
             { role: "system", content: systemPrompt },
+            ...history,
             { role: "user", content: context ? `CONTEXT FROM SYLLABUS:\n${context}\n\nUSER QUESTION: ${query}` : query }
         ]
 
@@ -121,6 +122,7 @@ export class AIClient {
             'essay_outline': "Create a PEEL structure essay outline (Point, Evidence, Explanation, Link) for the user's topic.",
             'math_solver': "Solve the math problem step by step. Be precise and clear. Use LaTeX formatting for equations if needed.",
             'syllabus_qa': "You are a study expert using the provided syllabus context. Answer strictly based on the syllabus content. If the answer isn't in the context, say so.",
+            'conversation_summary': "Summarize this conversation in 3-5 sentences focusing on: what the user is studying, what tasks were completed, and any important context for continuing the conversation. Be concise.",
             'general_chat': "You are STAVLOS AI, a brilliant and friendly study partner. Help the student master their subjects. Be concise and encouraging."
         }
         return prompts[taskType] || prompts['general_chat']

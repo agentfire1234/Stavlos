@@ -22,7 +22,8 @@ export class AIOrchestrator {
         userTier: 'free' | 'pro' = 'free',
         taskType: string = 'general_chat',
         stream: boolean = false,
-        syllabusId?: string
+        syllabusId?: string,
+        history: any[] = []
     ): Promise<OrchestratorResult> {
         const steps: string[] = []
 
@@ -81,7 +82,7 @@ export class AIOrchestrator {
         }
 
         steps.push(stream ? "Initializing secure stream..." : "Synthesizing response...")
-        const aiResponse = await AIClient.chat(query, context, allowed.model, taskType, stream)
+        const aiResponse = await AIClient.chat(query, context, allowed.model, taskType, stream, history)
 
         if (stream) {
             return {

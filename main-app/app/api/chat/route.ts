@@ -42,9 +42,80 @@ export async function POST(req: Request) {
             currentChatId = newChat?.id
         }
 
+        const { data: currentChat } = await supabaseAdmin
+            .from('chats')
+            .select('id, summary, syllabus_id, mode')
+            .eq('id', currentChatId)
+            .single()
+
         await supabaseAdmin
             .from('messages')
             .insert({ chat_id: currentChatId, role: 'user', content: message })
+
+        // 1. Fetch ALL messages for conversation memory
+        const { data: allMessages = [] } = await supabaseAdmin
+            .from('messages')
+            .order('created_at', { ascending: true })
+            .eq('chat_id', currentChatId)
+
+        let history: any[] = []
+        let currentSummary = currentChat?.summary || null
+        const msgCount = allMessages?.length || 0
+
+        // 2. Sliding Window & Summarization Logic
+        if (msgCount > 10) {
+            // Check re-summarization thresholds: 20, 40, 80, 160...
+            const thresholds = [11, 20, 40, 80, 160, 320, 640]
+            const shouldSummarize = !currentSummary || thresholds.includes(msgCount)
+
+            if (shouldSummarize) {
+                console.log(`[summarization] Triggered at ${msgCount} messages for chat ${currentChatId}`)
+                const toSummarize = allMessages.slice(0, msgCount - 10)
+                const summaryText = toSummarize
+                    .map(m => `${m.role.toUpperCase()}: ${m.content}`)
+                    .join('\n\n')
+
+                try {
+                    const { AIClient } = await import('@/lib/ai/ai-client')
+                    const summaryResult = await AIClient.chat(
+                        `Conversation to summarize:\n\n${summaryText}`,
+                        '',
+                        'llama-3.1-8b-instant',
+                        'conversation_summary'
+                    ) as any
+
+                    currentSummary = summaryResult.choices[0].message.content || currentSummary
+
+                    // Save back to DB
+                    await supabaseAdmin
+                        .from('chats')
+                        .update({
+                            summary: currentSummary,
+                            summary_updated_at: new Date().toISOString()
+                        })
+                        .eq('id', currentChatId)
+                } catch (e) {
+                    console.error('Summarization failed:', e)
+                }
+            }
+
+            // Build history with summary + last 9 previous messages
+            if (currentSummary) {
+                history.push({ role: 'system', content: `Previous conversation summary: ${currentSummary}` })
+            }
+            // Take messages from length-10 to length-1 (excluding the current one at index length-1)
+            const previousMessages = allMessages.slice(-10, -1).map(m => ({
+                role: m.role,
+                content: m.content
+            }))
+            history.push(...previousMessages)
+        } else {
+            // <= 10 messages: use all except current as history
+            history = allMessages.slice(0, -1).map(m => ({
+                role: m.role,
+                content: m.content
+            }))
+        }
 
         const taskTypeMap: Record<string, string> = {
             general: 'general_chat',
@@ -63,7 +134,8 @@ export async function POST(req: Request) {
             userTier,
             taskType,
             false,
-            syllabusId
+            syllabusId || currentChat?.syllabus_id,
+            history
         )
 
         if (!result.blocked) {
