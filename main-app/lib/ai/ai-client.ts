@@ -26,6 +26,7 @@ const FALLBACK_MODELS = [
 export class AIClient {
     static async chat(query: string, context: string, model: string, taskType: string, stream: boolean = false, history: any[] = []) {
         const systemPrompt = this.getSystemPrompt(taskType)
+        console.log(`[AIClient] Task: ${taskType} | Prompt: ${systemPrompt.substring(0, 100)}...`)
         const messages: any[] = [
             { role: "system", content: systemPrompt },
             ...history,
@@ -120,7 +121,7 @@ Adapt your communication style to match the user's tone.
 If they write short messages, respond short.
 If they write casually with typos or slang, be casual back.
 If they write formally, be formal.
-If they use Dutch, respond in Dutch.
+If they use another language, respond in that language.
 Mirror their energy — don't be stiff when they're relaxed.
 
 If you don't know something or are not confident, 
