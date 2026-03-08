@@ -31,26 +31,25 @@ export class AIClient {
             { role: "user", content: context ? `CONTEXT FROM SYLLABUS:\n${context}\n\nUSER QUESTION: ${query}` : query }
         ]
 
-        // Determine if this is a Groq model or OpenRouter model
-        // Groq models usually look like: llama-3.3-70b-versatile, llama-3.1-8b-instant, mixtral-8x7b-32768
-        const isGroqModel = model.includes('versatile') || model.includes('instant') || model.includes('8x7b') || model.includes('70b') && !model.includes('/');
+        // User's requested primary model
+        const GROQ_8B = 'llama-3.1-8b-instant'
 
-        // Create a list of models/providers to try
+        // Determine the models to try in order
+        const isGroqModel = model.includes('versatile') || model.includes('instant') || model.includes('8x7b') || (model.includes('70b') && !model.includes('/'));
         const requestedModel = model.includes('/') ? model : (isGroqModel ? model : `meta-llama/${model}`)
 
+        // Always prioritize Groq 8B for reliability, then the originally requested model, then fallbacks
         const modelsToTry = [
+            GROQ_8B,
             requestedModel,
-            ...FALLBACK_MODELS.filter(m => m !== requestedModel)
-        ]
+            ...FALLBACK_MODELS
+        ].filter((m, i, self) => self.indexOf(m) === i)
 
         let lastError: any = null
 
         for (const targetModel of modelsToTry) {
             try {
-                // Determine provider based on model ID
-                // If it contains a slash, it's OpenRouter. If not, it's likely Groq.
                 const provider = targetModel.includes('/') ? 'OpenRouter' : 'Groq'
-
                 console.log(`[AI] Attempting ${taskType} with ${targetModel} via ${provider} (Stream: ${stream})...`)
 
                 if (provider === 'Groq') {
@@ -100,22 +99,15 @@ export class AIClient {
             } catch (error: any) {
                 lastError = error
                 const statusCode = error.status || 500
-                // 401: Unauthorized, 404: Not Found, 429: Rate Limit, 5xx: Server Errors
                 const isRetryable = [401, 404, 408, 429, 500, 502, 503, 504].includes(statusCode)
 
                 console.error(`[AI] Model Failure (${targetModel}): ${error.message} (Status: ${statusCode})`)
-
-                if (!isRetryable) {
-                    break // Non-retryable error, don't bother trying other models
-                }
-
+                if (!isRetryable) break
                 console.log(`[AI] Attempting next fallback model...`)
             }
         }
 
-        // If we get here, all models failed
         console.error(`[AI] Critical Failure: All ${modelsToTry.length} models failed.`)
-
         throw new Error(lastError?.status === 401
             ? "AI Authentication failed. Please check system configuration."
             : "AI Service Temporarily Unavailable. Please try again soon.")
