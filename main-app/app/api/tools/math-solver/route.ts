@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { AIOrchestrator } from '@/lib/ai/orchestrator'
+// Updated: math solver strict prompt v2
 
 export async function POST(req: Request) {
     try {
