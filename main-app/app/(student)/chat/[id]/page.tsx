@@ -177,15 +177,14 @@ export default function ChatConversationPage() {
                                         }`}>
                                         <div className="prose prose-invert prose-sm max-w-none">
                                             <ReactMarkdown>
-                                                {msg.content.replace(/\[FLASHCARD_SET:[^\]]+\]/g, '')}
+                                                {msg.content.replace(/\[FLASHCARD_SET:[^\]]+\]/g, '').trim()}
                                             </ReactMarkdown>
                                         </div>
 
-                                        {msg.content.match(/\[FLASHCARD_SET:([^\]]+)\]/) && (
-                                            <FlashcardPreview
-                                                id={msg.content.match(/\[FLASHCARD_SET:([^\]]+)\]/)![1]}
-                                            />
-                                        )}
+                                        {/* Render flashcard buttons if present */}
+                                        {Array.from(msg.content.matchAll(/\[FLASHCARD_SET:([^\]]+)\]/g)).map((match, idx) => (
+                                            <FlashcardPreview key={idx} id={match[1]} />
+                                        ))}
                                     </div>
                                 </div>
                             </motion.div>
