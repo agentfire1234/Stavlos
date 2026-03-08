@@ -126,16 +126,27 @@ export class RAGSystem {
             }
         }
 
+        console.log('--- RAG QUERY DEBUG ---')
+        console.log('Querying syllabus:', syllabusId)
+        console.log('User ID:', userId)
+        console.log('Question embedding length:', data?.embedding?.length)
+
         // Vector similarity search
-        const { data: chunks } = await supabaseAdmin.rpc(
+        const { data: chunks, error: rpcError } = await supabaseAdmin.rpc(
             'match_syllabus_chunks',
             {
                 query_embedding: data.embedding,
                 match_threshold: 0.5,
                 match_count: 5,
-                filter_user_id: userId
+                filter_user_id: userId,
+                filter_syllabus_id: syllabusId || null
             }
         )
+
+        console.log('Chunks found:', chunks?.length)
+        console.log('Raw RPC result:', JSON.stringify(chunks))
+        if (rpcError) console.error('RPC ERROR:', rpcError)
+        console.log('-----------------------')
 
         return {
             found: !!chunks?.length,
