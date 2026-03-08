@@ -18,16 +18,13 @@ export function FounderStorySection() {
                     >
                         <h2 className="text-3xl md:text-5xl font-bold mb-8 tracking-tight italic">Built by a Student, For Students</h2>
                         <div className="space-y-6 text-base sm:text-lg text-[var(--text-muted)] leading-relaxed">
-                            <p>Hi, I'm Abraham. I'm 14.</p>
+                            <p>Hey, I&apos;m Abraham.</p>
                             <p>
-                                I built Stavlos because I was tired of searching through syllabi at midnight, missing deadlines,
-                                and feeling disorganized.
+                                I made this app because I saw people on Reddit and X complaining about
+                                searching through their syllabus and thought I could help them.
                             </p>
                             <p className="font-semibold text-[var(--headline)]">
-                                Most 'student tools' are built by people who haven't been in a classroom in 20 years. They don't get it.
-                            </p>
-                            <p>
-                                Stavlos is different because I'm actually a student, I use it for my own courses, and I understand the pain.
+                                And let&apos;s be real—who doesn&apos;t want a sick gaming PC while helping others? :)
                             </p>
                         </div>
                     </motion.div>
